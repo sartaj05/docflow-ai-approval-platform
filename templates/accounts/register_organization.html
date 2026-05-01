@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="auth-page">
+    <div class="auth-card auth-card-lg">
+
+        <div class="mb-3">
+            <a href="{% url 'landing' %}" class="btn btn-sm btn-outline-secondary">
+                ← Back to Home
+            </a>
+        </div>
+
+        <div class="text-center mb-4">
+            <h2 class="fw-bold text-primary mb-1">
+                Create Organization Workspace
+            </h2>
+            <p class="text-muted mb-0">
+                Register your organization and create the first admin account.
+            </p>
+        </div>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags|default:'info' }}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        {% if form.non_field_errors %}
+            <div class="alert alert-danger">
+                {{ form.non_field_errors }}
+            </div>
+        {% endif %}
+
+        <form method="post" enctype="multipart/form-data" novalidate>
+            {% csrf_token %}
+
+            <h5 class="fw-bold mb-3">Organization Details</h5>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Organization Name</label>
+                    {{ form.organization_name }}
+                    <div class="text-danger small">
+                        {{ form.organization_name.errors|striptags }}
+                    </div>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Organization Email</label>
+                    {{ form.organization_email }}
+                    <div class="text-danger small">
+                        {{ form.organization_email.errors|striptags }}
+                    </div>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Organization Phone</label>
+                    {{ form.organization_phone }}
+                    <div class="text-danger small">
+                        {{ form.organization_phone.errors|striptags }}
+                    </div>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Organization Address</label>
+                    {{ form.organization_address }}
+                    <div class="text-danger small">
+                        {{ form.organization_address.errors|striptags }}
+                    </div>
+                </div>
+
+                {% if form.organization_logo %}
+                    <div class="col-md-12 mb-3">
+                        <label class="form-label">Organization Logo</label>
+                        {{ form.organization_logo }}
+                        <div class="text-danger small">
+                            {{ form.organization_logo.errors|striptags }}
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+
+            <hr class="my-4">
+
+            <h5 class="fw-bold mb-3">Admin Account</h5>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Full Name</label>
+                    {{ form.admin_full_name }}
+                    <div class="text-danger small">
+                        {{ form.admin_full_name.errors|striptags }}
+                    </div>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Username</label>
+                    {{ form.admin_username }}
+                    <div class="text-danger small">
+                        {{ form.admin_username.errors|striptags }}
+                    </div>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Admin Email</label>
+                    {{ form.admin_email }}
+                    <div class="text-danger small">
+                        {{ form.admin_email.errors|striptags }}
+                    </div>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Admin Phone</label>
+                    {{ form.admin_phone }}
+                    <div class="text-danger small">
+                        {{ form.admin_phone.errors|striptags }}
+                    </div>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Password</label>
+                    {{ form.admin_password1 }}
+                    <div class="text-danger small">
+                        {{ form.admin_password1.errors|striptags }}
+                    </div>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Confirm Password</label>
+                    {{ form.admin_password2 }}
+                    <div class="text-danger small">
+                        {{ form.admin_password2.errors|striptags }}
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100 mt-2">
+                Create Workspace
+            </button>
+        </form>
+
+        <div class="text-center mt-4">
+            <a href="{% url 'accounts:login' %}">
+                Already have an account? Login
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <p class="eyebrow">User Detail</p>
+        <h1>{{ user_obj.display_name }}</h1>
+        <p class="page-subtitle">
+            Organization user profile, role, department, and access status.
+        </p>
+    </div>
+
+    <div class="d-flex gap-2 flex-wrap">
+        <a href="{% url 'accounts:org_user_list' %}" class="btn btn-light">
+            Back
+        </a>
+
+        {% if user_obj != request.user %}
+            <a href="{% url 'accounts:org_user_update' user_obj.pk %}" class="btn btn-outline-primary">
+                Edit
+            </a>
+
+            <a href="{% url 'accounts:org_user_reset_password' user_obj.pk %}" class="btn btn-outline-dark">
+                Reset Password
+            </a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-5">
+        <div class="panel-card">
+            <div class="profile-summary mb-4">
+                <div class="profile-avatar-large">
+                    {{ user_obj.display_name|slice:":1"|upper }}
+                </div>
+
+                <div>
+                    <h4 class="fw-bold mb-1">{{ user_obj.display_name }}</h4>
+                    <p class="text-muted mb-0">{{ user_obj.email }}</p>
+                    <small class="text-muted">@{{ user_obj.username }}</small>
+                </div>
+            </div>
+
+            <div class="info-list">
+                <div>
+                    <span>Status</span>
+                    <strong>
+                        {% if user_obj.is_active and profile.is_active %}
+                            <span class="status-badge status-approved">Active</span>
+                        {% else %}
+                            <span class="status-badge status-rejected">Inactive</span>
+                        {% endif %}
+                    </strong>
+                </div>
+
+                <div>
+                    <span>Role</span>
+                    <strong>
+                        {% if profile %}
+                            {{ profile.get_role_display }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </strong>
+                </div>
+
+                <div>
+                    <span>Department</span>
+                    <strong>
+                        {% if profile.department %}
+                            {{ profile.department.name }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </strong>
+                </div>
+
+                <div>
+                    <span>Designation</span>
+                    <strong>
+                        {% if profile %}
+                            {{ profile.designation|default:"-" }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </strong>
+                </div>
+
+                <div>
+                    <span>Phone</span>
+                    <strong>
+                        {% if profile %}
+                            {{ profile.phone|default:"-" }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </strong>
+                </div>
+
+                <div>
+                    <span>Joined</span>
+                    <strong>{{ user_obj.created_at|date:"d M Y, h:i A" }}</strong>
+                </div>
+            </div>
+        </div>
+
+        {% if user_obj != request.user %}
+            <div class="panel-card danger-panel mt-4">
+                <h5 class="fw-bold mb-2">Access Control</h5>
+                <p class="text-muted">
+                    Activate or deactivate this user's access.
+                </p>
+
+                <form method="post" action="{% url 'accounts:org_user_toggle_status' user_obj.pk %}">
+                    {% csrf_token %}
+
+                    {% if user_obj.is_active and profile.is_active %}
+                        <button type="submit" class="btn btn-outline-danger">
+                            Deactivate User
+                        </button>
+                    {% else %}
+                        <button type="submit" class="btn btn-outline-success">
+                            Activate User
+                        </button>
+                    {% endif %}
+                </form>
+            </div>
+        {% endif %}
+    </div>
+
+    <div class="col-lg-7">
+        <div class="panel-card">
+            <div class="panel-card-header">
+                <div>
+                    <h5>Permissions Summary</h5>
+                    <p>What this user can do in the system.</p>
+                </div>
+            </div>
+
+            {% if profile.role == "ORG_ADMIN" %}
+                <div class="alert alert-primary">
+                    Organization Admin can manage users, departments, workflows, requests, reports, and audit logs.
+                </div>
+            {% elif profile.role == "DEPARTMENT_HEAD" %}
+                <div class="alert alert-warning">
+                    Department Head can view department requests and participate in approval workflows.
+                </div>
+            {% elif profile.role == "STAFF" %}
+                <div class="alert alert-info">
+                    Staff can create requests, upload documents, submit requests, and track approvals.
+                </div>
+            {% elif profile.role == "APPROVER" %}
+                <div class="alert alert-success">
+                    Approver can review assigned approval steps, approve, reject, and comment.
+                </div>
+            {% elif profile.role == "AUDITOR" %}
+                <div class="alert alert-dark">
+                    Auditor can view reports and audit logs for organization governance.
+                </div>
+            {% else %}
+                <div class="alert alert-secondary">
+                    No permission summary available.
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% endblock %}

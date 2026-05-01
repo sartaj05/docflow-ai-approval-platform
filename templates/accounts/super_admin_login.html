@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="auth-page super-admin-auth">
+    <div class="auth-card">
+        <div class="text-center mb-4">
+            <div class="super-admin-icon mx-auto mb-3">
+                🛡️
+            </div>
+
+            <h2 class="fw-bold text-dark mb-1">
+                Super Admin Login
+            </h2>
+
+            <p class="text-muted mb-0">
+                Platform control access for DocFlow AI.
+            </p>
+        </div>
+
+        {% if form.non_field_errors %}
+            <div class="alert alert-danger">
+                {{ form.non_field_errors }}
+            </div>
+        {% endif %}
+
+        <form method="post" novalidate>
+            {% csrf_token %}
+
+            <div class="mb-3">
+                <label class="form-label">Username or Email</label>
+                {{ form.username }}
+
+                {% if form.username.errors %}
+                    <div class="text-danger small mt-1">
+                        {{ form.username.errors|striptags }}
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Password</label>
+                {{ form.password }}
+
+                {% if form.password.errors %}
+                    <div class="text-danger small mt-1">
+                        {{ form.password.errors|striptags }}
+                    </div>
+                {% endif %}
+            </div>
+
+            <button type="submit" class="btn btn-dark w-100">
+                Login as Super Admin
+            </button>
+        </form>
+
+        <div class="text-center mt-4">
+            <a href="{% url 'accounts:login' %}">
+                Organization user login
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

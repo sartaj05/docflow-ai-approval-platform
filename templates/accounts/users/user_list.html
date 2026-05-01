@@ -1,0 +1,218 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <p class="eyebrow">Organization Users</p>
+        <h1>User Management</h1>
+        <p class="page-subtitle">
+            Create, update, deactivate users, assign departments and roles within your organization.
+        </p>
+    </div>
+
+    <a href="{% url 'accounts:org_user_create' %}" class="btn btn-primary">
+        + Create User
+    </a>
+</div>
+
+<div class="stats-grid">
+    <div class="metric-card">
+        <div class="metric-icon bg-soft-primary">👥</div>
+        <div>
+            <p>Total Users</p>
+            <h3>{{ total_users }}</h3>
+        </div>
+    </div>
+
+    <div class="metric-card">
+        <div class="metric-icon bg-soft-success">✅</div>
+        <div>
+            <p>Active</p>
+            <h3>{{ active_users }}</h3>
+        </div>
+    </div>
+
+    <div class="metric-card">
+        <div class="metric-icon bg-soft-danger">⛔</div>
+        <div>
+            <p>Inactive</p>
+            <h3>{{ inactive_users }}</h3>
+        </div>
+    </div>
+</div>
+
+<div class="stats-grid mt-4">
+    <div class="metric-card">
+        <div class="metric-icon bg-soft-primary">🛡️</div>
+        <div>
+            <p>Org Admins</p>
+            <h3>{{ org_admin_count }}</h3>
+        </div>
+    </div>
+
+    <div class="metric-card">
+        <div class="metric-icon bg-soft-warning">✅</div>
+        <div>
+            <p>Approvers</p>
+            <h3>{{ approver_count }}</h3>
+        </div>
+    </div>
+
+    <div class="metric-card">
+        <div class="metric-icon bg-soft-info">👤</div>
+        <div>
+            <p>Staff</p>
+            <h3>{{ staff_count }}</h3>
+        </div>
+    </div>
+</div>
+
+<div class="panel-card mt-4">
+    <div class="panel-card-header">
+        <div>
+            <h5>Search & Filters</h5>
+            <p>Filter users by role, department, status, name, email, or phone.</p>
+        </div>
+    </div>
+
+    <form method="get" class="row g-3 align-items-end">
+        <div class="col-lg-4 col-md-6">
+            <label class="form-label">Search</label>
+            {{ filter_form.q }}
+        </div>
+
+        <div class="col-lg-2 col-md-6">
+            <label class="form-label">Role</label>
+            {{ filter_form.role }}
+        </div>
+
+        <div class="col-lg-2 col-md-6">
+            <label class="form-label">Department</label>
+            {{ filter_form.department }}
+        </div>
+
+        <div class="col-lg-2 col-md-6">
+            <label class="form-label">Status</label>
+            {{ filter_form.status }}
+        </div>
+
+        <div class="col-lg-1 col-md-6">
+            <button type="submit" class="btn btn-primary w-100">
+                Apply
+            </button>
+        </div>
+
+        <div class="col-lg-1 col-md-6">
+            <a href="{% url 'accounts:org_user_list' %}" class="btn btn-outline-secondary w-100">
+                Reset
+            </a>
+        </div>
+    </form>
+</div>
+
+<div class="panel-card mt-4">
+    <div class="panel-card-header">
+        <div>
+            <h5>Users</h5>
+            <p>{{ users.count }} matching users</p>
+        </div>
+    </div>
+
+    {% if users %}
+        <div class="table-responsive">
+            <table class="table modern-table align-middle">
+                <thead>
+                    <tr>
+                        <th>User</th>
+                        <th>Role</th>
+                        <th>Department</th>
+                        <th>Designation</th>
+                        <th>Phone</th>
+                        <th>Status</th>
+                        <th class="text-end">Action</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for user_obj in users %}
+                        <tr>
+                            <td>
+                                <div class="fw-bold">{{ user_obj.display_name }}</div>
+                                <small class="text-muted">
+                                    {{ user_obj.username }} · {{ user_obj.email }}
+                                </small>
+                            </td>
+
+                            <td>
+                                {% if user_obj.profile %}
+                                    <span class="status-badge status-submitted">
+                                        {{ user_obj.profile.get_role_display }}
+                                    </span>
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {% if user_obj.profile.department %}
+                                    {{ user_obj.profile.department.name }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {% if user_obj.profile %}
+                                    {{ user_obj.profile.designation|default:"-" }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {% if user_obj.profile %}
+                                    {{ user_obj.profile.phone|default:"-" }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {% if user_obj.is_active and user_obj.profile.is_active %}
+                                    <span class="status-badge status-approved">Active</span>
+                                {% else %}
+                                    <span class="status-badge status-rejected">Inactive</span>
+                                {% endif %}
+                            </td>
+
+                            <td class="text-end">
+                                <a href="{% url 'accounts:org_user_detail' user_obj.pk %}" class="btn btn-sm btn-outline-primary">
+                                    View
+                                </a>
+
+                                {% if user_obj != request.user %}
+                                    <a href="{% url 'accounts:org_user_update' user_obj.pk %}" class="btn btn-sm btn-outline-dark">
+                                        Edit
+                                    </a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">👥</div>
+            <h5>No users found</h5>
+            <p>Create users or change your filters.</p>
+
+            <a href="{% url 'accounts:org_user_create' %}" class="btn btn-primary">
+                Create User
+            </a>
+        </div>
+    {% endif %}
+</div>
+
+{% endblock %}

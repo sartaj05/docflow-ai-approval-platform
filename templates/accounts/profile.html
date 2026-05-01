@@ -1,0 +1,260 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <p class="eyebrow">Account</p>
+        <h1>My Profile</h1>
+        <p class="page-subtitle">
+            Your account, organization, role, department, and approval certificate signature.
+        </p>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-5">
+        <div class="panel-card">
+            <div class="profile-summary">
+                <div class="profile-avatar-large">
+                    {{ user_obj.display_name|slice:":1"|upper }}
+                </div>
+
+                <div>
+                    <h4 class="fw-bold mb-1">{{ user_obj.display_name }}</h4>
+                    <p class="text-muted mb-2">{{ user_obj.email }}</p>
+
+                    {% if user_obj.is_superuser %}
+                        <span class="status-badge status-draft">Super Admin</span>
+                    {% elif profile %}
+                        <span class="status-badge status-submitted">
+                            {{ profile.get_role_display }}
+                        </span>
+                    {% else %}
+                        <span class="status-badge status-draft">User</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="panel-card mt-4">
+            <div class="panel-card-header">
+                <div>
+                    <h5>Organization</h5>
+                    <p>Workspace information</p>
+                </div>
+            </div>
+
+            <div class="info-list">
+                <div>
+                    <span>Organization</span>
+                    <strong>
+                        {% if profile and profile.organization %}
+                            {{ profile.organization.name }}
+                        {% else %}
+                            Platform
+                        {% endif %}
+                    </strong>
+                </div>
+
+                <div>
+                    <span>Department</span>
+                    <strong>
+                        {% if profile and profile.department %}
+                            {{ profile.department.name }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </strong>
+                </div>
+
+                <div>
+                    <span>Designation</span>
+                    <strong>
+                        {% if profile %}
+                            {{ profile.designation|default:"-" }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </strong>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel-card mt-4">
+            <div class="panel-card-header">
+                <div>
+                    <h5>Signature Preview</h5>
+                    <p>Used on final approval certificates.</p>
+                </div>
+            </div>
+
+            {% if profile %}
+                <div class="text-center">
+                    {% if profile.signature_image %}
+                        <img
+                            src="{{ profile.signature_image.url }}"
+                            alt="Signature"
+                            style="max-height: 90px; max-width: 240px;"
+                            class="mb-3"
+                        >
+                    {% else %}
+                        <div class="empty-icon mx-auto">✍️</div>
+                    {% endif %}
+
+                    <h5 class="fw-bold mb-1">
+                        {{ user_obj.display_name }}
+                    </h5>
+
+                    <p class="text-muted mb-2">
+                        {{ profile.certificate_signature_title }}
+                    </p>
+
+                    {% if profile.signature_enabled %}
+                        <span class="status-badge status-approved">Signature Enabled</span>
+                    {% else %}
+                        <span class="status-badge status-rejected">Signature Disabled</span>
+                    {% endif %}
+                </div>
+            {% else %}
+                <div class="empty-state compact">
+                    <div class="empty-icon">👤</div>
+                    <h5>No profile found</h5>
+                    <p>Signature settings require a user profile.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="col-lg-7">
+        <div class="panel-card">
+            <div class="panel-card-header">
+                <div>
+                    <h5>Profile Details</h5>
+                    <p>Basic user information</p>
+                </div>
+            </div>
+
+            <div class="info-list">
+                <div>
+                    <span>Name</span>
+                    <strong>{{ user_obj.display_name }}</strong>
+                </div>
+
+                <div>
+                    <span>Username</span>
+                    <strong>{{ user_obj.username }}</strong>
+                </div>
+
+                <div>
+                    <span>Email</span>
+                    <strong>{{ user_obj.email|default:"-" }}</strong>
+                </div>
+
+                <div>
+                    <span>Phone</span>
+                    <strong>
+                        {% if profile %}
+                            {{ profile.phone|default:"-" }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </strong>
+                </div>
+
+                <div>
+                    <span>Role</span>
+                    <strong>
+                        {% if user_obj.is_superuser %}
+                            Super Admin
+                        {% elif profile %}
+                            {{ profile.get_role_display }}
+                        {% else %}
+                            User
+                        {% endif %}
+                    </strong>
+                </div>
+
+                <div>
+                    <span>Account Status</span>
+                    <strong>
+                        {% if user_obj.is_active %}
+                            <span class="status-badge status-approved">Active</span>
+                        {% else %}
+                            <span class="status-badge status-rejected">Inactive</span>
+                        {% endif %}
+                    </strong>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel-card mt-4">
+            <div class="panel-card-header">
+                <div>
+                    <h5>Certificate Signature Settings</h5>
+                    <p>Upload your signature and title for approval certificates.</p>
+                </div>
+            </div>
+
+            {% if signature_form %}
+                <form
+                    method="post"
+                    enctype="multipart/form-data"
+                    action="{% url 'accounts:profile_signature_update' %}"
+                    novalidate
+                >
+                    {% csrf_token %}
+
+                    <div class="mb-3">
+                        <label class="form-label">Signature Image</label>
+                        {{ signature_form.signature_image }}
+
+                        {% if signature_form.signature_image.errors %}
+                            <div class="text-danger small mt-1">
+                                {{ signature_form.signature_image.errors|striptags }}
+                            </div>
+                        {% endif %}
+
+                        <div class="form-text">
+                            Upload transparent PNG/JPG signature image for best result.
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Signature Title</label>
+                        {{ signature_form.signature_title }}
+
+                        {% if signature_form.signature_title.errors %}
+                            <div class="text-danger small mt-1">
+                                {{ signature_form.signature_title.errors|striptags }}
+                            </div>
+                        {% endif %}
+
+                        <div class="form-text">
+                            Example: Final Approver, Director, Department Head.
+                        </div>
+                    </div>
+
+                    <div class="form-check form-switch mb-4">
+                        {{ signature_form.signature_enabled }}
+                        <label class="form-check-label">
+                            Enable this signature on certificates
+                        </label>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">
+                        Save Signature Settings
+                    </button>
+                </form>
+            {% else %}
+                <div class="empty-state compact">
+                    <div class="empty-icon">✍️</div>
+                    <h5>Signature settings unavailable</h5>
+                    <p>Your account profile is missing.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% endblock %}
