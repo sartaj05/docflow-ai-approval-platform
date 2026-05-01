@@ -1,0 +1,353 @@
+:root {
+    --primary: #2563eb;
+    --primary-dark: #1d4ed8;
+    --primary-soft: #eff6ff;
+
+    --dark: #0f172a;
+    --muted: #64748b;
+    --border: #e5e7eb;
+    --light: #f8fafc;
+
+    --success: #16a34a;
+    --warning: #f59e0b;
+    --info: #0284c7;
+
+    --radius-xl: 28px;
+    --radius-lg: 22px;
+    --radius-md: 16px;
+
+    --shadow-soft: 0 18px 50px rgba(15, 23, 42, 0.08);
+    --shadow-strong: 0 28px 90px rgba(15, 23, 42, 0.15);
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    margin: 0;
+    background: #f8fafc;
+    color: var(--dark);
+    font-family:
+        Inter,
+        ui-sans-serif,
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        Arial,
+        sans-serif;
+}
+
+a {
+    text-decoration: none;
+}
+
+/* ===============================
+   Navbar
+================================ */
+
+.navbar {
+    min-height: 72px;
+    backdrop-filter: blur(16px);
+    background: rgba(255, 255, 255, 0.92) !important;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.04);
+}
+
+.navbar-brand {
+    letter-spacing: -0.5px;
+    font-size: 22px;
+}
+
+.btn {
+    border-radius: 13px;
+    font-weight: 800;
+    padding: 10px 16px;
+    transition: 0.18s ease;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+}
+
+.btn-sm {
+    padding: 7px 12px;
+    border-radius: 10px;
+}
+
+.btn-lg {
+    padding: 13px 20px;
+    border-radius: 15px;
+}
+
+.btn-primary {
+    background: var(--primary);
+    border-color: var(--primary);
+}
+
+.btn-primary:hover {
+    background: var(--primary-dark);
+    border-color: var(--primary-dark);
+}
+
+.btn-outline-primary {
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+.btn-outline-primary:hover {
+    background: var(--primary);
+    border-color: var(--primary);
+}
+
+.btn-outline-dark:hover {
+    transform: translateY(-1px);
+}
+
+/* ===============================
+   Hero
+================================ */
+
+.hero-section {
+    position: relative;
+    overflow: hidden;
+    background:
+        radial-gradient(circle at top left, rgba(37, 99, 235, 0.15), transparent 34%),
+        radial-gradient(circle at bottom right, rgba(124, 58, 237, 0.11), transparent 32%),
+        linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+}
+
+.hero-section::before {
+    content: "";
+    position: absolute;
+    width: 520px;
+    height: 520px;
+    border-radius: 999px;
+    background: rgba(37, 99, 235, 0.08);
+    right: -180px;
+    top: 110px;
+    filter: blur(8px);
+}
+
+.hero-section::after {
+    content: "";
+    position: absolute;
+    width: 420px;
+    height: 420px;
+    border-radius: 999px;
+    background: rgba(22, 163, 74, 0.08);
+    left: -150px;
+    bottom: -160px;
+    filter: blur(8px);
+}
+
+.hero-section .container {
+    position: relative;
+    z-index: 1;
+}
+
+.hero-section h1 {
+    color: var(--dark);
+    letter-spacing: -2px;
+    line-height: 1.05;
+}
+
+.hero-section .lead {
+    color: var(--muted) !important;
+    line-height: 1.75;
+}
+
+.badge {
+    border-radius: 999px;
+    padding: 8px 12px;
+    font-weight: 800;
+}
+
+/* ===============================
+   Landing Cards
+================================ */
+
+.card {
+    border-radius: var(--radius-xl) !important;
+}
+
+.card.shadow-lg {
+    box-shadow: var(--shadow-strong) !important;
+}
+
+.card.shadow-sm {
+    box-shadow: var(--shadow-soft) !important;
+}
+
+.card-body {
+    position: relative;
+}
+
+.rounded-4 {
+    border-radius: var(--radius-lg) !important;
+}
+
+.border {
+    border-color: var(--border) !important;
+}
+
+.bg-white {
+    background: rgba(255, 255, 255, 0.94) !important;
+}
+
+/* Feature cards inside hero */
+.hero-section .p-3.bg-white {
+    transition: 0.2s ease;
+}
+
+.hero-section .p-3.bg-white:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-soft);
+}
+
+.hero-section .p-3 h5 {
+    color: var(--dark);
+}
+
+.hero-section .p-3 p {
+    line-height: 1.5;
+}
+
+/* ===============================
+   Timeline
+================================ */
+
+.timeline-item {
+    position: relative;
+    padding: 15px 0 15px 38px;
+    border-left: 1px solid #e5e7eb;
+    color: #374151;
+    font-weight: 700;
+}
+
+.timeline-item:first-of-type {
+    padding-top: 4px;
+}
+
+.timeline-item:last-child {
+    border-left-color: transparent;
+}
+
+.timeline-item .dot {
+    position: absolute;
+    left: -8px;
+    top: 18px;
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    box-shadow: 0 0 0 5px #ffffff;
+}
+
+/* ===============================
+   Landing Badges
+================================ */
+
+.bg-light.text-dark.border {
+    padding: 9px 12px;
+    border-radius: 999px;
+    font-size: 13px;
+    background: #ffffff !important;
+    color: #334155 !important;
+    border-color: #e5e7eb !important;
+}
+
+/* ===============================
+   Footer-ready helpers
+================================ */
+
+.section-title {
+    font-size: 34px;
+    font-weight: 900;
+    letter-spacing: -1px;
+    color: var(--dark);
+}
+
+.section-subtitle {
+    color: var(--muted);
+    max-width: 720px;
+    line-height: 1.7;
+}
+
+/* ===============================
+   Responsive
+================================ */
+
+@media (max-width: 991px) {
+    .hero-section h1 {
+        font-size: 42px;
+    }
+
+    .hero-section .row {
+        min-height: auto !important;
+    }
+
+    .hero-section {
+        padding-top: 24px;
+        padding-bottom: 42px;
+    }
+}
+
+@media (max-width: 768px) {
+    .navbar .container {
+        gap: 12px;
+    }
+
+    .navbar .d-flex {
+        width: 100%;
+        justify-content: flex-start;
+        flex-wrap: wrap;
+    }
+
+    .hero-section h1 {
+        font-size: 36px;
+        letter-spacing: -1.2px;
+    }
+
+    .hero-section .lead {
+        font-size: 16px;
+    }
+
+    .btn-lg {
+        width: 100%;
+    }
+
+    .hero-section .d-flex.gap-3 {
+        width: 100%;
+    }
+
+    .hero-section .d-flex.gap-3 .btn {
+        flex: 1 1 100%;
+    }
+}
+
+@media (max-width: 520px) {
+    .navbar-brand {
+        font-size: 20px;
+    }
+
+    .hero-section h1 {
+        font-size: 31px;
+    }
+
+    .card-body {
+        padding: 22px !important;
+    }
+
+    .timeline-item {
+        font-size: 14px;
+    }
+
+    .badge {
+        white-space: normal;
+        text-align: left;
+    }
+}

@@ -1,0 +1,39 @@
+# Local environment and secrets
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+env/
+ENV/
+build/
+dist/
+*.egg-info/
+
+# Local databases and runtime data
+*.sqlite3
+db.sqlite3
+media/
+staticfiles/
+backups/
+restore_uploads/
+*.log
+
+# Tool caches and coverage output
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Front-end dependencies
+node_modules/
+
+# OS files
+.DS_Store
+Thumbs.db

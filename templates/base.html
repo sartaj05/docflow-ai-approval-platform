@@ -1,0 +1,358 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ page_title|default:"DocFlow AI" }}</title>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
+    <link rel="stylesheet" href="{% static 'css/app.css' %}">
+</head>
+
+<body>
+<div class="mobile-overlay" id="mobileOverlay"></div>
+
+<div class="app-shell">
+    {% if user.is_authenticated %}
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-brand">
+                <div>
+                    <a href="{% url 'dashboard:home' %}">DocFlow AI</a>
+                    <span>Approval Automation SaaS</span>
+                </div>
+
+                <button type="button" class="sidebar-close-btn" id="sidebarCloseBtn">
+                    ×
+                </button>
+            </div>
+
+            <nav class="sidebar-nav">
+                {% if user.is_superuser %}
+                    <a href="{% url 'dashboard:super_admin' %}">
+                        🛡️ Super Dashboard
+                    </a>
+
+                    <a href="{% url 'dashboard:my_activity' %}">
+                        ⚡ My Activity
+                    </a>
+
+                    <a href="{% url 'search_app:global_search' %}">
+                        🔎 Global Search
+                    </a>
+
+                    <a href="{% url 'superadmin:organizations' %}">
+                        🏢 Organizations
+                    </a>
+
+                    <a href="{% url 'superadmin:users' %}">
+                        👥 Platform Users
+                    </a>
+
+                    <a href="{% url 'approvals:request_list' %}">
+                        📄 All Requests
+                    </a>
+
+                    <a href="{% url 'reports:dashboard' %}">
+                        📑 Platform Reports
+                    </a>
+
+                    <a href="{% url 'reports:certificate_list' %}">
+                        📜 Certificates
+                    </a>
+
+                    <a href="{% url 'audit:audit_log_list' %}">
+                        🛡️ Audit Logs
+                    </a>
+
+                    <a href="{% url 'notifications:list' %}" class="notification-nav-link">
+                        🔔 Notifications
+                        {% if unread_notifications_count %}
+                            <span class="notification-badge">
+                                {{ unread_notifications_count }}
+                            </span>
+                        {% endif %}
+                    </a>
+
+                    <a href="{% url 'notifications:preferences' %}">
+                        🔧 Notification Preferences
+                    </a>
+
+                    <a href="{% url 'notifications:digest_preview' %}">
+                        📧 Notification Digest
+                    </a>
+
+                    <a href="{% url 'notifications:delivery_dashboard' %}">
+                        📡 Delivery Monitor
+                    </a>
+
+                    <a href="{% url 'dashboard:system_health' %}">
+                        🩺 System Health
+                    </a>
+
+                    <a href="{% url 'dashboard:backup_export' %}">
+                        💾 Backup & Export
+                    </a>
+
+                    <a href="{% url 'dashboard:restore_dashboard' %}">
+                        ♻️ Restore Center
+                    </a>
+
+                    <a href="{% url 'dashboard:maintenance_mode' %}">
+                        🚧 Maintenance Mode
+                    </a>
+
+                    <a href="{% url 'dashboard:deployment_readiness' %}">
+                        🚀 Deployment Readiness
+                    </a>
+
+                    <a href="{% url 'accounts:profile' %}">
+                        👤 Profile
+                    </a>
+                {% else %}
+                    <a href="{% url 'dashboard:home' %}">
+                        📊 Dashboard
+                    </a>
+
+                    <a href="{% url 'dashboard:my_activity' %}">
+                        ⚡ My Activity
+                    </a>
+
+                    <a href="{% url 'search_app:global_search' %}">
+                        🔎 Global Search
+                    </a>
+
+                    <a href="{% url 'approvals:request_list' %}">
+                        📄 Requests
+                    </a>
+
+                    <a href="{% url 'approvals:approval_inbox' %}">
+                        ✅ Approval Inbox
+                    </a>
+
+                    <a href="{% url 'approvals:reminder_history' %}">
+                        🔔 Reminder History
+                    </a>
+
+                    {% if user.profile.role == "ORG_ADMIN" or user.profile.role == "DEPARTMENT_HEAD" or user.profile.role == "APPROVER" %}
+                        <a href="{% url 'approvals:delegation_list' %}">
+                            🔁 Delegations
+                        </a>
+                    {% endif %}
+
+                    <a href="{% url 'notifications:list' %}" class="notification-nav-link">
+                        🔔 Notifications
+                        {% if unread_notifications_count %}
+                            <span class="notification-badge">
+                                {{ unread_notifications_count }}
+                            </span>
+                        {% endif %}
+                    </a>
+
+                    <a href="{% url 'notifications:preferences' %}">
+                        🔧 Notification Preferences
+                    </a>
+
+                    <a href="{% url 'notifications:digest_preview' %}">
+                        📧 Notification Digest
+                    </a>
+
+                    {% if user.profile.role == "ORG_ADMIN" or user.profile.role == "AUDITOR" %}
+                        <a href="{% url 'notifications:delivery_dashboard' %}">
+                            📡 Delivery Monitor
+                        </a>
+
+                        <a href="{% url 'dashboard:system_health' %}">
+                            🩺 System Health
+                        </a>
+                    {% endif %}
+
+                    {% if user.profile.role == "ORG_ADMIN" %}
+                        <a href="{% url 'accounts:org_user_list' %}">
+                            👥 Users
+                        </a>
+
+                        <a href="{% url 'organizations:settings' %}">
+                            ⚙️ Organization Settings
+                        </a>
+                    {% endif %}
+
+                    {% if user.profile.role == "ORG_ADMIN" or user.profile.role == "DEPARTMENT_HEAD" or user.profile.role == "APPROVER" or user.profile.role == "AUDITOR" %}
+                        <a href="{% url 'departments:list' %}">
+                            🏢 Departments
+                        </a>
+                    {% endif %}
+
+                    {% if user.profile.role == "ORG_ADMIN" or user.profile.role == "DEPARTMENT_HEAD" or user.profile.role == "APPROVER" or user.profile.role == "AUDITOR" %}
+                        <a href="{% url 'approvals:workflow_list' %}">
+                            🔁 Workflows
+                        </a>
+                    {% endif %}
+
+                    {% if user.profile.role == "ORG_ADMIN" or user.profile.role == "AUDITOR" %}
+                        <a href="{% url 'approvals:policy_list' %}">
+                            ⚙️ Approval Policies
+                        </a>
+                    {% endif %}
+
+                    {% if user.profile.role == "ORG_ADMIN" or user.profile.role == "DEPARTMENT_HEAD" or user.profile.role == "AUDITOR" %}
+                        <a href="{% url 'reports:dashboard' %}">
+                            📑 Reports
+                        </a>
+                    {% endif %}
+
+                    {% if user.profile.role == "ORG_ADMIN" or user.profile.role == "AUDITOR" %}
+                        <a href="{% url 'reports:certificate_list' %}">
+                            📜 Certificates
+                        </a>
+                    {% endif %}
+
+                    {% if user.profile.role == "ORG_ADMIN" or user.profile.role == "AUDITOR" %}
+                        <a href="{% url 'audit:audit_log_list' %}">
+                            🛡️ Audit Logs
+                        </a>
+                    {% endif %}
+
+                    <a href="{% url 'accounts:profile' %}">
+                        👤 Profile
+                    </a>
+                {% endif %}
+            </nav>
+        </aside>
+    {% endif %}
+
+    <main class="main-content {% if not user.is_authenticated %}public-main{% endif %}">
+        {% if user.is_authenticated %}
+            <header class="topbar">
+                <div class="topbar-left">
+                    <button type="button" class="mobile-menu-btn" id="mobileMenuBtn">
+                        ☰
+                    </button>
+
+                    <div>
+                        <h5 class="mb-0">
+                            {{ page_title|default:"Dashboard" }}
+                        </h5>
+
+                        <small class="text-muted">
+                            {% if user.is_superuser %}
+                                Platform Admin
+                            {% elif user.profile and user.profile.organization %}
+                                {{ user.profile.organization.name }}
+                            {% else %}
+                                DocFlow AI
+                            {% endif %}
+                        </small>
+                    </div>
+                </div>
+
+                <div class="topbar-right">
+                    <div class="user-pill">
+                        <div class="user-avatar">
+                            {{ user.display_name|slice:":1"|upper }}
+                        </div>
+
+                        <div class="user-meta">
+                            <div class="small fw-bold">
+                                {{ user.display_name }}
+                            </div>
+
+                            <div class="small text-muted">
+                                {% if user.is_superuser %}
+                                    Super Admin
+                                {% elif user.profile %}
+                                    {{ user.profile.get_role_display }}
+                                {% else %}
+                                    User
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <a href="{% url 'accounts:logout' %}" class="btn btn-outline-danger btn-sm">
+                        Logout
+                    </a>
+                </div>
+            </header>
+        {% endif %}
+
+        <div class="content-wrapper">
+            {% if messages %}
+                <div class="messages-wrapper">
+                    {% for message in messages %}
+                        <div
+                            class="alert alert-{{ message.tags }} alert-dismissible fade show"
+                            role="alert"
+                        >
+                            {{ message }}
+
+                            <button
+                                type="button"
+                                class="btn-close"
+                                data-bs-dismiss="alert"
+                                aria-label="Close"
+                            ></button>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+</div>
+
+<script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
+
+<script>
+    const sidebar = document.getElementById("sidebar");
+    const mobileMenuBtn = document.getElementById("mobileMenuBtn");
+    const sidebarCloseBtn = document.getElementById("sidebarCloseBtn");
+    const mobileOverlay = document.getElementById("mobileOverlay");
+
+    function openSidebar() {
+        if (!sidebar || !mobileOverlay) return;
+
+        sidebar.classList.add("show");
+        mobileOverlay.classList.add("show");
+        document.body.classList.add("sidebar-open");
+    }
+
+    function closeSidebar() {
+        if (!sidebar || !mobileOverlay) return;
+
+        sidebar.classList.remove("show");
+        mobileOverlay.classList.remove("show");
+        document.body.classList.remove("sidebar-open");
+    }
+
+    if (mobileMenuBtn) {
+        mobileMenuBtn.addEventListener("click", openSidebar);
+    }
+
+    if (sidebarCloseBtn) {
+        sidebarCloseBtn.addEventListener("click", closeSidebar);
+    }
+
+    if (mobileOverlay) {
+        mobileOverlay.addEventListener("click", closeSidebar);
+    }
+
+    document.addEventListener("keydown", function (event) {
+        if (event.key === "Escape") {
+            closeSidebar();
+        }
+    });
+
+    document.querySelectorAll(".sidebar-nav a").forEach(function (link) {
+        link.addEventListener("click", function () {
+            if (window.innerWidth <= 991) {
+                closeSidebar();
+            }
+        });
+    });
+</script>
+
+</body>
+</html>
