@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <p class="eyebrow">Approval Delegation</p>
+        <h1>{{ form_title }}</h1>
+        <p class="page-subtitle">
+            Temporarily delegate approval authority to another active approver during vacation or unavailable period.
+        </p>
+    </div>
+
+    <a href="{% url 'approvals:delegation_list' %}" class="btn btn-light">
+        Back
+    </a>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="panel-card">
+            <div class="panel-card-header">
+                <div>
+                    <h5>Delegation Details</h5>
+                    <p>Choose who is unavailable and who should receive approval assignments.</p>
+                </div>
+            </div>
+
+            <form method="post" novalidate>
+                {% csrf_token %}
+
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        {{ form.non_field_errors }}
+                    </div>
+                {% endif %}
+
+                <div class="mb-3">
+                    <label class="form-label">Delegating User</label>
+                    {{ form.delegator }}
+
+                    <div class="form-text">
+                        The user who is going on leave or temporarily unavailable.
+                    </div>
+
+                    {% if form.delegator.errors %}
+                        <div class="text-danger small mt-1">
+                            {{ form.delegator.errors|striptags }}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Delegate To</label>
+                    {{ form.delegate_to }}
+
+                    <div class="form-text">
+                        Approval assignments will be routed to this user while delegation is active.
+                    </div>
+
+                    {% if form.delegate_to.errors %}
+                        <div class="text-danger small mt-1">
+                            {{ form.delegate_to.errors|striptags }}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Reason</label>
+                    {{ form.reason }}
+
+                    {% if form.reason.errors %}
+                        <div class="text-danger small mt-1">
+                            {{ form.reason.errors|striptags }}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Start Date</label>
+                        {{ form.start_date }}
+
+                        {% if form.start_date.errors %}
+                            <div class="text-danger small mt-1">
+                                {{ form.start_date.errors|striptags }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">End Date</label>
+                        {{ form.end_date }}
+
+                        {% if form.end_date.errors %}
+                            <div class="text-danger small mt-1">
+                                {{ form.end_date.errors|striptags }}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="form-check form-switch mb-4">
+                    {{ form.is_active }}
+                    <label class="form-check-label">
+                        Active Delegation
+                    </label>
+                </div>
+
+                <div class="d-flex gap-2 flex-wrap">
+                    <button type="submit" class="btn btn-primary">
+                        {{ submit_label }}
+                    </button>
+
+                    <a href="{% url 'approvals:delegation_list' %}" class="btn btn-outline-secondary">
+                        Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="help-card">
+            <h5>How Delegation Works</h5>
+
+            <ul>
+                <li>If a selected approver has an active delegation today, the system assigns the approval step to the delegate.</li>
+                <li>Delegation applies only between start date and end date.</li>
+                <li>Only active users in the same organization can be selected.</li>
+                <li>Organization Admin can manage all delegations.</li>
+                <li>Approvers can create their own delegation.</li>
+            </ul>
+        </div>
+
+        <div class="help-card mt-4">
+            <h5>Example</h5>
+
+            <ul>
+                <li>Approver A is on leave from 10 May to 15 May.</li>
+                <li>Approver A delegates to Approver B.</li>
+                <li>Any approval assigned to A during this period goes to B.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

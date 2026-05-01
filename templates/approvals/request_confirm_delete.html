@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <p class="eyebrow">Danger Zone</p>
+        <h1>Delete Approval Request</h1>
+        <p class="page-subtitle">
+            This action cannot be undone.
+        </p>
+    </div>
+
+    <a href="{% url 'approvals:request_detail' document_request.pk %}" class="btn btn-light">
+        Back
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-lg-7">
+        <div class="panel-card danger-panel">
+            <h4 class="fw-bold mb-3">Are you sure?</h4>
+
+            <p class="text-muted">
+                You are about to delete this draft request:
+            </p>
+
+            <h5>{{ document_request.request_number }}</h5>
+            <p class="text-muted mb-4">{{ document_request.title }}</p>
+
+            <div class="info-list mb-4">
+                <div>
+                    <span>Category</span>
+                    <strong>{{ document_request.get_category_display }}</strong>
+                </div>
+
+                <div>
+                    <span>Priority</span>
+                    <strong>{{ document_request.get_priority_display }}</strong>
+                </div>
+
+                <div>
+                    <span>Status</span>
+                    <strong>
+                        <span class="status-badge status-draft">
+                            {{ document_request.get_status_display }}
+                        </span>
+                    </strong>
+                </div>
+            </div>
+
+            <div class="alert alert-warning">
+                Only draft requests can be deleted. Submitted requests should be cancelled instead.
+            </div>
+
+            <form method="post">
+                {% csrf_token %}
+
+                <button type="submit" class="btn btn-danger">
+                    Yes, Delete Request
+                </button>
+
+                <a href="{% url 'approvals:request_detail' document_request.pk %}" class="btn btn-outline-secondary">
+                    Cancel
+                </a>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

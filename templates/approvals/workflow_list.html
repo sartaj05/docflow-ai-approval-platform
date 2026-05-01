@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <p class="eyebrow">Workflow Builder</p>
+        <h1>Approval Workflows</h1>
+        <p class="page-subtitle">
+            Create reusable approval templates for different request categories.
+        </p>
+    </div>
+
+    {% if can_manage %}
+        <a href="{% url 'approvals:workflow_create' %}" class="btn btn-primary">
+            + Create Workflow
+        </a>
+    {% endif %}
+</div>
+
+<div class="panel-card">
+    <div class="panel-card-header">
+        <div>
+            <h5>Workflow Templates</h5>
+            <p>Organization-scoped approval workflows</p>
+        </div>
+    </div>
+
+    {% if workflows %}
+        <div class="table-responsive">
+            <table class="table modern-table align-middle">
+                <thead>
+                    <tr>
+                        <th>Workflow</th>
+                        <th>Category</th>
+                        <th>Steps</th>
+                        <th>Status</th>
+                        <th>Created By</th>
+                        <th>Created</th>
+                        <th class="text-end">Action</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for workflow in workflows %}
+                        <tr>
+                            <td>
+                                <div class="fw-bold">{{ workflow.name }}</div>
+                                <small class="text-muted">
+                                    {{ workflow.description|default:"No description"|truncatechars:70 }}
+                                </small>
+                            </td>
+
+                            <td>{{ workflow.get_category_display }}</td>
+
+                            <td>
+                                <span class="status-badge status-submitted">
+                                    {{ workflow.steps.count }} Steps
+                                </span>
+                            </td>
+
+                            <td>
+                                {% if workflow.is_active %}
+                                    <span class="status-badge status-approved">Active</span>
+                                {% else %}
+                                    <span class="status-badge status-rejected">Inactive</span>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {% if workflow.created_by %}
+                                    {{ workflow.created_by.display_name }}
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+
+                            <td>{{ workflow.created_at|date:"d M Y" }}</td>
+
+                            <td class="text-end">
+                                <a href="{% url 'approvals:workflow_detail' workflow.pk %}" class="btn btn-sm btn-outline-primary">
+                                    View
+                                </a>
+
+                                {% if can_manage %}
+                                    <a href="{% url 'approvals:workflow_update' workflow.pk %}" class="btn btn-sm btn-outline-dark">
+                                        Edit
+                                    </a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">🔁</div>
+            <h5>No workflows created yet</h5>
+            <p>Create your first approval workflow before submitting requests.</p>
+
+            {% if can_manage %}
+                <a href="{% url 'approvals:workflow_create' %}" class="btn btn-primary">
+                    Create Workflow
+                </a>
+            {% endif %}
+        </div>
+    {% endif %}
+</div>
+
+{% endblock %}

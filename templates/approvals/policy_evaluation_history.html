@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <p class="eyebrow">Rules Engine</p>
+        <h1>Policy Evaluation History</h1>
+        <p class="page-subtitle">
+            Track which approval policies matched requests and what changes were applied.
+        </p>
+    </div>
+
+    <a href="{% url 'approvals:policy_list' %}" class="btn btn-light">
+        Back to Policies
+    </a>
+</div>
+
+<div class="panel-card">
+    <div class="panel-card-header">
+        <div>
+            <h5>Recent Evaluations</h5>
+            <p>Showing latest policy evaluations.</p>
+        </div>
+    </div>
+
+    {% if evaluations %}
+        <div class="table-responsive">
+            <table class="table modern-table align-middle">
+                <thead>
+                    <tr>
+                        <th>Request</th>
+                        <th>Policy</th>
+                        <th>Amount</th>
+                        <th>Priority Change</th>
+                        <th>Workflow Change</th>
+                        <th>Fixed Approver</th>
+                        <th>Time</th>
+                        <th class="text-end">Open</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for item in evaluations %}
+                        <tr>
+                            <td>
+                                <div class="fw-bold">{{ item.request.request_number }}</div>
+                                <small class="text-muted">{{ item.request.title|truncatechars:60 }}</small>
+                            </td>
+
+                            <td>
+                                {% if item.matched and item.policy %}
+                                    <span class="status-badge status-approved">Matched</span>
+                                    <div class="small mt-1">{{ item.policy.name }}</div>
+                                {% else %}
+                                    <span class="status-badge status-draft">No Match</span>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {% if item.extracted_amount %}
+                                    ₹{{ item.extracted_amount }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {{ item.old_priority|default:"-" }}
+                                →
+                                {{ item.new_priority|default:"-" }}
+                            </td>
+
+                            <td>
+                                {% if item.old_workflow %}
+                                    {{ item.old_workflow.name }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                                →
+                                {% if item.new_workflow %}
+                                    {{ item.new_workflow.name }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {% if item.fixed_approver %}
+                                    {{ item.fixed_approver.display_name }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+
+                            <td>{{ item.evaluated_at|date:"d M Y, h:i A" }}</td>
+
+                            <td class="text-end">
+                                <a href="{% url 'approvals:request_detail' item.request.pk %}" class="btn btn-sm btn-outline-primary">
+                                    View
+                                </a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">⚙️</div>
+            <h5>No policy evaluations yet</h5>
+            <p>Policy evaluation history will appear after requests are created or submitted.</p>
+        </div>
+    {% endif %}
+</div>
+
+{% endblock %}

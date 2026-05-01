@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <p class="eyebrow">Danger Zone</p>
+        <h1>Delete Workflow</h1>
+        <p class="page-subtitle">
+            This action cannot be undone.
+        </p>
+    </div>
+
+    <a href="{% url 'approvals:workflow_detail' workflow.pk %}" class="btn btn-light">
+        Back
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-lg-7">
+        <div class="panel-card danger-panel">
+            <h4 class="fw-bold mb-3">Are you sure?</h4>
+
+            <p class="text-muted">
+                You are about to delete this workflow:
+            </p>
+
+            <h5>{{ workflow.name }}</h5>
+
+            <div class="info-list my-4">
+                <div>
+                    <span>Category</span>
+                    <strong>{{ workflow.get_category_display }}</strong>
+                </div>
+
+                <div>
+                    <span>Total Steps</span>
+                    <strong>{{ workflow.steps.count }}</strong>
+                </div>
+
+                <div>
+                    <span>Status</span>
+                    <strong>
+                        {% if workflow.is_active %}
+                            <span class="status-badge status-approved">Active</span>
+                        {% else %}
+                            <span class="status-badge status-rejected">Inactive</span>
+                        {% endif %}
+                    </strong>
+                </div>
+            </div>
+
+            <div class="alert alert-warning mt-4">
+                Workflows already used by approval requests cannot be deleted.
+                You can deactivate them instead.
+            </div>
+
+            <form method="post">
+                {% csrf_token %}
+
+                <button type="submit" class="btn btn-danger">
+                    Yes, Delete Workflow
+                </button>
+
+                <a href="{% url 'approvals:workflow_detail' workflow.pk %}" class="btn btn-outline-secondary">
+                    Cancel
+                </a>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

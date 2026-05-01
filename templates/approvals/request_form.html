@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <p class="eyebrow">Approval Request</p>
+        <h1>{{ form_title }}</h1>
+        <p class="page-subtitle">
+            Create a structured document approval request and select the workflow that should approve it.
+        </p>
+    </div>
+
+    <a href="{% url 'approvals:request_list' %}" class="btn btn-light">
+        Back
+    </a>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="panel-card">
+            <div class="panel-card-header">
+                <div>
+                    <h5>Request Information</h5>
+                    <p>Fill request title, workflow, category, priority, department, and description.</p>
+                </div>
+            </div>
+
+            <form method="post" novalidate>
+                {% csrf_token %}
+
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        {{ form.non_field_errors }}
+                    </div>
+                {% endif %}
+
+                <div class="mb-3">
+                    <label class="form-label">Department</label>
+                    {{ form.department }}
+
+                    {% if form.department.errors %}
+                        <div class="text-danger small mt-1">
+                            {{ form.department.errors|striptags }}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Approval Workflow</label>
+                    {{ form.workflow }}
+
+                    <div class="form-text">
+                        Select the workflow that will generate approval steps after submission.
+                    </div>
+
+                    {% if form.workflow.errors %}
+                        <div class="text-danger small mt-1">
+                            {{ form.workflow.errors|striptags }}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Title</label>
+                    {{ form.title }}
+
+                    {% if form.title.errors %}
+                        <div class="text-danger small mt-1">
+                            {{ form.title.errors|striptags }}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Category</label>
+                        {{ form.category }}
+
+                        {% if form.category.errors %}
+                            <div class="text-danger small mt-1">
+                                {{ form.category.errors|striptags }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Priority</label>
+                        {{ form.priority }}
+
+                        {% if form.priority.errors %}
+                            <div class="text-danger small mt-1">
+                                {{ form.priority.errors|striptags }}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label">Description</label>
+                    {{ form.description }}
+
+                    {% if form.description.errors %}
+                        <div class="text-danger small mt-1">
+                            {{ form.description.errors|striptags }}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="d-flex gap-2 flex-wrap">
+                    <button type="submit" class="btn btn-primary">
+                        {{ submit_label }}
+                    </button>
+
+                    <a href="{% url 'approvals:request_list' %}" class="btn btn-outline-secondary">
+                        Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="help-card">
+            <h5>Request Flow</h5>
+
+            <ul>
+                <li>Request is first saved as Draft.</li>
+                <li>You can edit draft before submission.</li>
+                <li>Workflow is required before submission.</li>
+                <li>After submission, workflow steps are generated automatically.</li>
+                <li>First approval step becomes active/current.</li>
+                <li>After submission, request becomes locked for editing.</li>
+            </ul>
+        </div>
+
+        <div class="help-card mt-4">
+            <h5>No Workflow?</h5>
+
+            <p class="text-muted mb-3">
+                Organization Admin must create workflow templates before users submit requests.
+            </p>
+
+            <a href="{% url 'approvals:workflow_list' %}" class="btn btn-outline-primary w-100">
+                Manage Workflows
+            </a>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

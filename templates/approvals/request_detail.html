@@ -1,0 +1,1556 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <p class="eyebrow">Request Detail</p>
+        <h1>{{ document_request.request_number }}</h1>
+        <p class="page-subtitle">
+            {{ document_request.title }}
+        </p>
+    </div>
+
+    <div class="d-flex gap-2 flex-wrap">
+        <a href="{% url 'approvals:request_list' %}" class="btn btn-light">
+            Back
+        </a>
+
+        <form method="post" action="{% url 'approvals:request_watch_toggle' document_request.pk %}" class="d-inline">
+            {% csrf_token %}
+
+            {% if is_watching_request %}
+                <button type="submit" class="btn btn-outline-danger">
+                    Unwatch
+                </button>
+            {% else %}
+                <button type="submit" class="btn btn-outline-success">
+                    Watch Request
+                </button>
+            {% endif %}
+        </form>
+
+        <a href="{% url 'approvals:request_watcher_list' document_request.pk %}" class="btn btn-outline-secondary">
+            Watchers {{ watcher_count }}
+        </a>
+
+        <a
+            href="{% url 'reports:printable_request_summary' document_request.pk %}"
+            class="btn btn-outline-dark"
+            target="_blank"
+        >
+            Print Summary
+        </a>
+
+        <a
+            href="{% url 'reports:request_summary_pdf' document_request.pk %}"
+            class="btn btn-outline-primary"
+        >
+            Download Summary PDF
+        </a>
+
+        {% if document_request.status == "APPROVED" %}
+            <a
+                href="{% url 'reports:approval_certificate_pdf' document_request.pk %}"
+                class="btn btn-outline-success"
+            >
+                Download Certificate PDF
+            </a>
+
+            <a
+                href="{% url 'reports:request_archive_zip' document_request.pk %}"
+                class="btn btn-outline-dark"
+            >
+                Download Archive ZIP
+            </a>
+        {% endif %}
+
+        <a
+            href="{% url 'reports:request_share_links' document_request.pk %}"
+            class="btn btn-outline-info"
+        >
+            Secure Share Links
+        </a>
+
+        {% if certificate_signature %}
+            <a
+                href="{% url 'reports:verify_certificate' certificate_signature.verification_code %}"
+                class="btn btn-outline-info"
+                target="_blank"
+            >
+                Public Verify
+            </a>
+
+            {% if can_manage_certificate %}
+                <a
+                    href="{% url 'reports:certificate_detail' certificate_signature.pk %}"
+                    class="btn btn-outline-dark"
+                >
+                    Certificate Detail
+                </a>
+            {% endif %}
+        {% endif %}
+
+        {% if can_manage_certificate %}
+            <a
+                href="{% url 'reports:certificate_list' %}"
+                class="btn btn-outline-secondary"
+            >
+                Manage Certificates
+            </a>
+        {% endif %}
+
+        <a
+            href="{% url 'reports:verify_request' document_request.pk %}"
+            class="btn btn-outline-secondary"
+            target="_blank"
+        >
+            Verify Request
+        </a>
+
+        <a
+            href="{% url 'approvals:reminder_history' %}"
+            class="btn btn-outline-warning"
+        >
+            Reminder History
+        </a>
+
+        {% if can_upload_documents %}
+            <a href="{% url 'documents:attachment_upload' document_request.pk %}" class="btn btn-outline-primary">
+                Upload Documents
+            </a>
+        {% endif %}
+
+        {% if can_edit %}
+            <a href="{% url 'approvals:request_update' document_request.pk %}" class="btn btn-outline-primary">
+                Edit
+            </a>
+        {% endif %}
+
+        {% if can_submit %}
+            <form method="post" action="{% url 'approvals:request_submit' document_request.pk %}" class="d-inline">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-primary">
+                    Submit Request
+                </button>
+            </form>
+        {% endif %}
+
+        {% if can_cancel %}
+            <form method="post" action="{% url 'approvals:request_cancel' document_request.pk %}" class="d-inline">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-outline-danger">
+                    Cancel
+                </button>
+            </form>
+        {% endif %}
+    </div>
+</div>
+
+{% if certificate_signature and not certificate_signature.is_valid %}
+    <div class="alert alert-danger">
+        <strong>Certificate Invalidated:</strong>
+        This request certificate has been invalidated.
+        {% if certificate_signature.invalidation_reason %}
+            <br>
+            Reason: {{ certificate_signature.invalidation_reason }}
+        {% endif %}
+    </div>
+{% endif %}
+
+<div class="row g-4">
+    <div class="col-lg-8">
+
+        <!-- Request Information -->
+        <div class="panel-card">
+            <div class="panel-card-header">
+                <div>
+                    <h5>Request Information</h5>
+                    <p>Main approval request details</p>
+                </div>
+
+                {% if document_request.status == "DRAFT" %}
+                    <span class="status-badge status-draft">Draft</span>
+                {% elif document_request.status == "SUBMITTED" %}
+                    <span class="status-badge status-submitted">Submitted</span>
+                {% elif document_request.status == "IN_REVIEW" %}
+                    <span class="status-badge status-review">In Review</span>
+                {% elif document_request.status == "APPROVED" %}
+                    <span class="status-badge status-approved">Approved</span>
+                {% elif document_request.status == "REJECTED" %}
+                    <span class="status-badge status-rejected">Rejected</span>
+                {% elif document_request.status == "CANCELLED" %}
+                    <span class="status-badge status-draft">Cancelled</span>
+                {% else %}
+                    <span class="status-badge status-draft">{{ document_request.get_status_display }}</span>
+                {% endif %}
+            </div>
+
+            <div class="info-list">
+                <div>
+                    <span>Title</span>
+                    <strong>{{ document_request.title }}</strong>
+                </div>
+
+                <div>
+                    <span>Description</span>
+                    <strong>{{ document_request.description|linebreaksbr|default:"-" }}</strong>
+                </div>
+
+                <div>
+                    <span>Organization</span>
+                    <strong>{{ document_request.organization.name }}</strong>
+                </div>
+
+                <div>
+                    <span>Department</span>
+                    <strong>
+                        {% if document_request.department %}
+                            {{ document_request.department.name }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </strong>
+                </div>
+
+                <div>
+                    <span>Created By</span>
+                    <strong>
+                        {% if document_request.created_by %}
+                            {{ document_request.created_by.display_name }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </strong>
+                </div>
+            </div>
+        </div>
+
+        <!-- Attached Documents -->
+        <div class="panel-card mt-4">
+            <div class="panel-card-header">
+                <div>
+                    <h5>Attached Documents</h5>
+                    <p>Uploaded files, versions, OCR, extracted text, and AI processing status.</p>
+                </div>
+
+                {% if can_upload_documents %}
+                    <a href="{% url 'documents:attachment_upload' document_request.pk %}" class="btn btn-sm btn-outline-primary">
+                        + Upload
+                    </a>
+                {% endif %}
+            </div>
+
+            {% if attachments %}
+                <div class="table-responsive">
+                    <table class="table modern-table align-middle">
+                        <thead>
+                            <tr>
+                                <th>File</th>
+                                <th>Version</th>
+                                <th>Type</th>
+                                <th>Size</th>
+                                <th>Uploaded By</th>
+                                <th>AI Status</th>
+                                <th>OCR</th>
+                                <th>Created</th>
+                                <th class="text-end">Action</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            {% for attachment in attachments %}
+                                <tr>
+                                    <td>
+                                        <div class="fw-bold">
+                                            {{ attachment.original_filename|truncatechars:45 }}
+                                        </div>
+
+                                        {% if attachment.extracted_text %}
+                                            <small class="text-success">Text extracted</small>
+                                        {% elif attachment.processing_error %}
+                                            <small class="text-warning">Extraction issue</small>
+                                        {% else %}
+                                            <small class="text-muted">No text extracted</small>
+                                        {% endif %}
+                                    </td>
+
+                                    <td>
+                                        <span class="status-badge status-submitted">
+                                            v{{ attachment.current_version_number }}
+                                        </span>
+                                        <div class="small text-muted mt-1">
+                                            {{ attachment.total_versions }} total
+                                        </div>
+                                    </td>
+
+                                    <td>
+                                        <span class="status-badge status-draft">
+                                            {{ attachment.display_file_type }}
+                                        </span>
+                                    </td>
+
+                                    <td>{{ attachment.file_size_mb }} MB</td>
+
+                                    <td>
+                                        {% if attachment.uploaded_by %}
+                                            {{ attachment.uploaded_by.display_name }}
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </td>
+
+                                    <td>
+                                        {% if attachment.ai_processed %}
+                                            <span class="status-badge status-approved">Processed</span>
+                                        {% else %}
+                                            <span class="status-badge status-draft">Pending</span>
+                                        {% endif %}
+                                    </td>
+
+                                    <td>
+                                        {% if attachment.ocr_status == "SUCCESS" %}
+                                            <span class="status-badge status-approved">
+                                                OCR {{ attachment.ocr_confidence|default:"-" }}%
+                                            </span>
+                                        {% elif attachment.ocr_status == "LOW_CONFIDENCE" %}
+                                            <span class="status-badge status-review">
+                                                Low {{ attachment.ocr_confidence|default:"-" }}%
+                                            </span>
+                                        {% elif attachment.ocr_status == "FAILED" %}
+                                            <span class="status-badge status-rejected">Failed</span>
+                                        {% elif attachment.ocr_status == "MANUAL_CORRECTED" %}
+                                            <span class="status-badge status-approved">Corrected</span>
+                                        {% else %}
+                                            <span class="status-badge status-draft">Not Required</span>
+                                        {% endif %}
+                                    </td>
+
+                                    <td>{{ attachment.created_at|date:"d M Y" }}</td>
+
+                                    <td class="text-end">
+                                        <a href="{% url 'documents:attachment_detail' attachment.pk %}" class="btn btn-sm btn-outline-primary">
+                                            View
+                                        </a>
+
+                                        <a href="{% url 'documents:attachment_manual_correction' attachment.pk %}" class="btn btn-sm btn-outline-info">
+                                            Correct
+                                        </a>
+
+                                        <a href="{% url 'documents:attachment_versions' attachment.pk %}" class="btn btn-sm btn-outline-dark">
+                                            Versions
+                                        </a>
+
+                                        {% if can_upload_documents %}
+                                            <a href="{% url 'documents:attachment_replace' attachment.pk %}" class="btn btn-sm btn-outline-warning">
+                                                Replace
+                                            </a>
+
+                                            <a href="{% url 'documents:attachment_delete' attachment.pk %}" class="btn btn-sm btn-outline-danger">
+                                                Delete
+                                            </a>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="empty-state compact">
+                    <div class="empty-icon">📎</div>
+                    <h5>No documents uploaded</h5>
+                    <p>Upload supporting files for this approval request.</p>
+
+                    {% if can_upload_documents %}
+                        <a href="{% url 'documents:attachment_upload' document_request.pk %}" class="btn btn-primary">
+                            Upload Documents
+                        </a>
+                    {% endif %}
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Approval Workflow Timeline -->
+        <div class="panel-card mt-4">
+            <div class="panel-card-header">
+                <div>
+                    <h5>Approval Workflow Timeline</h5>
+                    <p>Generated approval steps, assigned approvers, SLA status, reminders, and escalation details.</p>
+                </div>
+            </div>
+
+            {% if approval_steps %}
+                <div class="workflow-timeline">
+                    {% for step in approval_steps %}
+                        <div class="workflow-step-item {% if step.is_current %}current{% endif %}">
+                            <div class="workflow-step-marker">
+                                {{ step.step_order }}
+                            </div>
+
+                            <div class="workflow-step-content">
+                                <div class="d-flex justify-content-between gap-3 flex-wrap">
+                                    <div>
+                                        <h6 class="mb-1">
+                                            Step {{ step.step_order }} — {{ step.role_required }}
+                                        </h6>
+
+                                        <p class="text-muted mb-1">
+                                            Assigned to:
+                                            {% if step.assigned_to %}
+                                                <strong>{{ step.assigned_to.display_name }}</strong>
+                                            {% else %}
+                                                <strong>Not assigned</strong>
+                                            {% endif %}
+                                        </p>
+
+                                        <p class="text-muted mb-1">
+                                            Due:
+                                            {% if step.due_at %}
+                                                <strong>{{ step.due_at|date:"d M Y, h:i A" }}</strong>
+                                            {% else %}
+                                                <strong>-</strong>
+                                            {% endif %}
+                                        </p>
+
+                                        {% if step.status == "PENDING" and step.due_at %}
+                                            {% if step.is_overdue %}
+                                                <p class="text-danger mb-1">
+                                                    Overdue by {{ step.overdue_hours }} hour(s)
+                                                </p>
+                                            {% else %}
+                                                <p class="text-muted mb-1">
+                                                    Time left: {{ step.hours_until_due }} hour(s)
+                                                </p>
+                                            {% endif %}
+                                        {% endif %}
+
+                                        {% if step.reminder_sent_at %}
+                                            <p class="text-muted mb-1">
+                                                System reminder sent at {{ step.reminder_sent_at|date:"d M Y, h:i A" }}
+                                            </p>
+                                        {% endif %}
+
+                                        {% if step.reminders.exists %}
+                                            <p class="text-muted mb-1">
+                                                Manual reminders sent: {{ step.reminders.count }}
+                                            </p>
+                                        {% endif %}
+
+                                        {% if step.escalated_at %}
+                                            <p class="text-danger mb-1">
+                                                Escalated at {{ step.escalated_at|date:"d M Y, h:i A" }}
+                                            </p>
+                                        {% endif %}
+
+                                        {% if step.comments %}
+                                            <p class="mb-0">
+                                                {{ step.comments|linebreaksbr }}
+                                            </p>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="d-flex flex-column gap-2 align-items-start align-items-md-end">
+                                        {% if step.status == "PENDING" %}
+                                            {% if step.is_current %}
+                                                <span class="status-badge status-review">Current Pending</span>
+                                            {% else %}
+                                                <span class="status-badge status-draft">Pending</span>
+                                            {% endif %}
+                                        {% elif step.status == "APPROVED" %}
+                                            <span class="status-badge status-approved">Approved</span>
+                                        {% elif step.status == "REJECTED" %}
+                                            <span class="status-badge status-rejected">Rejected</span>
+                                        {% elif step.status == "SKIPPED" %}
+                                            <span class="status-badge status-draft">Skipped</span>
+                                        {% else %}
+                                            <span class="status-badge status-draft">{{ step.get_status_display }}</span>
+                                        {% endif %}
+
+                                        {% if step.is_overdue %}
+                                            <span class="status-badge status-rejected">Overdue</span>
+                                        {% elif step.due_at and step.status == "PENDING" %}
+                                            <span class="status-badge status-review">SLA Active</span>
+                                        {% endif %}
+
+                                        {% if step.escalated_at %}
+                                            <span class="status-badge status-rejected">Escalated</span>
+                                        {% endif %}
+
+                                        {% if step.status == "PENDING" and step.is_current %}
+                                            <form
+                                                method="post"
+                                                action="{% url 'approvals:approval_step_reminder' step.pk %}"
+                                                class="mt-1"
+                                            >
+                                                {% csrf_token %}
+
+                                                <input
+                                                    type="hidden"
+                                                    name="message"
+                                                    value="Reminder: Approval is pending for {{ document_request.request_number }}."
+                                                >
+
+                                                <button type="submit" class="btn btn-sm btn-outline-warning">
+                                                    Send Reminder
+                                                </button>
+                                            </form>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <div class="small text-muted mt-2">
+                                    {% if step.approved_at %}
+                                        Approved at {{ step.approved_at|date:"d M Y, h:i A" }}
+                                    {% elif step.rejected_at %}
+                                        Rejected at {{ step.rejected_at|date:"d M Y, h:i A" }}
+                                    {% else %}
+                                        Created at {{ step.created_at|date:"d M Y, h:i A" }}
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state compact">
+                    <div class="empty-icon">🔁</div>
+                    <h5>No workflow steps generated</h5>
+                    <p>Workflow steps will be generated after the draft request is submitted.</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Current User Action -->
+        {% if can_take_action and current_user_step %}
+            <div class="panel-card mt-4">
+                <div class="panel-card-header">
+                    <div>
+                        <h5>Your Approval Action</h5>
+                        <p>This request is currently assigned to you.</p>
+                    </div>
+
+                    <span class="status-badge status-review">
+                        Step {{ current_user_step.step_order }}
+                    </span>
+                </div>
+
+                <form method="post" action="{% url 'approvals:approval_step_comment' current_user_step.pk %}" class="mb-3">
+                    {% csrf_token %}
+
+                    <label class="form-label">Add Comment</label>
+                    <textarea
+                        name="comment"
+                        class="form-control mb-2"
+                        rows="3"
+                        placeholder="Write a comment..."
+                    ></textarea>
+
+                    <button type="submit" class="btn btn-outline-primary btn-sm">
+                        Add Comment
+                    </button>
+                </form>
+
+                <hr>
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <form method="post" action="{% url 'approvals:approval_step_approve' current_user_step.pk %}">
+                            {% csrf_token %}
+
+                            <label class="form-label">Approval Comment Optional</label>
+                            <textarea
+                                name="comment"
+                                class="form-control mb-2"
+                                rows="3"
+                                placeholder="Write approval note..."
+                            ></textarea>
+
+                            <button type="submit" class="btn btn-success w-100">
+                                Approve Step
+                            </button>
+                        </form>
+                    </div>
+
+                    <div class="col-md-6">
+                        <form method="post" action="{% url 'approvals:approval_step_reject' current_user_step.pk %}">
+                            {% csrf_token %}
+
+                            <label class="form-label">Rejection Reason</label>
+                            <textarea
+                                name="comment"
+                                class="form-control mb-2"
+                                rows="3"
+                                required
+                                placeholder="Write rejection reason..."
+                            ></textarea>
+
+                            <button type="submit" class="btn btn-danger w-100">
+                                Reject Request
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+
+        <!-- AI Analysis -->
+        <div class="panel-card mt-4">
+            <div class="panel-card-header">
+                <div>
+                    <h5>AI Analysis</h5>
+                    <p>AI extraction, risk details, and extracted fields from uploaded documents.</p>
+                </div>
+            </div>
+
+            <div class="info-list">
+                <div>
+                    <span>AI Summary</span>
+                    <strong>{{ document_request.ai_summary|default:"Pending AI processing" }}</strong>
+                </div>
+
+                <div>
+                    <span>AI Category</span>
+                    <strong>{{ document_request.ai_category|default:"-" }}</strong>
+                </div>
+
+                <div>
+                    <span>Risk Level</span>
+                    <strong>
+                        {% if document_request.risk_level == "HIGH" %}
+                            <span class="status-badge status-rejected">High</span>
+                        {% elif document_request.risk_level == "MEDIUM" %}
+                            <span class="status-badge status-review">Medium</span>
+                        {% elif document_request.risk_level == "LOW" %}
+                            <span class="status-badge status-approved">Low</span>
+                        {% else %}
+                            Pending
+                        {% endif %}
+                    </strong>
+                </div>
+
+                <div>
+                    <span>Risk Notes</span>
+                    <strong>{{ document_request.risk_notes|default:"-" }}</strong>
+                </div>
+
+                <div>
+                    <span>Extracted Data</span>
+                    <strong>
+                        {% if document_request.ai_extracted_data %}
+                            <pre class="audit-json-box mb-0">{{ document_request.ai_extracted_data }}</pre>
+                        {% else %}
+                            -
+                        {% endif %}
+                    </strong>
+                </div>
+            </div>
+        </div>
+
+        <!-- Policy Evaluation -->
+        <div class="panel-card mt-4">
+            <div class="panel-card-header">
+                <div>
+                    <h5>Policy Evaluation</h5>
+                    <p>Rules engine evaluation details for this request.</p>
+                </div>
+            </div>
+
+            {% if document_request.policy_evaluations.exists %}
+                <div class="table-responsive">
+                    <table class="table modern-table align-middle">
+                        <thead>
+                            <tr>
+                                <th>Policy</th>
+                                <th>Matched</th>
+                                <th>Amount</th>
+                                <th>Priority</th>
+                                <th>Workflow</th>
+                                <th>Fixed Approver</th>
+                                <th>Evaluated</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            {% for evaluation in document_request.policy_evaluations.all %}
+                                <tr>
+                                    <td>
+                                        {% if evaluation.policy %}
+                                            {{ evaluation.policy.name }}
+                                        {% else %}
+                                            No Policy
+                                        {% endif %}
+                                    </td>
+
+                                    <td>
+                                        {% if evaluation.matched %}
+                                            <span class="status-badge status-approved">Matched</span>
+                                        {% else %}
+                                            <span class="status-badge status-draft">No Match</span>
+                                        {% endif %}
+                                    </td>
+
+                                    <td>
+                                        {% if evaluation.extracted_amount %}
+                                            ₹{{ evaluation.extracted_amount }}
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </td>
+
+                                    <td>
+                                        {{ evaluation.old_priority|default:"-" }}
+                                        →
+                                        {{ evaluation.new_priority|default:"-" }}
+                                    </td>
+
+                                    <td>
+                                        {% if evaluation.old_workflow %}
+                                            {{ evaluation.old_workflow.name }}
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                        →
+                                        {% if evaluation.new_workflow %}
+                                            {{ evaluation.new_workflow.name }}
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </td>
+
+                                    <td>
+                                        {% if evaluation.fixed_approver %}
+                                            {{ evaluation.fixed_approver.display_name }}
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </td>
+
+                                    <td>{{ evaluation.evaluated_at|date:"d M Y, h:i A" }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="empty-state compact">
+                    <div class="empty-icon">⚙️</div>
+                    <h5>No policy evaluation found</h5>
+                    <p>Policy evaluation will appear after the rules engine runs.</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Unified Activity Timeline -->
+        <div class="panel-card mt-4" id="activity-timeline">
+            <div class="panel-card-header">
+                <div>
+                    <h5>Unified Activity Timeline</h5>
+                    <p>
+                        Comments, approvals, audit logs, document uploads, AI processing,
+                        reminders, OCR, certificates, and request activity in one place.
+                    </p>
+                </div>
+
+                <span class="status-badge status-submitted">
+                    {{ activity_timeline|length }} Events
+                </span>
+            </div>
+
+            {% if activity_timeline %}
+                <div class="activity-feed">
+                    {% for item in activity_timeline %}
+                        <div class="activity-feed-item">
+                            <div class="activity-feed-icon">
+                                {{ item.icon }}
+                            </div>
+
+                            <div class="activity-feed-content">
+                                <div class="d-flex justify-content-between gap-3 flex-wrap">
+                                    <div>
+                                        <h6 class="mb-1">
+                                            {{ item.title }}
+                                        </h6>
+
+                                        <p class="text-muted mb-1">
+                                            {% if item.actor %}
+                                                By <strong>{{ item.actor.display_name }}</strong>
+                                            {% else %}
+                                                By <strong>System</strong>
+                                            {% endif %}
+                                        </p>
+                                    </div>
+
+                                    <div class="text-end">
+                                        <span class="status-badge {{ item.badge }}">
+                                            {{ item.activity_type|title }}
+                                        </span>
+
+                                        <div class="small text-muted mt-1">
+                                            {{ item.timestamp|date:"d M Y, h:i A" }}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {% if item.description %}
+                                    <div class="activity-description mt-2">
+                                        {{ item.description|linebreaksbr }}
+                                    </div>
+                                {% endif %}
+
+                                {% if item.meta %}
+                                    <div class="activity-meta mt-3">
+                                        {% for key, value in item.meta.items %}
+                                            {% if value %}
+                                                <span class="activity-meta-pill">
+                                                    <strong>{{ key|title }}:</strong>
+                                                    {{ value }}
+                                                </span>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+
+                                {% if item.target_url %}
+                                    <div class="mt-3">
+                                        <a href="{{ item.target_url }}" class="btn btn-sm btn-outline-primary">
+                                            Open Related Section
+                                        </a>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state compact">
+                    <div class="empty-icon">🕒</div>
+                    <h5>No activity yet</h5>
+                    <p>Activity will appear here as the request moves through the workflow.</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Request Timeline -->
+        <div class="panel-card mt-4">
+            <div class="panel-card-header">
+                <div>
+                    <h5>Request Timeline</h5>
+                    <p>All approval actions, comments, approvals, and rejections.</p>
+                </div>
+            </div>
+
+            {% if approval_actions %}
+                <div class="action-timeline">
+                    {% for action in approval_actions %}
+                        <div class="action-item">
+                            <div class="action-dot">
+                                {% if action.action_type == "APPROVED" %}
+                                    ✅
+                                {% elif action.action_type == "REJECTED" %}
+                                    ❌
+                                {% elif action.action_type == "COMMENTED" %}
+                                    💬
+                                {% elif action.action_type == "SUBMITTED" %}
+                                    📤
+                                {% elif action.action_type == "CANCELLED" %}
+                                    ⛔
+                                {% else %}
+                                    🔔
+                                {% endif %}
+                            </div>
+
+                            <div class="action-content">
+                                <div class="d-flex justify-content-between gap-3 flex-wrap">
+                                    <div>
+                                        <h6 class="mb-1">
+                                            {{ action.get_action_type_display }}
+                                            {% if action.step %}
+                                                — Step {{ action.step.step_order }}
+                                            {% endif %}
+                                        </h6>
+
+                                        <p class="text-muted mb-1">
+                                            By:
+                                            {% if action.action_by %}
+                                                <strong>{{ action.action_by.display_name }}</strong>
+                                            {% else %}
+                                                <strong>System</strong>
+                                            {% endif %}
+                                        </p>
+
+                                        {% if action.comment %}
+                                            <p class="mb-0">
+                                                {{ action.comment|linebreaksbr }}
+                                            </p>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="small text-muted">
+                                        {{ action.created_at|date:"d M Y, h:i A" }}
+                                    </div>
+                                </div>
+
+                                {% if action.old_status or action.new_status %}
+                                    <div class="small text-muted mt-2">
+                                        Status:
+                                        {{ action.old_status|default:"-" }}
+                                        →
+                                        {{ action.new_status|default:"-" }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state compact">
+                    <div class="empty-icon">🕒</div>
+                    <h5>No timeline activity</h5>
+                    <p>Approval actions will appear here.</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Internal Discussion -->
+        <div class="panel-card mt-4" id="discussion">
+            <div class="panel-card-header">
+                <div>
+                    <h5>Internal Discussion</h5>
+                    <p>Comment, mention users with @username, and attach supporting files.</p>
+                </div>
+
+                <span class="status-badge status-submitted">
+                    {{ discussion_comments.count }} Threads
+                </span>
+            </div>
+
+            <form
+                method="post"
+                action="{% url 'approvals:request_discussion_comment_create' document_request.pk %}"
+                enctype="multipart/form-data"
+                class="mb-4"
+            >
+                {% csrf_token %}
+
+                <label class="form-label">Add Comment</label>
+                {{ discussion_form.message }}
+
+                {% if discussion_form.message.errors %}
+                    <div class="text-danger small mt-1">
+                        {{ discussion_form.message.errors|striptags }}
+                    </div>
+                {% endif %}
+
+                <div class="mt-3">
+                    <label class="form-label">Attachments</label>
+                    {{ discussion_form.attachments }}
+
+                    <div class="form-text">
+                        Optional. Attach screenshots, PDFs, or supporting files.
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary mt-3">
+                    Post Comment
+                </button>
+            </form>
+
+            {% if discussion_comments %}
+                <div class="discussion-thread-list">
+                    {% for comment in discussion_comments %}
+                        <div class="discussion-comment-card">
+                            <div class="discussion-comment-header">
+                                <div>
+                                    <div class="fw-bold">
+                                        {% if comment.author %}
+                                            {{ comment.author.display_name }}
+                                        {% else %}
+                                            System
+                                        {% endif %}
+                                    </div>
+
+                                    <small class="text-muted">
+                                        {{ comment.created_at|date:"d M Y, h:i A" }}
+                                    </small>
+                                </div>
+
+                                {% if comment.author_id == request.user.id or request.user.is_superuser %}
+                                    {% if not comment.is_deleted %}
+                                        <form
+                                            method="post"
+                                            action="{% url 'approvals:request_discussion_comment_delete' document_request.pk comment.pk %}"
+                                            onsubmit="return confirm('Delete this comment?');"
+                                        >
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                Delete
+                                            </button>
+                                        </form>
+                                    {% endif %}
+                                {% endif %}
+                            </div>
+
+                            {% if comment.is_deleted %}
+                                <div class="text-muted fst-italic mt-2">
+                                    This comment was deleted.
+                                </div>
+                            {% else %}
+                                <div class="discussion-message mt-2">
+                                    {{ comment.message|linebreaksbr }}
+                                </div>
+
+                                {% if comment.mentioned_users.exists %}
+                                    <div class="mt-2">
+                                        <small class="text-muted">Mentioned:</small>
+                                        {% for mentioned_user in comment.mentioned_users.all %}
+                                            <span class="status-badge status-draft">
+                                                @{{ mentioned_user.username }}
+                                            </span>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+
+                                {% if comment.attachments.exists %}
+                                    <div class="discussion-attachments mt-3">
+                                        {% for attachment in comment.attachments.all %}
+                                            <a
+                                                href="{{ attachment.file.url }}"
+                                                target="_blank"
+                                                class="discussion-attachment-pill"
+                                            >
+                                                📎 {{ attachment.original_filename }}
+                                                <span>{{ attachment.file_size_mb }} MB</span>
+                                            </a>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+
+                                <div class="reply-box mt-3">
+                                    <button
+                                        type="button"
+                                        class="btn btn-sm btn-outline-primary"
+                                        onclick="document.getElementById('reply-form-{{ comment.pk }}').classList.toggle('d-none')"
+                                    >
+                                        Reply
+                                    </button>
+
+                                    <form
+                                        id="reply-form-{{ comment.pk }}"
+                                        method="post"
+                                        action="{% url 'approvals:request_discussion_comment_create' document_request.pk %}"
+                                        enctype="multipart/form-data"
+                                        class="d-none mt-3"
+                                    >
+                                        {% csrf_token %}
+
+                                        <input type="hidden" name="parent_id" value="{{ comment.pk }}">
+
+                                        <textarea
+                                            name="message"
+                                            class="form-control"
+                                            rows="3"
+                                            placeholder="Write reply..."
+                                            required
+                                        ></textarea>
+
+                                        <input
+                                            type="file"
+                                            name="attachments"
+                                            class="form-control mt-2"
+                                            multiple
+                                        >
+
+                                        <button type="submit" class="btn btn-primary btn-sm mt-2">
+                                            Post Reply
+                                        </button>
+                                    </form>
+                                </div>
+
+                                {% if comment.replies.exists %}
+                                    <div class="discussion-replies mt-3">
+                                        {% for reply in comment.replies.all %}
+                                            <div class="discussion-reply-card">
+                                                <div class="d-flex justify-content-between gap-2">
+                                                    <div>
+                                                        <div class="fw-bold">
+                                                            {% if reply.author %}
+                                                                {{ reply.author.display_name }}
+                                                            {% else %}
+                                                                System
+                                                            {% endif %}
+                                                        </div>
+
+                                                        <small class="text-muted">
+                                                            {{ reply.created_at|date:"d M Y, h:i A" }}
+                                                        </small>
+                                                    </div>
+
+                                                    {% if reply.author_id == request.user.id or request.user.is_superuser %}
+                                                        {% if not reply.is_deleted %}
+                                                            <form
+                                                                method="post"
+                                                                action="{% url 'approvals:request_discussion_comment_delete' document_request.pk reply.pk %}"
+                                                                onsubmit="return confirm('Delete this reply?');"
+                                                            >
+                                                                {% csrf_token %}
+                                                                <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                                    Delete
+                                                                </button>
+                                                            </form>
+                                                        {% endif %}
+                                                    {% endif %}
+                                                </div>
+
+                                                {% if reply.is_deleted %}
+                                                    <div class="text-muted fst-italic mt-2">
+                                                        This reply was deleted.
+                                                    </div>
+                                                {% else %}
+                                                    <div class="mt-2">
+                                                        {{ reply.message|linebreaksbr }}
+                                                    </div>
+
+                                                    {% if reply.attachments.exists %}
+                                                        <div class="discussion-attachments mt-3">
+                                                            {% for attachment in reply.attachments.all %}
+                                                                <a
+                                                                    href="{{ attachment.file.url }}"
+                                                                    target="_blank"
+                                                                    class="discussion-attachment-pill"
+                                                                >
+                                                                    📎 {{ attachment.original_filename }}
+                                                                    <span>{{ attachment.file_size_mb }} MB</span>
+                                                                </a>
+                                                            {% endfor %}
+                                                        </div>
+                                                    {% endif %}
+                                                {% endif %}
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state compact">
+                    <div class="empty-icon">💬</div>
+                    <h5>No discussion yet</h5>
+                    <p>Start an internal discussion for this approval request.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+
+        <!-- Meta Details -->
+        <div class="panel-card">
+            <div class="panel-card-header">
+                <div>
+                    <h5>Meta Details</h5>
+                    <p>Request category and tracking</p>
+                </div>
+            </div>
+
+            <div class="info-list">
+                <div>
+                    <span>Request No</span>
+                    <strong>{{ document_request.request_number }}</strong>
+                </div>
+
+                <div>
+                    <span>Workflow</span>
+                    <strong>
+                        {% if document_request.workflow %}
+                            {{ document_request.workflow.name }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </strong>
+                </div>
+
+                <div>
+                    <span>Category</span>
+                    <strong>{{ document_request.get_category_display }}</strong>
+                </div>
+
+                <div>
+                    <span>Priority</span>
+                    <strong>
+                        {% if document_request.priority == "URGENT" %}
+                            <span class="status-badge status-rejected">Urgent</span>
+                        {% elif document_request.priority == "HIGH" %}
+                            <span class="status-badge status-review">High</span>
+                        {% elif document_request.priority == "MEDIUM" %}
+                            <span class="status-badge status-submitted">Medium</span>
+                        {% elif document_request.priority == "LOW" %}
+                            <span class="status-badge status-draft">Low</span>
+                        {% else %}
+                            {{ document_request.get_priority_display }}
+                        {% endif %}
+                    </strong>
+                </div>
+
+                <div>
+                    <span>Current Step</span>
+                    <strong>{{ document_request.current_step }}</strong>
+                </div>
+
+                <div>
+                    <span>Total Attachments</span>
+                    <strong>{{ attachments.count }}</strong>
+                </div>
+
+                <div>
+                    <span>Total Approval Steps</span>
+                    <strong>{{ approval_steps.count }}</strong>
+                </div>
+
+                <div>
+                    <span>Created</span>
+                    <strong>{{ document_request.created_at|date:"d M Y, h:i A" }}</strong>
+                </div>
+
+                <div>
+                    <span>Submitted</span>
+                    <strong>
+                        {% if document_request.submitted_at %}
+                            {{ document_request.submitted_at|date:"d M Y, h:i A" }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </strong>
+                </div>
+
+                <div>
+                    <span>Approved</span>
+                    <strong>
+                        {% if document_request.approved_at %}
+                            {{ document_request.approved_at|date:"d M Y, h:i A" }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </strong>
+                </div>
+
+                <div>
+                    <span>Rejected</span>
+                    <strong>
+                        {% if document_request.rejected_at %}
+                            {{ document_request.rejected_at|date:"d M Y, h:i A" }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </strong>
+                </div>
+            </div>
+        </div>
+
+        <!-- Watch Status -->
+        <div class="panel-card mt-4">
+            <div class="panel-card-header">
+                <div>
+                    <h5>Watch Status</h5>
+                    <p>Follow this request to receive notifications for timeline activity.</p>
+                </div>
+            </div>
+
+            <div class="info-list">
+                <div>
+                    <span>Your Status</span>
+                    <strong>
+                        {% if is_watching_request %}
+                            <span class="status-badge status-approved">Watching</span>
+                        {% else %}
+                            <span class="status-badge status-draft">Not Watching</span>
+                        {% endif %}
+                    </strong>
+                </div>
+
+                <div>
+                    <span>Total Watchers</span>
+                    <strong>{{ watcher_count }}</strong>
+                </div>
+            </div>
+
+            <form method="post" action="{% url 'approvals:request_watch_toggle' document_request.pk %}" class="mt-3">
+                {% csrf_token %}
+
+                {% if is_watching_request %}
+                    <button type="submit" class="btn btn-outline-danger w-100">
+                        Stop Watching
+                    </button>
+                {% else %}
+                    <button type="submit" class="btn btn-success w-100">
+                        Watch This Request
+                    </button>
+                {% endif %}
+            </form>
+
+            <a
+                href="{% url 'approvals:request_watcher_list' document_request.pk %}"
+                class="btn btn-outline-secondary w-100 mt-2"
+            >
+                View Watchers
+            </a>
+        </div>
+
+        <!-- Certificate Status -->
+        <div class="panel-card mt-4">
+            <div class="panel-card-header">
+                <div>
+                    <h5>Certificate Status</h5>
+                    <p>Digital signature, seal, verification code, and certificate hash.</p>
+                </div>
+            </div>
+
+            {% if document_request.status != "APPROVED" %}
+                <div class="empty-state compact">
+                    <div class="empty-icon">📜</div>
+                    <h5>Certificate Not Available</h5>
+                    <p>Certificate can be generated only after final approval.</p>
+                </div>
+            {% elif certificate_signature %}
+                {% if certificate_signature.is_valid %}
+                    <div class="alert alert-success">
+                        This request has a valid digitally signed certificate.
+                    </div>
+                {% else %}
+                    <div class="alert alert-danger">
+                        This certificate has been invalidated.
+                        {% if certificate_signature.invalidation_reason %}
+                            <br>
+                            Reason: {{ certificate_signature.invalidation_reason }}
+                        {% endif %}
+                    </div>
+                {% endif %}
+
+                <div class="info-list">
+                    <div>
+                        <span>Verification Code</span>
+                        <strong>{{ certificate_signature.verification_code }}</strong>
+                    </div>
+
+                    <div>
+                        <span>Signed By</span>
+                        <strong>{{ certificate_signature.signed_by_name|default:"System" }}</strong>
+                    </div>
+
+                    <div>
+                        <span>Signer Role</span>
+                        <strong>{{ certificate_signature.signed_by_role|default:"Final Approver" }}</strong>
+                    </div>
+
+                    <div>
+                        <span>Signed At</span>
+                        <strong>{{ certificate_signature.signed_at|date:"d M Y, h:i A" }}</strong>
+                    </div>
+
+                    <div>
+                        <span>Certificate Hash</span>
+                        <strong class="small text-break">
+                            {{ certificate_signature.certificate_hash }}
+                        </strong>
+                    </div>
+                </div>
+
+                <div class="d-grid gap-2 mt-3">
+                    <a
+                        href="{% url 'reports:verify_certificate' certificate_signature.verification_code %}"
+                        class="btn btn-outline-info"
+                        target="_blank"
+                    >
+                        Public Verify
+                    </a>
+
+                    {% if can_manage_certificate %}
+                        <a
+                            href="{% url 'reports:certificate_detail' certificate_signature.pk %}"
+                            class="btn btn-outline-dark"
+                        >
+                            Certificate Detail
+                        </a>
+                    {% endif %}
+                </div>
+            {% else %}
+                <div class="empty-state compact">
+                    <div class="empty-icon">📜</div>
+                    <h5>Certificate Not Generated</h5>
+                    <p>Download the certificate PDF once to generate the certificate signature.</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Report Actions -->
+        <div class="panel-card mt-4">
+            <div class="panel-card-header">
+                <div>
+                    <h5>Report Actions</h5>
+                    <p>Generate printable and downloadable approval reports.</p>
+                </div>
+            </div>
+
+            <div class="d-grid gap-2">
+                <a
+                    href="{% url 'reports:printable_request_summary' document_request.pk %}"
+                    class="btn btn-outline-dark"
+                    target="_blank"
+                >
+                    Print / Save PDF
+                </a>
+
+                <a
+                    href="{% url 'reports:request_summary_pdf' document_request.pk %}"
+                    class="btn btn-outline-primary"
+                >
+                    Download Summary PDF
+                </a>
+
+                {% if document_request.status == "APPROVED" %}
+                    <a
+                        href="{% url 'reports:approval_certificate_pdf' document_request.pk %}"
+                        class="btn btn-outline-success"
+                    >
+                        Download Certificate PDF
+                    </a>
+
+                    <a
+                        href="{% url 'reports:request_archive_zip' document_request.pk %}"
+                        class="btn btn-outline-dark"
+                    >
+                        Download Final Archive ZIP
+                    </a>
+                {% endif %}
+
+                {% if certificate_signature %}
+                    <a
+                        href="{% url 'reports:verify_certificate' certificate_signature.verification_code %}"
+                        class="btn btn-outline-info"
+                        target="_blank"
+                    >
+                        Verify Certificate
+                    </a>
+                {% endif %}
+
+                <a
+                    href="{% url 'reports:verify_request' document_request.pk %}"
+                    class="btn btn-outline-secondary"
+                    target="_blank"
+                >
+                    Verify Request
+                </a>
+
+                <a
+                    href="{% url 'reports:request_share_links' document_request.pk %}"
+                    class="btn btn-outline-info"
+                >
+                    Manage Secure Share Links
+                </a>
+
+                {% if can_manage_certificate %}
+                    <a
+                        href="{% url 'reports:certificate_list' %}"
+                        class="btn btn-outline-secondary"
+                    >
+                        Manage Certificates
+                    </a>
+                {% endif %}
+
+                <a
+                    href="{% url 'approvals:reminder_history' %}"
+                    class="btn btn-outline-warning"
+                >
+                    Reminder History
+                </a>
+            </div>
+        </div>
+
+        <!-- Reminder Quick Card -->
+        <div class="panel-card mt-4">
+            <div class="panel-card-header">
+                <div>
+                    <h5>Reminder Tools</h5>
+                    <p>Send a reminder to the current pending approver.</p>
+                </div>
+            </div>
+
+            {% if approval_steps %}
+                {% for step in approval_steps %}
+                    {% if step.status == "PENDING" and step.is_current %}
+                        <div class="info-list mb-3">
+                            <div>
+                                <span>Current Pending Step</span>
+                                <strong>Step {{ step.step_order }}</strong>
+                            </div>
+
+                            <div>
+                                <span>Assigned To</span>
+                                <strong>
+                                    {% if step.assigned_to %}
+                                        {{ step.assigned_to.display_name }}
+                                    {% else %}
+                                        Not assigned
+                                    {% endif %}
+                                </strong>
+                            </div>
+
+                            <div>
+                                <span>Due Date</span>
+                                <strong>
+                                    {% if step.due_at %}
+                                        {{ step.due_at|date:"d M Y, h:i A" }}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </strong>
+                            </div>
+                        </div>
+
+                        <form
+                            method="post"
+                            action="{% url 'approvals:approval_step_reminder' step.pk %}"
+                        >
+                            {% csrf_token %}
+
+                            <label class="form-label">Reminder Message</label>
+                            <textarea
+                                name="message"
+                                class="form-control mb-3"
+                                rows="3"
+                                placeholder="Optional reminder message..."
+                            >Reminder: Approval is pending for {{ document_request.request_number }}.</textarea>
+
+                            <button type="submit" class="btn btn-warning w-100">
+                                Send Reminder
+                            </button>
+                        </form>
+                    {% endif %}
+                {% endfor %}
+            {% else %}
+                <div class="empty-state compact">
+                    <div class="empty-icon">🔔</div>
+                    <h5>No active step</h5>
+                    <p>Reminder can be sent only for current pending approval step.</p>
+                </div>
+            {% endif %}
+        </div>
+
+        {% if can_edit %}
+            <div class="panel-card danger-panel mt-4">
+                <h5 class="fw-bold mb-2">Danger Zone</h5>
+                <p class="text-muted">
+                    Draft requests can be deleted before submission.
+                </p>
+
+                <a href="{% url 'approvals:request_delete' document_request.pk %}" class="btn btn-outline-danger">
+                    Delete Draft
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+{% endblock %}

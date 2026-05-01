@@ -1,0 +1,320 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <p class="eyebrow">Approval Desk</p>
+        <h1>Approval Inbox</h1>
+        <p class="page-subtitle">
+            Manage requests assigned to you with bulk approval, comments, filters, and productivity tools.
+        </p>
+    </div>
+
+    <a href="{% url 'approvals:reminder_history' %}" class="btn btn-light">
+        Reminder History
+    </a>
+</div>
+
+<div class="stats-grid super-grid">
+    <div class="metric-card">
+        <div class="metric-icon bg-soft-primary">✅</div>
+        <div>
+            <p>Pending Assigned</p>
+            <h3>{{ pending_count }}</h3>
+        </div>
+    </div>
+
+    <div class="metric-card">
+        <div class="metric-icon bg-soft-danger">🔥</div>
+        <div>
+            <p>Overdue</p>
+            <h3>{{ overdue_count }}</h3>
+        </div>
+    </div>
+
+    <div class="metric-card">
+        <div class="metric-icon bg-soft-warning">🚨</div>
+        <div>
+            <p>Urgent</p>
+            <h3>{{ urgent_count }}</h3>
+        </div>
+    </div>
+
+    <div class="metric-card">
+        <div class="metric-icon bg-soft-success">📅</div>
+        <div>
+            <p>Due Today</p>
+            <h3>{{ due_today_count }}</h3>
+        </div>
+    </div>
+</div>
+
+<div class="panel-card mt-4">
+    <div class="panel-card-header">
+        <div>
+            <h5>Inbox Filters</h5>
+            <p>Filter approvals by status, priority, or request details.</p>
+        </div>
+    </div>
+
+    <form method="get" class="row g-3 align-items-end">
+        <div class="col-lg-4 col-md-6">
+            <label class="form-label">Search</label>
+            <input
+                type="text"
+                name="q"
+                value="{{ search }}"
+                class="form-control"
+                placeholder="Search request, department, creator..."
+            >
+        </div>
+
+        <div class="col-lg-2 col-md-6">
+            <label class="form-label">Status</label>
+            <select name="status" class="form-select">
+                <option value="pending" {% if status_filter == "pending" %}selected{% endif %}>Pending</option>
+                <option value="overdue" {% if status_filter == "overdue" %}selected{% endif %}>Overdue</option>
+                <option value="all" {% if status_filter == "all" %}selected{% endif %}>All Current</option>
+            </select>
+        </div>
+
+        <div class="col-lg-2 col-md-6">
+            <label class="form-label">Priority</label>
+            <select name="priority" class="form-select">
+                <option value="">All Priority</option>
+                <option value="URGENT" {% if priority_filter == "URGENT" %}selected{% endif %}>Urgent</option>
+                <option value="HIGH" {% if priority_filter == "HIGH" %}selected{% endif %}>High</option>
+                <option value="MEDIUM" {% if priority_filter == "MEDIUM" %}selected{% endif %}>Medium</option>
+                <option value="LOW" {% if priority_filter == "LOW" %}selected{% endif %}>Low</option>
+            </select>
+        </div>
+
+        <div class="col-lg-2 col-md-6">
+            <button type="submit" class="btn btn-primary w-100">
+                Apply
+            </button>
+        </div>
+
+        <div class="col-lg-2 col-md-6">
+            <a href="{% url 'approvals:approval_inbox' %}" class="btn btn-outline-secondary w-100">
+                Reset
+            </a>
+        </div>
+    </form>
+</div>
+
+<div class="panel-card mt-4">
+    <div class="panel-card-header">
+        <div>
+            <h5>Pending Approval Steps</h5>
+            <p>{{ steps.count }} item(s) found</p>
+        </div>
+    </div>
+
+    {% if steps %}
+        <form method="post" action="{% url 'approvals:approval_bulk_action' %}" id="bulkApprovalForm">
+            {% csrf_token %}
+
+            <div class="bulk-action-bar mb-3">
+                <div class="row g-3 align-items-end">
+                    <div class="col-lg-3 col-md-6">
+                        <label class="form-label">Bulk Action</label>
+                        <select name="action" class="form-select" id="bulkActionSelect">
+                            <option value="approve">Approve Selected</option>
+                            <option value="reject">Reject Selected</option>
+                            <option value="comment">Comment Selected</option>
+                        </select>
+                    </div>
+
+                    <div class="col-lg-6 col-md-12">
+                        <label class="form-label">Comment / Reason</label>
+                        <textarea
+                            name="comment"
+                            class="form-control"
+                            rows="2"
+                            placeholder="Required for reject/comment. Optional for approve."
+                        ></textarea>
+                    </div>
+
+                    <div class="col-lg-3 col-md-6">
+                        <button type="submit" class="btn btn-primary w-100">
+                            Apply Bulk Action
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table modern-table align-middle">
+                    <thead>
+                        <tr>
+                            <th style="width: 42px;">
+                                <input
+                                    type="checkbox"
+                                    class="form-check-input"
+                                    id="selectAllSteps"
+                                >
+                            </th>
+                            <th>Request</th>
+                            <th>Organization</th>
+                            <th>Department</th>
+                            <th>Priority</th>
+                            <th>SLA</th>
+                            <th>Current Step</th>
+                            <th>Created By</th>
+                            <th class="text-end">Action</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for step in steps %}
+                            <tr>
+                                <td>
+                                    <input
+                                        type="checkbox"
+                                        class="form-check-input step-checkbox"
+                                        name="selected_steps"
+                                        value="{{ step.pk }}"
+                                    >
+                                </td>
+
+                                <td>
+                                    <div class="fw-bold">{{ step.request.request_number }}</div>
+                                    <small class="text-muted">
+                                        {{ step.request.title|truncatechars:60 }}
+                                    </small>
+                                </td>
+
+                                <td>{{ step.request.organization.name }}</td>
+
+                                <td>
+                                    {% if step.request.department %}
+                                        {{ step.request.department.name }}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+
+                                <td>
+                                    {% if step.request.priority == "URGENT" %}
+                                        <span class="status-badge status-rejected">Urgent</span>
+                                    {% elif step.request.priority == "HIGH" %}
+                                        <span class="status-badge status-review">High</span>
+                                    {% elif step.request.priority == "MEDIUM" %}
+                                        <span class="status-badge status-submitted">Medium</span>
+                                    {% else %}
+                                        <span class="status-badge status-draft">Low</span>
+                                    {% endif %}
+                                </td>
+
+                                <td>
+                                    {% if step.is_overdue %}
+                                        <span class="status-badge status-rejected">Overdue</span>
+                                        <div class="small text-danger mt-1">
+                                            {{ step.overdue_hours }} hour(s)
+                                        </div>
+                                    {% elif step.due_at %}
+                                        <span class="status-badge status-review">Due</span>
+                                        <div class="small text-muted mt-1">
+                                            {{ step.due_at|date:"d M, h:i A" }}
+                                        </div>
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+
+                                <td>
+                                    <span class="status-badge status-review">
+                                        Step {{ step.step_order }}
+                                    </span>
+                                </td>
+
+                                <td>
+                                    {% if step.request.created_by %}
+                                        {{ step.request.created_by.display_name }}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+
+                                <td class="text-end">
+                                    <a href="{% url 'approvals:request_detail' step.request.pk %}" class="btn btn-sm btn-outline-primary">
+                                        Review
+                                    </a>
+
+                                    <form
+                                        method="post"
+                                        action="{% url 'approvals:approval_step_approve' step.pk %}"
+                                        class="d-inline"
+                                    >
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-sm btn-outline-success">
+                                            Approve
+                                        </button>
+                                    </form>
+
+                                    <form
+                                        method="post"
+                                        action="{% url 'approvals:approval_step_comment' step.pk %}"
+                                        class="d-inline"
+                                    >
+                                        {% csrf_token %}
+                                        <input type="hidden" name="comment" value="Reminder noted from inbox quick action.">
+                                        <button type="submit" class="btn btn-sm btn-outline-dark">
+                                            Note
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </form>
+    {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">✅</div>
+            <h5>No pending approvals</h5>
+            <p>You do not have any approval item assigned right now.</p>
+        </div>
+    {% endif %}
+</div>
+
+<script>
+    const selectAllSteps = document.getElementById("selectAllSteps");
+    const stepCheckboxes = document.querySelectorAll(".step-checkbox");
+    const bulkApprovalForm = document.getElementById("bulkApprovalForm");
+
+    if (selectAllSteps) {
+        selectAllSteps.addEventListener("change", function () {
+            stepCheckboxes.forEach(function (checkbox) {
+                checkbox.checked = selectAllSteps.checked;
+            });
+        });
+    }
+
+    if (bulkApprovalForm) {
+        bulkApprovalForm.addEventListener("submit", function (event) {
+            const selected = document.querySelectorAll(".step-checkbox:checked");
+
+            if (selected.length === 0) {
+                event.preventDefault();
+                alert("Please select at least one approval item.");
+                return;
+            }
+
+            const action = document.getElementById("bulkActionSelect").value;
+
+            if (action === "reject") {
+                const confirmReject = confirm("Are you sure you want to reject selected approval request(s)?");
+
+                if (!confirmReject) {
+                    event.preventDefault();
+                }
+            }
+        });
+    }
+</script>
+
+{% endblock %}

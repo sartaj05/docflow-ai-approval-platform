@@ -1,0 +1,274 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <p class="eyebrow">Approval Workflow</p>
+        <h1>Approval Requests</h1>
+        <p class="page-subtitle">
+            Track document approvals, priorities, statuses, AI risk level, and department-wise request flow.
+        </p>
+    </div>
+
+    {% if can_create %}
+        <a href="{% url 'approvals:request_create' %}" class="btn btn-primary">
+            + New Request
+        </a>
+    {% endif %}
+</div>
+
+<div class="stats-grid request-stats-grid">
+    <div class="metric-card">
+        <div class="metric-icon bg-soft-primary">📄</div>
+        <div>
+            <p>Total Requests</p>
+            <h3>{{ total_requests }}</h3>
+        </div>
+    </div>
+
+    <div class="metric-card">
+        <div class="metric-icon bg-soft-warning">📝</div>
+        <div>
+            <p>Draft</p>
+            <h3>{{ draft_count }}</h3>
+        </div>
+    </div>
+
+    <div class="metric-card">
+        <div class="metric-icon bg-soft-primary">📤</div>
+        <div>
+            <p>Submitted</p>
+            <h3>{{ submitted_count }}</h3>
+        </div>
+    </div>
+
+    <div class="metric-card">
+        <div class="metric-icon bg-soft-warning">🔎</div>
+        <div>
+            <p>In Review</p>
+            <h3>{{ in_review_count }}</h3>
+        </div>
+    </div>
+
+    <div class="metric-card">
+        <div class="metric-icon bg-soft-success">✅</div>
+        <div>
+            <p>Approved</p>
+            <h3>{{ approved_count }}</h3>
+        </div>
+    </div>
+
+    <div class="metric-card">
+        <div class="metric-icon bg-soft-danger">❌</div>
+        <div>
+            <p>Rejected</p>
+            <h3>{{ rejected_count }}</h3>
+        </div>
+    </div>
+</div>
+
+<div class="panel-card mt-4">
+    <div class="panel-card-header">
+        <div>
+            <h5>Search & Filters</h5>
+            <p>Filter requests by status, category, priority, department, and risk level.</p>
+        </div>
+    </div>
+
+    <form method="get" class="row g-3 align-items-end">
+        <div class="col-lg-4 col-md-6">
+            <label class="form-label">Search</label>
+            {{ filter_form.q }}
+        </div>
+
+        <div class="col-lg-2 col-md-6">
+            <label class="form-label">Status</label>
+            {{ filter_form.status }}
+        </div>
+
+        <div class="col-lg-2 col-md-6">
+            <label class="form-label">Category</label>
+            {{ filter_form.category }}
+        </div>
+
+        <div class="col-lg-2 col-md-6">
+            <label class="form-label">Priority</label>
+            {{ filter_form.priority }}
+        </div>
+
+        <div class="col-lg-2 col-md-6">
+            <label class="form-label">Department</label>
+            {{ filter_form.department }}
+        </div>
+
+        <div class="col-lg-2 col-md-6">
+            <label class="form-label">Risk</label>
+            {{ filter_form.risk_level }}
+        </div>
+
+        <div class="col-lg-2 col-md-6">
+            <button type="submit" class="btn btn-primary w-100">
+                Apply
+            </button>
+        </div>
+
+        <div class="col-lg-2 col-md-6">
+            <a href="{% url 'approvals:request_list' %}" class="btn btn-outline-secondary w-100">
+                Reset
+            </a>
+        </div>
+    </form>
+</div>
+
+<div class="panel-card mt-4">
+    <div class="panel-card-header">
+        <div>
+            <h5>Request List</h5>
+            <p>{{ requests.count }} records found</p>
+        </div>
+    </div>
+
+    {% if requests %}
+        <div class="table-responsive">
+            <table class="table modern-table align-middle">
+                <thead>
+                    <tr>
+                        <th>Request</th>
+                        {% if user.is_superuser %}
+                            <th>Organization</th>
+                        {% endif %}
+                        <th>Department</th>
+                        <th>Workflow</th>
+                        <th>Category</th>
+                        <th>Priority</th>
+                        <th>Status</th>
+                        <th>Risk</th>
+                        <th>Created By</th>
+                        <th>Created</th>
+                        <th class="text-end">Action</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for item in requests %}
+                        <tr>
+                            <td>
+                                <div class="fw-bold">{{ item.request_number }}</div>
+                                <small class="text-muted">
+                                    {{ item.title|truncatechars:55 }}
+                                </small>
+                            </td>
+
+                            {% if user.is_superuser %}
+                                <td>
+                                    {% if item.organization %}
+                                        {{ item.organization.name }}
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                            {% endif %}
+
+                            <td>
+                                {% if item.department %}
+                                    {{ item.department.name }}
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {% if item.workflow %}
+                                    {{ item.workflow.name|truncatechars:35 }}
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+
+                            <td>{{ item.get_category_display }}</td>
+
+                            <td>
+                                {% if item.priority == "URGENT" %}
+                                    <span class="status-badge status-rejected">Urgent</span>
+                                {% elif item.priority == "HIGH" %}
+                                    <span class="status-badge status-review">High</span>
+                                {% elif item.priority == "MEDIUM" %}
+                                    <span class="status-badge status-submitted">Medium</span>
+                                {% elif item.priority == "LOW" %}
+                                    <span class="status-badge status-draft">Low</span>
+                                {% else %}
+                                    <span class="status-badge status-draft">
+                                        {{ item.get_priority_display }}
+                                    </span>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {% if item.status == "DRAFT" %}
+                                    <span class="status-badge status-draft">Draft</span>
+                                {% elif item.status == "SUBMITTED" %}
+                                    <span class="status-badge status-submitted">Submitted</span>
+                                {% elif item.status == "IN_REVIEW" %}
+                                    <span class="status-badge status-review">In Review</span>
+                                {% elif item.status == "APPROVED" %}
+                                    <span class="status-badge status-approved">Approved</span>
+                                {% elif item.status == "REJECTED" %}
+                                    <span class="status-badge status-rejected">Rejected</span>
+                                {% elif item.status == "CANCELLED" %}
+                                    <span class="status-badge status-draft">Cancelled</span>
+                                {% else %}
+                                    <span class="status-badge status-draft">
+                                        {{ item.get_status_display }}
+                                    </span>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {% if item.risk_level == "HIGH" %}
+                                    <span class="status-badge status-rejected">High</span>
+                                {% elif item.risk_level == "MEDIUM" %}
+                                    <span class="status-badge status-review">Medium</span>
+                                {% elif item.risk_level == "LOW" %}
+                                    <span class="status-badge status-approved">Low</span>
+                                {% else %}
+                                    <span class="text-muted">Pending</span>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {% if item.created_by %}
+                                    {{ item.created_by.display_name }}
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+
+                            <td>{{ item.created_at|date:"d M Y" }}</td>
+
+                            <td class="text-end">
+                                <a href="{% url 'approvals:request_detail' item.pk %}" class="btn btn-sm btn-outline-primary">
+                                    View
+                                </a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">📄</div>
+            <h5>No approval requests found</h5>
+            <p>Create your first approval request or change your filters.</p>
+
+            {% if can_create %}
+                <a href="{% url 'approvals:request_create' %}" class="btn btn-primary">
+                    Create Request
+                </a>
+            {% endif %}
+        </div>
+    {% endif %}
+</div>
+
+{% endblock %}

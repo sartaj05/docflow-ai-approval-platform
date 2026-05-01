@@ -1,0 +1,205 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <p class="eyebrow">Rules Engine</p>
+        <h1>Approval Policies</h1>
+        <p class="page-subtitle">
+            Configure category, amount, risk, priority, workflow routing, and dynamic approver assignment rules.
+        </p>
+    </div>
+
+    <div class="d-flex gap-2 flex-wrap">
+        <a href="{% url 'approvals:policy_evaluation_history' %}" class="btn btn-light">
+            Evaluation History
+        </a>
+
+        {% if can_manage %}
+            <a href="{% url 'approvals:policy_create' %}" class="btn btn-primary">
+                + Create Policy
+            </a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="stats-grid super-grid">
+    <div class="metric-card">
+        <div class="metric-icon bg-soft-primary">⚙️</div>
+        <div>
+            <p>Total Policies</p>
+            <h3>{{ total_count }}</h3>
+        </div>
+    </div>
+
+    <div class="metric-card">
+        <div class="metric-icon bg-soft-success">✅</div>
+        <div>
+            <p>Active Policies</p>
+            <h3>{{ active_count }}</h3>
+        </div>
+    </div>
+</div>
+
+<div class="panel-card mt-4">
+    <div class="panel-card-header">
+        <div>
+            <h5>Policy Rules</h5>
+            <p>Policies run by priority order. First matching active policy is applied.</p>
+        </div>
+    </div>
+
+    {% if policies %}
+        <div class="table-responsive">
+            <table class="table modern-table align-middle">
+                <thead>
+                    <tr>
+                        <th>Policy</th>
+                        <th>Conditions</th>
+                        <th>Actions</th>
+                        <th>Order</th>
+                        <th>Status</th>
+                        <th class="text-end">Action</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for policy in policies %}
+                        <tr>
+                            <td>
+                                <div class="fw-bold">{{ policy.name }}</div>
+                                <small class="text-muted">
+                                    {{ policy.description|default:"No description"|truncatechars:80 }}
+                                </small>
+                            </td>
+
+                            <td>
+                                <div class="small">
+                                    <strong>Category:</strong>
+                                    {% if policy.category %}
+                                        {{ policy.get_category_display }}
+                                    {% else %}
+                                        Any
+                                    {% endif %}
+                                </div>
+
+                                <div class="small">
+                                    <strong>Amount:</strong>
+                                    {% if policy.min_amount or policy.max_amount %}
+                                        {{ policy.min_amount|default:"0" }} - {{ policy.max_amount|default:"Unlimited" }}
+                                    {% else %}
+                                        Any
+                                    {% endif %}
+                                </div>
+
+                                <div class="small">
+                                    <strong>Risk:</strong>
+                                    {% if policy.risk_level %}
+                                        {{ policy.get_risk_level_display }}
+                                    {% else %}
+                                        Any
+                                    {% endif %}
+                                </div>
+
+                                <div class="small">
+                                    <strong>Priority:</strong>
+                                    {% if policy.priority %}
+                                        {{ policy.get_priority_display }}
+                                    {% else %}
+                                        Any
+                                    {% endif %}
+                                </div>
+                            </td>
+
+                            <td>
+                                <div class="small">
+                                    <strong>Workflow:</strong>
+                                    {% if policy.assign_workflow %}
+                                        {{ policy.assign_workflow.name }}
+                                    {% else %}
+                                        No change
+                                    {% endif %}
+                                </div>
+
+                                <div class="small">
+                                    <strong>Set Priority:</strong>
+                                    {% if policy.set_priority %}
+                                        {{ policy.get_set_priority_display }}
+                                    {% else %}
+                                        No change
+                                    {% endif %}
+                                </div>
+
+                                <div class="small">
+                                    <strong>Fixed Approver:</strong>
+                                    {% if policy.fixed_approver %}
+                                        {{ policy.fixed_approver.display_name }}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </div>
+                            </td>
+
+                            <td>
+                                <span class="status-badge status-draft">
+                                    {{ policy.priority_order }}
+                                </span>
+                            </td>
+
+                            <td>
+                                {% if policy.is_active %}
+                                    <span class="status-badge status-approved">Active</span>
+                                {% else %}
+                                    <span class="status-badge status-draft">Inactive</span>
+                                {% endif %}
+                            </td>
+
+                            <td class="text-end">
+                                {% if can_manage %}
+                                    <a href="{% url 'approvals:policy_update' policy.pk %}" class="btn btn-sm btn-outline-primary">
+                                        Edit
+                                    </a>
+
+                                    <form method="post" action="{% url 'approvals:policy_toggle_status' policy.pk %}" class="d-inline">
+                                        {% csrf_token %}
+
+                                        {% if policy.is_active %}
+                                            <button type="submit" class="btn btn-sm btn-outline-warning">
+                                                Disable
+                                            </button>
+                                        {% else %}
+                                            <button type="submit" class="btn btn-sm btn-outline-success">
+                                                Enable
+                                            </button>
+                                        {% endif %}
+                                    </form>
+
+                                    <a href="{% url 'approvals:policy_delete' policy.pk %}" class="btn btn-sm btn-outline-danger">
+                                        Delete
+                                    </a>
+                                {% else %}
+                                    <span class="text-muted small">View only</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">⚙️</div>
+            <h5>No approval policies created</h5>
+            <p>Create policies for amount-based routing, priority upgrade, and automatic workflow selection.</p>
+
+            {% if can_manage %}
+                <a href="{% url 'approvals:policy_create' %}" class="btn btn-primary">
+                    Create Policy
+                </a>
+            {% endif %}
+        </div>
+    {% endif %}
+</div>
+
+{% endblock %}

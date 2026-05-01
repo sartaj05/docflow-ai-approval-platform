@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <p class="eyebrow">Request Watchers</p>
+        <h1>{{ document_request.request_number }}</h1>
+        <p class="page-subtitle">
+            Users following this request and receiving notifications for request activity.
+        </p>
+    </div>
+
+    <a href="{% url 'approvals:request_detail' document_request.pk %}" class="btn btn-light">
+        Back to Request
+    </a>
+</div>
+
+<div class="panel-card">
+    <div class="panel-card-header">
+        <div>
+            <h5>Active Watchers</h5>
+            <p>Users who are currently watching this approval request.</p>
+        </div>
+
+        <span class="status-badge status-submitted">
+            {{ watchers.count }} Watchers
+        </span>
+    </div>
+
+    {% if watchers %}
+        <div class="table-responsive">
+            <table class="table modern-table align-middle">
+                <thead>
+                    <tr>
+                        <th>User</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Comment</th>
+                        <th>Document</th>
+                        <th>Approval</th>
+                        <th>AI</th>
+                        <th>Certificate</th>
+                        <th>Reminder</th>
+                        <th>Watching Since</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for watcher in watchers %}
+                        <tr>
+                            <td>
+                                <div class="fw-bold">
+                                    {{ watcher.user.display_name }}
+                                </div>
+                                <small class="text-muted">
+                                    @{{ watcher.user.username }}
+                                </small>
+                            </td>
+
+                            <td>{{ watcher.user.email|default:"-" }}</td>
+
+                            <td>
+                                {% if watcher.user.profile %}
+                                    {{ watcher.user.profile.get_role_display }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {% if watcher.receive_comment_notifications %}
+                                    <span class="status-badge status-approved">On</span>
+                                {% else %}
+                                    <span class="status-badge status-draft">Off</span>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {% if watcher.receive_document_notifications %}
+                                    <span class="status-badge status-approved">On</span>
+                                {% else %}
+                                    <span class="status-badge status-draft">Off</span>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {% if watcher.receive_approval_notifications %}
+                                    <span class="status-badge status-approved">On</span>
+                                {% else %}
+                                    <span class="status-badge status-draft">Off</span>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {% if watcher.receive_ai_notifications %}
+                                    <span class="status-badge status-approved">On</span>
+                                {% else %}
+                                    <span class="status-badge status-draft">Off</span>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {% if watcher.receive_certificate_notifications %}
+                                    <span class="status-badge status-approved">On</span>
+                                {% else %}
+                                    <span class="status-badge status-draft">Off</span>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {% if watcher.receive_reminder_notifications %}
+                                    <span class="status-badge status-approved">On</span>
+                                {% else %}
+                                    <span class="status-badge status-draft">Off</span>
+                                {% endif %}
+                            </td>
+
+                            <td>{{ watcher.created_at|date:"d M Y, h:i A" }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="empty-state compact">
+            <div class="empty-icon">👁️</div>
+            <h5>No watchers yet</h5>
+            <p>No user is currently following this request.</p>
+        </div>
+    {% endif %}
+</div>
+
+{% endblock %}

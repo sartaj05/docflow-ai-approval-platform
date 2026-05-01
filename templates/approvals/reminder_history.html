@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <p class="eyebrow">Approval Reminders</p>
+        <h1>Reminder History</h1>
+        <p class="page-subtitle">
+            Track manual reminders sent for pending approval steps.
+        </p>
+    </div>
+
+    <a href="{% url 'approvals:approval_inbox' %}" class="btn btn-light">
+        Back to Inbox
+    </a>
+</div>
+
+<div class="panel-card">
+    <div class="panel-card-header">
+        <div>
+            <h5>Recent Reminders</h5>
+            <p>Showing latest reminder records.</p>
+        </div>
+    </div>
+
+    {% if reminders %}
+        <div class="table-responsive">
+            <table class="table modern-table align-middle">
+                <thead>
+                    <tr>
+                        <th>Request</th>
+                        <th>Step</th>
+                        <th>Sent To</th>
+                        <th>Sent By</th>
+                        <th>Message</th>
+                        <th>Date</th>
+                        <th class="text-end">Open</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for reminder in reminders %}
+                        <tr>
+                            <td>
+                                <div class="fw-bold">{{ reminder.request.request_number }}</div>
+                                <small class="text-muted">
+                                    {{ reminder.request.title|truncatechars:60 }}
+                                </small>
+                            </td>
+
+                            <td>
+                                Step {{ reminder.step.step_order }}
+                            </td>
+
+                            <td>
+                                {% if reminder.sent_to %}
+                                    {{ reminder.sent_to.display_name }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {% if reminder.sent_by %}
+                                    {{ reminder.sent_by.display_name }}
+                                {% else %}
+                                    System
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {{ reminder.message|default:"-"|truncatechars:90 }}
+                            </td>
+
+                            <td>{{ reminder.created_at|date:"d M Y, h:i A" }}</td>
+
+                            <td class="text-end">
+                                <a href="{% url 'approvals:request_detail' reminder.request.pk %}" class="btn btn-sm btn-outline-primary">
+                                    View
+                                </a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">🔔</div>
+            <h5>No reminders found</h5>
+            <p>Reminder history will appear here after reminders are sent.</p>
+        </div>
+    {% endif %}
+</div>
+
+{% endblock %}

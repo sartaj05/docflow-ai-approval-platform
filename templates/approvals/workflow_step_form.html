@@ -1,0 +1,186 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <p class="eyebrow">Workflow Step</p>
+        <h1>{{ form_title }}</h1>
+        <p class="page-subtitle">
+            Configure approval level, assignment logic, SLA, reminders, and final approval rules for workflow: {{ workflow.name }}.
+        </p>
+    </div>
+
+    <a href="{% url 'approvals:workflow_detail' workflow.pk %}" class="btn btn-light">
+        Back
+    </a>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="panel-card">
+            <div class="panel-card-header">
+                <div>
+                    <h5>Step Configuration</h5>
+                    <p>Configure approver role, fixed approver, department-based assignment, and SLA timing.</p>
+                </div>
+            </div>
+
+            <form method="post" novalidate>
+                {% csrf_token %}
+
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        {{ form.non_field_errors }}
+                    </div>
+                {% endif %}
+
+                <div class="mb-3">
+                    <label class="form-label">Step Order</label>
+                    {{ form.step_order }}
+
+                    <div class="form-text">
+                        Lower numbers run first. Step order must be unique inside this workflow.
+                    </div>
+
+                    {% if form.step_order.errors %}
+                        <div class="text-danger small mt-1">
+                            {{ form.step_order.errors|striptags }}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">SLA Hours</label>
+                        {{ form.sla_hours }}
+
+                        <div class="form-text">
+                            Time allowed before this step becomes overdue.
+                        </div>
+
+                        {% if form.sla_hours.errors %}
+                            <div class="text-danger small mt-1">
+                                {{ form.sla_hours.errors|striptags }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Reminder Before Hours</label>
+                        {{ form.reminder_before_hours }}
+
+                        <div class="form-text">
+                            Reminder is sent this many hours before due time.
+                        </div>
+
+                        {% if form.reminder_before_hours.errors %}
+                            <div class="text-danger small mt-1">
+                                {{ form.reminder_before_hours.errors|striptags }}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Required Role</label>
+                    {{ form.role_required }}
+
+                    <div class="form-text">
+                        Used for auto-assignment when no fixed approver or department-based assignment is selected.
+                    </div>
+
+                    {% if form.role_required.errors %}
+                        <div class="text-danger small mt-1">
+                            {{ form.role_required.errors|striptags }}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Fixed Approver</label>
+                    {{ form.approver_user }}
+
+                    <div class="form-text">
+                        Optional. If selected, this user will be assigned for this step.
+                    </div>
+
+                    {% if form.approver_user.errors %}
+                        <div class="text-danger small mt-1">
+                            {{ form.approver_user.errors|striptags }}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="form-check form-switch mb-3">
+                    {{ form.department_based }}
+                    <label class="form-check-label">
+                        Department-based assignment
+                    </label>
+
+                    <div class="form-text">
+                        If enabled, the request department head will be assigned.
+                    </div>
+                </div>
+
+                <div class="form-check form-switch mb-4">
+                    {{ form.is_final_step }}
+                    <label class="form-check-label">
+                        Final approval step
+                    </label>
+
+                    <div class="form-text">
+                        Mark this if this step represents the final approval level.
+                    </div>
+                </div>
+
+                <div class="d-flex gap-2 flex-wrap">
+                    <button type="submit" class="btn btn-primary">
+                        {{ submit_label }}
+                    </button>
+
+                    <a href="{% url 'approvals:workflow_detail' workflow.pk %}" class="btn btn-outline-secondary">
+                        Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="help-card">
+            <h5>Assignment Logic</h5>
+
+            <ul>
+                <li>Fixed approver has highest priority.</li>
+                <li>Department-based assigns the request department head.</li>
+                <li>If both are empty, system assigns by required role.</li>
+                <li>If no user is found, organization admin is used as fallback.</li>
+                <li>Do not select fixed approver and department-based together.</li>
+            </ul>
+        </div>
+
+        <div class="help-card mt-4">
+            <h5>SLA Rules</h5>
+
+            <ul>
+                <li>SLA hours controls when a step becomes overdue.</li>
+                <li>Reminder before hours must be less than SLA hours.</li>
+                <li>Overdue steps are escalated to department head or organization admin.</li>
+                <li>Celery Beat checks SLA status every 15 minutes.</li>
+            </ul>
+        </div>
+
+        <div class="help-card mt-4">
+            <h5>Example Flow</h5>
+
+            <ul>
+                <li>Step 1: Department Head — 24 hours SLA</li>
+                <li>Step 2: Approver — 48 hours SLA</li>
+                <li>Step 3: Organization Admin as final step</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

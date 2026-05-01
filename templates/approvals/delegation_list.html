@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <p class="eyebrow">Approval Delegation</p>
+        <h1>Approval Delegations</h1>
+        <p class="page-subtitle">
+            Manage temporary approval delegation, vacation mode, and fallback assignment during unavailable periods.
+        </p>
+    </div>
+
+    {% if can_create %}
+        <a href="{% url 'approvals:delegation_create' %}" class="btn btn-primary">
+            + Create Delegation
+        </a>
+    {% endif %}
+</div>
+
+<div class="stats-grid super-grid">
+    <div class="metric-card">
+        <div class="metric-icon bg-soft-primary">🔁</div>
+        <div>
+            <p>Total Delegations</p>
+            <h3>{{ total_count }}</h3>
+        </div>
+    </div>
+
+    <div class="metric-card">
+        <div class="metric-icon bg-soft-success">✅</div>
+        <div>
+            <p>Active Delegations</p>
+            <h3>{{ active_count }}</h3>
+        </div>
+    </div>
+</div>
+
+<div class="panel-card mt-4">
+    <div class="panel-card-header">
+        <div>
+            <h5>Delegation Records</h5>
+            <p>Active delegation routes approval assignments to another approver during selected dates.</p>
+        </div>
+    </div>
+
+    {% if delegations %}
+        <div class="table-responsive">
+            <table class="table modern-table align-middle">
+                <thead>
+                    <tr>
+                        <th>Delegator</th>
+                        <th>Delegate To</th>
+                        <th>Reason</th>
+                        <th>Date Range</th>
+                        <th>Status</th>
+                        <th>Current</th>
+                        <th class="text-end">Action</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for delegation in delegations %}
+                        <tr>
+                            <td>
+                                <div class="fw-bold">{{ delegation.delegator.display_name }}</div>
+                                <small class="text-muted">{{ delegation.delegator.email }}</small>
+                            </td>
+
+                            <td>
+                                <div class="fw-bold">{{ delegation.delegate_to.display_name }}</div>
+                                <small class="text-muted">{{ delegation.delegate_to.email }}</small>
+                            </td>
+
+                            <td>
+                                {{ delegation.reason|default:"-" }}
+                            </td>
+
+                            <td>
+                                <div class="fw-bold">
+                                    {{ delegation.start_date|date:"d M Y" }}
+                                    -
+                                    {{ delegation.end_date|date:"d M Y" }}
+                                </div>
+                            </td>
+
+                            <td>
+                                {% if delegation.is_active %}
+                                    <span class="status-badge status-approved">Active</span>
+                                {% else %}
+                                    <span class="status-badge status-draft">Inactive</span>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {% if delegation.is_currently_active %}
+                                    <span class="status-badge status-review">Currently Applied</span>
+                                {% else %}
+                                    <span class="status-badge status-draft">Not Current</span>
+                                {% endif %}
+                            </td>
+
+                            <td class="text-end">
+                                <a href="{% url 'approvals:delegation_update' delegation.pk %}" class="btn btn-sm btn-outline-primary">
+                                    Edit
+                                </a>
+
+                                <form
+                                    method="post"
+                                    action="{% url 'approvals:delegation_toggle_status' delegation.pk %}"
+                                    class="d-inline"
+                                >
+                                    {% csrf_token %}
+
+                                    {% if delegation.is_active %}
+                                        <button type="submit" class="btn btn-sm btn-outline-warning">
+                                            Disable
+                                        </button>
+                                    {% else %}
+                                        <button type="submit" class="btn btn-sm btn-outline-success">
+                                            Enable
+                                        </button>
+                                    {% endif %}
+                                </form>
+
+                                <a href="{% url 'approvals:delegation_delete' delegation.pk %}" class="btn btn-sm btn-outline-danger">
+                                    Delete
+                                </a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">🔁</div>
+            <h5>No approval delegation created</h5>
+            <p>Create delegation when an approver is on leave, vacation, or unavailable.</p>
+
+            <a href="{% url 'approvals:delegation_create' %}" class="btn btn-primary">
+                Create Delegation
+            </a>
+        </div>
+    {% endif %}
+</div>
+
+{% endblock %}
