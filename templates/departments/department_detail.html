@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <p class="eyebrow">Department Detail</p>
+        <h1>{{ department.name }}</h1>
+        <p class="page-subtitle">
+            {{ department.description|default:"No description added." }}
+        </p>
+    </div>
+
+    <div class="d-flex gap-2 flex-wrap">
+        <a href="{% url 'departments:list' %}" class="btn btn-light">
+            Back
+        </a>
+
+        <a href="{% url 'departments:users' department.pk %}" class="btn btn-outline-primary">
+            View Users
+        </a>
+
+        {% if can_manage %}
+            <a href="{% url 'departments:update' department.pk %}" class="btn btn-primary">
+                Edit
+            </a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-4">
+        <div class="panel-card">
+            <div class="panel-card-header">
+                <div>
+                    <h5>Department Info</h5>
+                    <p>Basic department information</p>
+                </div>
+            </div>
+
+            <div class="info-list">
+                <div>
+                    <span>Organization</span>
+                    <strong>{{ department.organization.name }}</strong>
+                </div>
+
+                <div>
+                    <span>Department Head</span>
+                    <strong>
+                        {% if department.head %}
+                            {{ department.head.display_name }}
+                        {% else %}
+                            Not assigned
+                        {% endif %}
+                    </strong>
+                </div>
+
+                <div>
+                    <span>Status</span>
+                    <strong>
+                        {% if department.is_active %}
+                            <span class="status-badge status-approved">Active</span>
+                        {% else %}
+                            <span class="status-badge status-rejected">Inactive</span>
+                        {% endif %}
+                    </strong>
+                </div>
+
+                <div>
+                    <span>Total Users</span>
+                    <strong>{{ users.count }}</strong>
+                </div>
+
+                <div>
+                    <span>Created</span>
+                    <strong>{{ department.created_at|date:"d M Y, h:i A" }}</strong>
+                </div>
+            </div>
+        </div>
+
+        {% if can_manage %}
+            <div class="panel-card danger-panel mt-4">
+                <h5 class="fw-bold mb-2">Danger Zone</h5>
+                <p class="text-muted">
+                    Delete this department only if it is no longer required.
+                </p>
+
+                <a href="{% url 'departments:delete' department.pk %}" class="btn btn-outline-danger">
+                    Delete Department
+                </a>
+            </div>
+        {% endif %}
+    </div>
+
+    <div class="col-lg-8">
+        <div class="panel-card">
+            <div class="panel-card-header">
+                <div>
+                    <h5>Department Users</h5>
+                    <p>Users currently assigned to this department</p>
+                </div>
+
+                <a href="{% url 'departments:users' department.pk %}" class="btn btn-sm btn-outline-primary">
+                    View All
+                </a>
+            </div>
+
+            {% if users %}
+                <div class="table-responsive">
+                    <table class="table modern-table align-middle">
+                        <thead>
+                            <tr>
+                                <th>User</th>
+                                <th>Role</th>
+                                <th>Designation</th>
+                                <th>Phone</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            {% for profile in users %}
+                                <tr>
+                                    <td>
+                                        <div class="fw-bold">{{ profile.user.display_name }}</div>
+                                        <small class="text-muted">{{ profile.user.email }}</small>
+                                    </td>
+
+                                    <td>
+                                        <span class="status-badge status-submitted">
+                                            {{ profile.get_role_display }}
+                                        </span>
+                                    </td>
+
+                                    <td>{{ profile.designation|default:"-" }}</td>
+                                    <td>{{ profile.phone|default:"-" }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="empty-state compact">
+                    <div class="empty-icon">👥</div>
+                    <h5>No users assigned</h5>
+                    <p>No active users are assigned to this department yet.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% endblock %}

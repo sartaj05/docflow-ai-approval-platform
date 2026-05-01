@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <p class="eyebrow">Danger Zone</p>
+        <h1>Delete Department</h1>
+        <p class="page-subtitle">
+            This action will remove the department and detach assigned users.
+        </p>
+    </div>
+
+    <a href="{% url 'departments:detail' department.pk %}" class="btn btn-light">
+        Back
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-lg-7">
+        <div class="panel-card danger-panel">
+            <h4 class="fw-bold mb-3">Are you sure?</h4>
+
+            <p class="text-muted mb-2">
+                You are about to delete this department:
+            </p>
+
+            <h5 class="mb-4">{{ department.name }}</h5>
+
+            <div class="info-list mb-4">
+                <div>
+                    <span>Organization</span>
+                    <strong>{{ department.organization.name }}</strong>
+                </div>
+
+                <div>
+                    <span>Department Head</span>
+                    <strong>
+                        {% if department.head %}
+                            {{ department.head.display_name }}
+                        {% else %}
+                            Not assigned
+                        {% endif %}
+                    </strong>
+                </div>
+            </div>
+
+            <div class="alert alert-warning">
+                Users assigned to this department will not be deleted.
+                Their department field will be cleared.
+            </div>
+
+            <form method="post">
+                {% csrf_token %}
+
+                <button type="submit" class="btn btn-danger">
+                    Yes, Delete Department
+                </button>
+
+                <a href="{% url 'departments:detail' department.pk %}" class="btn btn-outline-secondary">
+                    Cancel
+                </a>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

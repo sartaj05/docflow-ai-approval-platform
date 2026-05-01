@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <p class="eyebrow">Workspace Management</p>
+        <h1>Departments</h1>
+        <p class="page-subtitle">
+            Manage organization departments, department heads, and department-wise users.
+        </p>
+    </div>
+
+    {% if can_manage %}
+        <a href="{% url 'departments:create' %}" class="btn btn-primary">
+            + Create Department
+        </a>
+    {% endif %}
+</div>
+
+<div class="stats-grid">
+    <div class="metric-card">
+        <div class="metric-icon bg-soft-primary">🏢</div>
+        <div>
+            <p>Total Departments</p>
+            <h3>{{ total_departments }}</h3>
+        </div>
+    </div>
+
+    <div class="metric-card">
+        <div class="metric-icon bg-soft-success">✅</div>
+        <div>
+            <p>Active Departments</p>
+            <h3>{{ active_departments }}</h3>
+        </div>
+    </div>
+
+    <div class="metric-card">
+        <div class="metric-icon bg-soft-danger">⛔</div>
+        <div>
+            <p>Inactive Departments</p>
+            <h3>{{ inactive_departments }}</h3>
+        </div>
+    </div>
+</div>
+
+<div class="panel-card mt-4">
+    <div class="panel-card-header">
+        <div>
+            <h5>Department List</h5>
+            <p>Organization-scoped department records</p>
+        </div>
+    </div>
+
+    {% if departments %}
+        <div class="table-responsive">
+            <table class="table modern-table align-middle">
+                <thead>
+                    <tr>
+                        <th>Department</th>
+                        <th>Head</th>
+                        <th>Organization</th>
+                        <th>Status</th>
+                        <th>Created</th>
+                        <th class="text-end">Action</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for department in departments %}
+                        <tr>
+                            <td>
+                                <div class="fw-bold">{{ department.name }}</div>
+                                <small class="text-muted">
+                                    {{ department.description|default:"No description"|truncatechars:60 }}
+                                </small>
+                            </td>
+
+                            <td>
+                                {% if department.head %}
+                                    {{ department.head.display_name }}
+                                {% else %}
+                                    <span class="text-muted">Not assigned</span>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {% if department.organization %}
+                                    {{ department.organization.name }}
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {% if department.is_active %}
+                                    <span class="status-badge status-approved">Active</span>
+                                {% else %}
+                                    <span class="status-badge status-rejected">Inactive</span>
+                                {% endif %}
+                            </td>
+
+                            <td>{{ department.created_at|date:"d M Y" }}</td>
+
+                            <td class="text-end">
+                                <a href="{% url 'departments:detail' department.pk %}" class="btn btn-sm btn-outline-primary">
+                                    View
+                                </a>
+
+                                {% if can_manage %}
+                                    <a href="{% url 'departments:update' department.pk %}" class="btn btn-sm btn-outline-dark">
+                                        Edit
+                                    </a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">🏢</div>
+            <h5>No departments created yet</h5>
+            <p>Create your first department to organize approval requests and users.</p>
+
+            {% if can_manage %}
+                <a href="{% url 'departments:create' %}" class="btn btn-primary">
+                    Create Department
+                </a>
+            {% endif %}
+        </div>
+    {% endif %}
+</div>
+
+{% endblock %}

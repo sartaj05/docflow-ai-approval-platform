@@ -1,0 +1,23 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>DocFlow AI SMTP Test</title>
+</head>
+<body style="font-family: Arial, sans-serif; background: #f8fafc; padding: 24px;">
+    <div style="max-width: 620px; margin: 0 auto; background: #ffffff; border-radius: 16px; padding: 24px; border: 1px solid #e5e7eb;">
+        <h2 style="margin-top: 0;">SMTP Test Successful</h2>
+
+        <p>Hello {{ user.display_name }},</p>
+
+        <p>
+            This is a test email from <strong>{{ organization.name }}</strong>
+            using organization-specific SMTP settings.
+        </p>
+
+        <p style="color: #64748b;">
+            If you received this email, your SMTP settings are working correctly.
+        </p>
+    </div>
+</body>
+</html>

@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <p class="eyebrow">Department Users</p>
+        <h1>{{ department.name }} Users</h1>
+        <p class="page-subtitle">
+            List of users assigned to this department.
+        </p>
+    </div>
+
+    <a href="{% url 'departments:detail' department.pk %}" class="btn btn-light">
+        Back
+    </a>
+</div>
+
+<div class="panel-card">
+    <div class="panel-card-header">
+        <div>
+            <h5>Users</h5>
+            <p>{{ users.count }} users found in this department</p>
+        </div>
+    </div>
+
+    {% if users %}
+        <div class="table-responsive">
+            <table class="table modern-table align-middle">
+                <thead>
+                    <tr>
+                        <th>User</th>
+                        <th>Role</th>
+                        <th>Designation</th>
+                        <th>Phone</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for profile in users %}
+                        <tr>
+                            <td>
+                                <div class="fw-bold">{{ profile.user.display_name }}</div>
+                                <small class="text-muted">{{ profile.user.email }}</small>
+                            </td>
+
+                            <td>
+                                <span class="status-badge status-submitted">
+                                    {{ profile.get_role_display }}
+                                </span>
+                            </td>
+
+                            <td>{{ profile.designation|default:"-" }}</td>
+                            <td>{{ profile.phone|default:"-" }}</td>
+
+                            <td>
+                                {% if profile.is_active and profile.user.is_active %}
+                                    <span class="status-badge status-approved">Active</span>
+                                {% else %}
+                                    <span class="status-badge status-rejected">Inactive</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">👥</div>
+            <h5>No users found</h5>
+            <p>This department does not have assigned users yet.</p>
+        </div>
+    {% endif %}
+</div>
+
+{% endblock %}
