@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <p class="eyebrow">Document Versioning</p>
+        <h1>Replace Document</h1>
+        <p class="page-subtitle">
+            Replace current file for {{ document_request.request_number }}. The existing file will be saved in version history.
+        </p>
+    </div>
+
+    <a href="{% url 'documents:attachment_detail' attachment.pk %}" class="btn btn-light">
+        Back
+    </a>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="panel-card">
+            <div class="panel-card-header">
+                <div>
+                    <h5>Upload Replacement File</h5>
+                    <p>Current document will be saved as an older version before replacement.</p>
+                </div>
+            </div>
+
+            <div class="alert alert-info">
+                Current file:
+                <strong>{{ attachment.original_filename }}</strong>
+                |
+                Current version:
+                <strong>v{{ attachment.current_version_number }}</strong>
+            </div>
+
+            <form method="post" enctype="multipart/form-data" novalidate>
+                {% csrf_token %}
+
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        {{ form.non_field_errors }}
+                    </div>
+                {% endif %}
+
+                <div class="upload-box mb-3">
+                    <div class="upload-icon">🔁</div>
+
+                    <label class="form-label">Replacement File</label>
+                    {{ form.file }}
+
+                    <div class="form-text mt-2">
+                        {{ form.file.help_text }}
+                    </div>
+
+                    {% if form.file.errors %}
+                        <div class="text-danger small mt-2">
+                            {{ form.file.errors|striptags }}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label">Change Note</label>
+                    {{ form.change_note }}
+
+                    {% if form.change_note.errors %}
+                        <div class="text-danger small mt-1">
+                            {{ form.change_note.errors|striptags }}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="d-flex gap-2 flex-wrap">
+                    <button type="submit" class="btn btn-warning">
+                        Replace Document
+                    </button>
+
+                    <a href="{% url 'documents:attachment_detail' attachment.pk %}" class="btn btn-outline-secondary">
+                        Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="help-card">
+            <h5>Versioning Rules</h5>
+
+            <ul>
+                <li>Replacement is allowed only while request is in Draft status.</li>
+                <li>The current file is saved as a version before replacement.</li>
+                <li>You can compare old versions with the current file.</li>
+                <li>You can rollback to an older version while request is Draft.</li>
+                <li>Every replacement is recorded in audit logs.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

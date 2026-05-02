@@ -1,0 +1,317 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <p class="eyebrow">Document Detail</p>
+        <h1>{{ attachment.original_filename }}</h1>
+        <p class="page-subtitle">
+            Attached to {{ document_request.request_number }} — {{ document_request.title }}
+        </p>
+    </div>
+
+    <div class="d-flex gap-2 flex-wrap">
+        <a href="{% url 'approvals:request_detail' document_request.pk %}" class="btn btn-light">
+            Back to Request
+        </a>
+
+        {% if attachment.file %}
+            <a href="{{ attachment.file.url }}" target="_blank" class="btn btn-outline-primary">
+                Open File
+            </a>
+        {% endif %}
+
+        {% if can_correct_text %}
+            <a href="{% url 'documents:attachment_manual_correction' attachment.pk %}" class="btn btn-outline-info">
+                Correct Text
+            </a>
+        {% endif %}
+
+        <a href="{% url 'documents:attachment_versions' attachment.pk %}" class="btn btn-outline-dark">
+            Version History
+        </a>
+
+        {% if can_delete %}
+            <a href="{% url 'documents:attachment_replace' attachment.pk %}" class="btn btn-outline-warning">
+                Replace File
+            </a>
+
+            <a href="{% url 'documents:attachment_delete' attachment.pk %}" class="btn btn-outline-danger">
+                Delete
+            </a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-5">
+
+        <!-- File Information -->
+        <div class="panel-card">
+            <div class="panel-card-header">
+                <div>
+                    <h5>File Information</h5>
+                    <p>Uploaded document metadata, version details, OCR, and AI status.</p>
+                </div>
+            </div>
+
+            <div class="info-list">
+                <div>
+                    <span>Original Filename</span>
+                    <strong>{{ attachment.original_filename }}</strong>
+                </div>
+
+                <div>
+                    <span>Current Version</span>
+                    <strong>
+                        <span class="status-badge status-submitted">
+                            v{{ attachment.current_version_number }}
+                        </span>
+                    </strong>
+                </div>
+
+                <div>
+                    <span>Total Versions</span>
+                    <strong>{{ attachment.total_versions }}</strong>
+                </div>
+
+                <div>
+                    <span>File Type</span>
+                    <strong>{{ attachment.display_file_type }}</strong>
+                </div>
+
+                <div>
+                    <span>File Size</span>
+                    <strong>{{ attachment.file_size_mb }} MB</strong>
+                </div>
+
+                <div>
+                    <span>Uploaded By</span>
+                    <strong>
+                        {% if attachment.uploaded_by %}
+                            {{ attachment.uploaded_by.display_name }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </strong>
+                </div>
+
+                <div>
+                    <span>Uploaded At</span>
+                    <strong>{{ attachment.created_at|date:"d M Y, h:i A" }}</strong>
+                </div>
+
+                <div>
+                    <span>Last Updated</span>
+                    <strong>{{ attachment.updated_at|date:"d M Y, h:i A" }}</strong>
+                </div>
+
+                <div>
+                    <span>AI Processed</span>
+                    <strong>
+                        {% if attachment.ai_processed %}
+                            <span class="status-badge status-approved">Processed</span>
+                        {% else %}
+                            <span class="status-badge status-draft">Pending</span>
+                        {% endif %}
+                    </strong>
+                </div>
+
+                <div>
+                    <span>OCR Used</span>
+                    <strong>
+                        {% if attachment.ocr_used %}
+                            Yes
+                        {% else %}
+                            No
+                        {% endif %}
+                    </strong>
+                </div>
+
+                <div>
+                    <span>OCR Confidence</span>
+                    <strong>
+                        {% if attachment.ocr_confidence %}
+                            {{ attachment.ocr_confidence }}%
+                        {% else %}
+                            -
+                        {% endif %}
+                    </strong>
+                </div>
+
+                <div>
+                    <span>OCR Status</span>
+                    <strong>
+                        {% if attachment.ocr_status == "SUCCESS" %}
+                            <span class="status-badge status-approved">OCR Success</span>
+                        {% elif attachment.ocr_status == "LOW_CONFIDENCE" %}
+                            <span class="status-badge status-review">Low Confidence</span>
+                        {% elif attachment.ocr_status == "FAILED" %}
+                            <span class="status-badge status-rejected">OCR Failed</span>
+                        {% elif attachment.ocr_status == "MANUAL_CORRECTED" %}
+                            <span class="status-badge status-approved">Manual Corrected</span>
+                        {% else %}
+                            <span class="status-badge status-draft">
+                                {{ attachment.ocr_status|default:"Not Required" }}
+                            </span>
+                        {% endif %}
+                    </strong>
+                </div>
+
+                <div>
+                    <span>Manual Corrected By</span>
+                    <strong>
+                        {% if attachment.manual_corrected_by %}
+                            {{ attachment.manual_corrected_by.display_name }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </strong>
+                </div>
+
+                <div>
+                    <span>Manual Corrected At</span>
+                    <strong>
+                        {% if attachment.manual_corrected_at %}
+                            {{ attachment.manual_corrected_at|date:"d M Y, h:i A" }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </strong>
+                </div>
+            </div>
+        </div>
+
+        <!-- Version Actions -->
+        <div class="panel-card mt-4">
+            <div class="panel-card-header">
+                <div>
+                    <h5>Version Actions</h5>
+                    <p>Manage replacement, rollback, and version history.</p>
+                </div>
+            </div>
+
+            <div class="d-grid gap-2">
+                <a href="{% url 'documents:attachment_versions' attachment.pk %}" class="btn btn-outline-dark">
+                    View Version History
+                </a>
+
+                {% if can_correct_text %}
+                    <a href="{% url 'documents:attachment_manual_correction' attachment.pk %}" class="btn btn-outline-info">
+                        Correct Extracted Text
+                    </a>
+                {% endif %}
+
+                {% if can_delete %}
+                    <a href="{% url 'documents:attachment_replace' attachment.pk %}" class="btn btn-outline-warning">
+                        Replace Current File
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- AI Details -->
+        <div class="panel-card mt-4">
+            <div class="panel-card-header">
+                <div>
+                    <h5>AI Analysis</h5>
+                    <p>AI result fields for document processing.</p>
+                </div>
+            </div>
+
+            <div class="info-list">
+                <div>
+                    <span>AI Summary</span>
+                    <strong>{{ attachment.ai_summary|default:"Pending AI processing" }}</strong>
+                </div>
+
+                <div>
+                    <span>AI Category</span>
+                    <strong>{{ attachment.ai_category|default:"-" }}</strong>
+                </div>
+
+                <div>
+                    <span>Risk Level</span>
+                    <strong>
+                        {% if attachment.risk_level == "HIGH" %}
+                            <span class="status-badge status-rejected">High</span>
+                        {% elif attachment.risk_level == "MEDIUM" %}
+                            <span class="status-badge status-review">Medium</span>
+                        {% elif attachment.risk_level == "LOW" %}
+                            <span class="status-badge status-approved">Low</span>
+                        {% else %}
+                            Pending
+                        {% endif %}
+                    </strong>
+                </div>
+
+                <div>
+                    <span>Risk Notes</span>
+                    <strong>{{ attachment.risk_notes|default:"-" }}</strong>
+                </div>
+
+                <div>
+                    <span>Extracted Data</span>
+                    <strong>
+                        {% if attachment.ai_extracted_data %}
+                            <pre class="audit-json-box mb-0">{{ attachment.ai_extracted_data }}</pre>
+                        {% else %}
+                            -
+                        {% endif %}
+                    </strong>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-7">
+
+        <!-- Processing Error -->
+        {% if attachment.processing_error %}
+            <div class="alert alert-warning">
+                <strong>Processing Note:</strong>
+                {{ attachment.processing_error }}
+            </div>
+        {% endif %}
+
+        <!-- Extracted Text -->
+        <div class="panel-card">
+            <div class="panel-card-header">
+                <div>
+                    <h5>Extracted / OCR Text</h5>
+                    <p>Text extracted from PDF or OCR fallback. You can manually correct it if needed.</p>
+                </div>
+
+                {% if can_correct_text %}
+                    <a href="{% url 'documents:attachment_manual_correction' attachment.pk %}" class="btn btn-sm btn-outline-info">
+                        Correct Text
+                    </a>
+                {% endif %}
+            </div>
+
+            {% if attachment.extracted_text %}
+                <div class="extracted-text-box">
+                    {{ attachment.extracted_text|linebreaksbr }}
+                </div>
+            {% else %}
+                <div class="empty-state compact">
+                    <div class="empty-icon">🧾</div>
+                    <h5>No extracted text</h5>
+                    <p>
+                        No readable text was found. For scanned PDF or images,
+                        OCR may fail if the file quality is low.
+                    </p>
+
+                    {% if can_correct_text %}
+                        <a href="{% url 'documents:attachment_manual_correction' attachment.pk %}" class="btn btn-primary">
+                            Add Text Manually
+                        </a>
+                    {% endif %}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% endblock %}

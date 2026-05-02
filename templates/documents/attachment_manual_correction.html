@@ -1,0 +1,154 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <p class="eyebrow">OCR Review</p>
+        <h1>Manual Text Correction</h1>
+        <p class="page-subtitle">
+            Review and correct extracted/OCR text for {{ attachment.original_filename }}.
+        </p>
+    </div>
+
+    <a href="{% url 'documents:attachment_detail' attachment.pk %}" class="btn btn-light">
+        Back to Document
+    </a>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="panel-card">
+            <div class="panel-card-header">
+                <div>
+                    <h5>Correct Extracted Text</h5>
+                    <p>Manual correction will replace the current extracted text.</p>
+                </div>
+
+                {% if attachment.ocr_status == "LOW_CONFIDENCE" %}
+                    <span class="status-badge status-review">Low Confidence</span>
+                {% elif attachment.ocr_status == "SUCCESS" %}
+                    <span class="status-badge status-approved">OCR Success</span>
+                {% elif attachment.ocr_status == "FAILED" %}
+                    <span class="status-badge status-rejected">OCR Failed</span>
+                {% elif attachment.ocr_status == "MANUAL_CORRECTED" %}
+                    <span class="status-badge status-approved">Manual Corrected</span>
+                {% else %}
+                    <span class="status-badge status-draft">{{ attachment.ocr_status|default:"Not Required" }}</span>
+                {% endif %}
+            </div>
+
+            <form method="post" novalidate>
+                {% csrf_token %}
+
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        {{ form.non_field_errors }}
+                    </div>
+                {% endif %}
+
+                <div class="mb-4">
+                    <label class="form-label">Corrected Text</label>
+                    {{ form.corrected_text }}
+
+                    {% if form.corrected_text.errors %}
+                        <div class="text-danger small mt-1">
+                            {{ form.corrected_text.errors|striptags }}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="d-flex gap-2 flex-wrap">
+                    <button type="submit" class="btn btn-primary">
+                        Save Correction
+                    </button>
+
+                    <a href="{% url 'documents:attachment_detail' attachment.pk %}" class="btn btn-outline-secondary">
+                        Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="panel-card">
+            <div class="panel-card-header">
+                <div>
+                    <h5>OCR Metadata</h5>
+                    <p>Extraction status and confidence.</p>
+                </div>
+            </div>
+
+            <div class="info-list">
+                <div>
+                    <span>Request</span>
+                    <strong>{{ document_request.request_number }}</strong>
+                </div>
+
+                <div>
+                    <span>OCR Used</span>
+                    <strong>
+                        {% if attachment.ocr_used %}
+                            Yes
+                        {% else %}
+                            No
+                        {% endif %}
+                    </strong>
+                </div>
+
+                <div>
+                    <span>OCR Confidence</span>
+                    <strong>
+                        {% if attachment.ocr_confidence %}
+                            {{ attachment.ocr_confidence }}%
+                        {% else %}
+                            -
+                        {% endif %}
+                    </strong>
+                </div>
+
+                <div>
+                    <span>OCR Status</span>
+                    <strong>{{ attachment.ocr_status|default:"NOT_REQUIRED" }}</strong>
+                </div>
+
+                <div>
+                    <span>Manual Corrected By</span>
+                    <strong>
+                        {% if attachment.manual_corrected_by %}
+                            {{ attachment.manual_corrected_by.display_name }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </strong>
+                </div>
+
+                <div>
+                    <span>Manual Corrected At</span>
+                    <strong>
+                        {% if attachment.manual_corrected_at %}
+                            {{ attachment.manual_corrected_at|date:"d M Y, h:i A" }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </strong>
+                </div>
+            </div>
+        </div>
+
+        <div class="help-card mt-4">
+            <h5>When to correct?</h5>
+
+            <ul>
+                <li>Scanned PDF text is incomplete.</li>
+                <li>Image OCR has wrong words.</li>
+                <li>OCR confidence is low.</li>
+                <li>Important financial/date fields are missing.</li>
+                <li>AI analysis depends on corrected text.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

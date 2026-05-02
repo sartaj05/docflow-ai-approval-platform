@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <p class="eyebrow">Document Versioning</p>
+        <h1>Version History</h1>
+        <p class="page-subtitle">
+            {{ attachment.original_filename }} — {{ document_request.request_number }}
+        </p>
+    </div>
+
+    <div class="d-flex gap-2 flex-wrap">
+        <a href="{% url 'documents:attachment_detail' attachment.pk %}" class="btn btn-light">
+            Back to Document
+        </a>
+
+        {% if can_rollback %}
+            <a href="{% url 'documents:attachment_replace' attachment.pk %}" class="btn btn-outline-warning">
+                Replace Current File
+            </a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="stats-grid super-grid">
+    <div class="metric-card">
+        <div class="metric-icon bg-soft-primary">📎</div>
+        <div>
+            <p>Current Version</p>
+            <h3>v{{ attachment.current_version_number }}</h3>
+        </div>
+    </div>
+
+    <div class="metric-card">
+        <div class="metric-icon bg-soft-warning">🕒</div>
+        <div>
+            <p>Saved Versions</p>
+            <h3>{{ versions.count }}</h3>
+        </div>
+    </div>
+</div>
+
+<div class="panel-card mt-4">
+    <div class="panel-card-header">
+        <div>
+            <h5>Current Active File</h5>
+            <p>This is the file currently attached to the request.</p>
+        </div>
+
+        {% if attachment.file %}
+            <a href="{{ attachment.file.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                Open Current
+            </a>
+        {% endif %}
+    </div>
+
+    <div class="info-list">
+        <div>
+            <span>Filename</span>
+            <strong>{{ attachment.original_filename }}</strong>
+        </div>
+
+        <div>
+            <span>File Type</span>
+            <strong>{{ attachment.display_file_type }}</strong>
+        </div>
+
+        <div>
+            <span>File Size</span>
+            <strong>{{ attachment.file_size_mb }} MB</strong>
+        </div>
+
+        <div>
+            <span>Last Updated</span>
+            <strong>{{ attachment.updated_at|date:"d M Y, h:i A" }}</strong>
+        </div>
+    </div>
+</div>
+
+<div class="panel-card mt-4">
+    <div class="panel-card-header">
+        <div>
+            <h5>Previous Versions</h5>
+            <p>Older versions created before replacement or rollback.</p>
+        </div>
+    </div>
+
+    {% if versions %}
+        <div class="table-responsive">
+            <table class="table modern-table align-middle">
+                <thead>
+                    <tr>
+                        <th>Version</th>
+                        <th>Filename</th>
+                        <th>Type</th>
+                        <th>Size</th>
+                        <th>Changed By</th>
+                        <th>Change Note</th>
+                        <th>Created</th>
+                        <th class="text-end">Action</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for version in versions %}
+                        <tr>
+                            <td>
+                                <span class="status-badge status-submitted">
+                                    v{{ version.version_number }}
+                                </span>
+                            </td>
+
+                            <td>
+                                <div class="fw-bold">{{ version.original_filename|truncatechars:45 }}</div>
+                                {% if version.ai_processed %}
+                                    <small class="text-success">AI processed</small>
+                                {% else %}
+                                    <small class="text-muted">AI pending</small>
+                                {% endif %}
+                            </td>
+
+                            <td>{{ version.display_file_type }}</td>
+
+                            <td>{{ version.file_size_mb }} MB</td>
+
+                            <td>
+                                {% if version.replaced_by %}
+                                    {{ version.replaced_by.display_name }}
+                                {% else %}
+                                    System
+                                {% endif %}
+                            </td>
+
+                            <td>{{ version.change_note|default:"-"|truncatechars:60 }}</td>
+
+                            <td>{{ version.created_at|date:"d M Y, h:i A" }}</td>
+
+                            <td class="text-end">
+                                {% if version.file %}
+                                    <a href="{{ version.file.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                        Open
+                                    </a>
+                                {% endif %}
+
+                                <a href="{% url 'documents:attachment_version_compare' attachment.pk version.pk %}" class="btn btn-sm btn-outline-dark">
+                                    Compare
+                                </a>
+
+                                {% if can_rollback %}
+                                    <a href="{% url 'documents:attachment_rollback' attachment.pk version.pk %}" class="btn btn-sm btn-outline-warning">
+                                        Rollback
+                                    </a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">🕒</div>
+            <h5>No previous versions</h5>
+            <p>Versions will appear when this document is replaced or rolled back.</p>
+        </div>
+    {% endif %}
+</div>
+
+{% endblock %}

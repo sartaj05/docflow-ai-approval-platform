@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <p class="eyebrow">Document Upload</p>
+        <h1>Upload Documents</h1>
+        <p class="page-subtitle">
+            Upload one or multiple files for {{ document_request.request_number }}.
+        </p>
+    </div>
+
+    <a href="{% url 'approvals:request_detail' document_request.pk %}" class="btn btn-light">
+        Back to Request
+    </a>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="panel-card">
+            <div class="panel-card-header">
+                <div>
+                    <h5>Attach Documents</h5>
+                    <p>
+                        Supported files: PDF, JPG, JPEG, PNG, DOC, DOCX.
+                        PDF text will be extracted automatically.
+                    </p>
+                </div>
+            </div>
+
+            <form method="post" enctype="multipart/form-data" novalidate>
+                {% csrf_token %}
+
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        {{ form.non_field_errors }}
+                    </div>
+                {% endif %}
+
+                <div class="upload-box mb-3">
+                    <div class="upload-icon">📎</div>
+
+                    <label class="form-label">Select Documents</label>
+                    {{ form.files }}
+
+                    <div class="form-text mt-2">
+                        {{ form.files.help_text }}
+                    </div>
+
+                    {% if form.files.errors %}
+                        <div class="text-danger small mt-2">
+                            {{ form.files.errors|striptags }}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="d-flex gap-2 flex-wrap">
+                    <button type="submit" class="btn btn-primary">
+                        Upload Documents
+                    </button>
+
+                    <a href="{% url 'approvals:request_detail' document_request.pk %}" class="btn btn-outline-secondary">
+                        Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="help-card">
+            <h5>Upload Rules</h5>
+
+            <ul>
+                <li>You can upload multiple files together.</li>
+                <li>Files are allowed only while request is in Draft status.</li>
+                <li>PDF files are processed for text extraction.</li>
+                <li>AI summary will be connected in the next AI integration step.</li>
+                <li>Submitted requests become locked for document changes.</li>
+            </ul>
+        </div>
+
+        <div class="help-card mt-4">
+            <h5>Current Request</h5>
+
+            <div class="info-list">
+                <div>
+                    <span>Request No</span>
+                    <strong>{{ document_request.request_number }}</strong>
+                </div>
+
+                <div>
+                    <span>Title</span>
+                    <strong>{{ document_request.title|truncatechars:45 }}</strong>
+                </div>
+
+                <div>
+                    <span>Status</span>
+                    <strong>
+                        {% if document_request.status == "DRAFT" %}
+                            <span class="status-badge status-draft">Draft</span>
+                        {% elif document_request.status == "IN_REVIEW" %}
+                            <span class="status-badge status-review">In Review</span>
+                        {% elif document_request.status == "APPROVED" %}
+                            <span class="status-badge status-approved">Approved</span>
+                        {% elif document_request.status == "REJECTED" %}
+                            <span class="status-badge status-rejected">Rejected</span>
+                        {% else %}
+                            <span class="status-badge status-draft">
+                                {{ document_request.get_status_display }}
+                            </span>
+                        {% endif %}
+                    </strong>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,196 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <p class="eyebrow">Document Versioning</p>
+        <h1>Compare Version</h1>
+        <p class="page-subtitle">
+            Compare current document with version v{{ version.version_number }}.
+        </p>
+    </div>
+
+    <div class="d-flex gap-2 flex-wrap">
+        <a href="{% url 'documents:attachment_versions' attachment.pk %}" class="btn btn-light">
+            Back to Versions
+        </a>
+
+        {% if can_rollback %}
+            <a href="{% url 'documents:attachment_rollback' attachment.pk version.pk %}" class="btn btn-outline-warning">
+                Rollback to v{{ version.version_number }}
+            </a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-6">
+        <div class="panel-card">
+            <div class="panel-card-header">
+                <div>
+                    <h5>Current Version</h5>
+                    <p>Active file currently attached to request.</p>
+                </div>
+
+                <span class="status-badge status-approved">
+                    Current
+                </span>
+            </div>
+
+            <div class="info-list">
+                <div>
+                    <span>Filename</span>
+                    <strong>{{ attachment.original_filename }}</strong>
+                </div>
+
+                <div>
+                    <span>Type</span>
+                    <strong>{{ attachment.display_file_type }}</strong>
+                </div>
+
+                <div>
+                    <span>Size</span>
+                    <strong>{{ attachment.file_size_mb }} MB</strong>
+                </div>
+
+                <div>
+                    <span>AI Summary</span>
+                    <strong>{{ attachment.ai_summary|default:"-" }}</strong>
+                </div>
+
+                <div>
+                    <span>Risk Level</span>
+                    <strong>{{ attachment.risk_level|default:"-" }}</strong>
+                </div>
+
+                <div>
+                    <span>Risk Notes</span>
+                    <strong>{{ attachment.risk_notes|default:"-" }}</strong>
+                </div>
+            </div>
+
+            {% if attachment.file %}
+                <a href="{{ attachment.file.url }}" target="_blank" class="btn btn-outline-primary w-100 mt-4">
+                    Open Current File
+                </a>
+            {% endif %}
+        </div>
+
+        <div class="panel-card mt-4">
+            <div class="panel-card-header">
+                <div>
+                    <h5>Current Extracted Text</h5>
+                    <p>Current file extracted text.</p>
+                </div>
+            </div>
+
+            {% if attachment.extracted_text %}
+                <div class="extracted-text-box compare-text-box">
+                    {{ attachment.extracted_text|linebreaksbr }}
+                </div>
+            {% else %}
+                <div class="empty-state compact">
+                    <div class="empty-icon">🧾</div>
+                    <h5>No text</h5>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="panel-card">
+            <div class="panel-card-header">
+                <div>
+                    <h5>Version v{{ version.version_number }}</h5>
+                    <p>Saved historical version.</p>
+                </div>
+
+                <span class="status-badge status-draft">
+                    Old Version
+                </span>
+            </div>
+
+            <div class="info-list">
+                <div>
+                    <span>Filename</span>
+                    <strong>{{ version.original_filename }}</strong>
+                </div>
+
+                <div>
+                    <span>Type</span>
+                    <strong>{{ version.display_file_type }}</strong>
+                </div>
+
+                <div>
+                    <span>Size</span>
+                    <strong>{{ version.file_size_mb }} MB</strong>
+                </div>
+
+                <div>
+                    <span>Changed By</span>
+                    <strong>
+                        {% if version.replaced_by %}
+                            {{ version.replaced_by.display_name }}
+                        {% else %}
+                            System
+                        {% endif %}
+                    </strong>
+                </div>
+
+                <div>
+                    <span>Change Note</span>
+                    <strong>{{ version.change_note|default:"-" }}</strong>
+                </div>
+
+                <div>
+                    <span>Created</span>
+                    <strong>{{ version.created_at|date:"d M Y, h:i A" }}</strong>
+                </div>
+
+                <div>
+                    <span>AI Summary</span>
+                    <strong>{{ version.ai_summary|default:"-" }}</strong>
+                </div>
+
+                <div>
+                    <span>Risk Level</span>
+                    <strong>{{ version.risk_level|default:"-" }}</strong>
+                </div>
+
+                <div>
+                    <span>Risk Notes</span>
+                    <strong>{{ version.risk_notes|default:"-" }}</strong>
+                </div>
+            </div>
+
+            {% if version.file %}
+                <a href="{{ version.file.url }}" target="_blank" class="btn btn-outline-primary w-100 mt-4">
+                    Open Version File
+                </a>
+            {% endif %}
+        </div>
+
+        <div class="panel-card mt-4">
+            <div class="panel-card-header">
+                <div>
+                    <h5>Version Extracted Text</h5>
+                    <p>Historical file extracted text.</p>
+                </div>
+            </div>
+
+            {% if version.extracted_text %}
+                <div class="extracted-text-box compare-text-box">
+                    {{ version.extracted_text|linebreaksbr }}
+                </div>
+            {% else %}
+                <div class="empty-state compact">
+                    <div class="empty-icon">🧾</div>
+                    <h5>No text</h5>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <p class="eyebrow">Danger Zone</p>
+        <h1>Delete Document</h1>
+        <p class="page-subtitle">
+            This document will be permanently removed from the request.
+        </p>
+    </div>
+
+    <a href="{% url 'approvals:request_detail' document_request.pk %}" class="btn btn-light">
+        Back to Request
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-lg-7">
+        <div class="panel-card danger-panel">
+            <h4 class="fw-bold mb-3">Are you sure?</h4>
+
+            <p class="text-muted mb-2">
+                You are about to delete this document:
+            </p>
+
+            <h5 class="mb-3">{{ attachment.original_filename }}</h5>
+
+            <div class="info-list mb-4">
+                <div>
+                    <span>Request</span>
+                    <strong>
+                        {{ document_request.request_number }} — {{ document_request.title }}
+                    </strong>
+                </div>
+
+                <div>
+                    <span>File Type</span>
+                    <strong>{{ attachment.display_file_type }}</strong>
+                </div>
+
+                <div>
+                    <span>File Size</span>
+                    <strong>{{ attachment.file_size_mb }} MB</strong>
+                </div>
+
+                <div>
+                    <span>Uploaded At</span>
+                    <strong>{{ attachment.created_at|date:"d M Y, h:i A" }}</strong>
+                </div>
+            </div>
+
+            <div class="alert alert-warning">
+                This action will delete the uploaded file, extracted text, and related AI placeholder data.
+            </div>
+
+            <form method="post">
+                {% csrf_token %}
+
+                <button type="submit" class="btn btn-danger">
+                    Yes, Delete Document
+                </button>
+
+                <a href="{% url 'approvals:request_detail' document_request.pk %}" class="btn btn-outline-secondary">
+                    Cancel
+                </a>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

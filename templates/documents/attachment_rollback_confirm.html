@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <p class="eyebrow">Danger Zone</p>
+        <h1>Rollback Document</h1>
+        <p class="page-subtitle">
+            Restore version v{{ version.version_number }} as the current active document.
+        </p>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-7">
+        <div class="panel-card danger-panel">
+            <h4 class="fw-bold mb-3">Are you sure?</h4>
+
+            <p class="text-muted">
+                You are about to rollback current document:
+            </p>
+
+            <h5>{{ attachment.original_filename }}</h5>
+
+            <div class="alert alert-warning mt-4">
+                Current active file will be saved as a new version before rollback.
+                Then version v{{ version.version_number }} will become the active file.
+            </div>
+
+            <div class="info-list mb-4">
+                <div>
+                    <span>Rollback Version</span>
+                    <strong>v{{ version.version_number }}</strong>
+                </div>
+
+                <div>
+                    <span>Version Filename</span>
+                    <strong>{{ version.original_filename }}</strong>
+                </div>
+
+                <div>
+                    <span>Created</span>
+                    <strong>{{ version.created_at|date:"d M Y, h:i A" }}</strong>
+                </div>
+            </div>
+
+            <form method="post" novalidate>
+                {% csrf_token %}
+
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        {{ form.non_field_errors }}
+                    </div>
+                {% endif %}
+
+                <div class="mb-4">
+                    <label class="form-label">Rollback Reason</label>
+                    {{ form.reason }}
+
+                    {% if form.reason.errors %}
+                        <div class="text-danger small mt-1">
+                            {{ form.reason.errors|striptags }}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <button type="submit" class="btn btn-danger">
+                    Yes, Rollback Document
+                </button>
+
+                <a href="{% url 'documents:attachment_versions' attachment.pk %}" class="btn btn-outline-secondary">
+                    Cancel
+                </a>
+            </form>
+        </div>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="help-card">
+            <h5>Rollback Rules</h5>
+
+            <ul>
+                <li>Rollback is allowed only while request is in Draft status.</li>
+                <li>Current file is saved before rollback.</li>
+                <li>Rollback action is recorded in audit logs.</li>
+                <li>You can compare versions before rollback.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
