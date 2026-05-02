@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <p class="eyebrow">Audit Detail</p>
+        <h1>{{ audit_log.get_action_display }}</h1>
+        <p class="page-subtitle">
+            {{ audit_log.message }}
+        </p>
+    </div>
+
+    <a href="{% url 'audit:audit_log_list' %}" class="btn btn-light">
+        Back
+    </a>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-5">
+        <div class="panel-card">
+            <div class="panel-card-header">
+                <div>
+                    <h5>Audit Information</h5>
+                    <p>Core event details</p>
+                </div>
+
+                {% if audit_log.action == "APPROVED" %}
+                    <span class="status-badge status-approved">Approved</span>
+                {% elif audit_log.action == "REJECTED" %}
+                    <span class="status-badge status-rejected">Rejected</span>
+                {% elif audit_log.action == "CREATED" %}
+                    <span class="status-badge status-submitted">Created</span>
+                {% elif audit_log.action == "UPDATED" %}
+                    <span class="status-badge status-review">Updated</span>
+                {% elif audit_log.action == "DELETED" %}
+                    <span class="status-badge status-rejected">Deleted</span>
+                {% elif audit_log.action == "UPLOADED" %}
+                    <span class="status-badge status-submitted">Uploaded</span>
+                {% elif audit_log.action == "SUBMITTED" %}
+                    <span class="status-badge status-review">Submitted</span>
+                {% elif audit_log.action == "STATUS_CHANGED" %}
+                    <span class="status-badge status-review">Status Changed</span>
+                {% else %}
+                    <span class="status-badge status-draft">
+                        {{ audit_log.get_action_display }}
+                    </span>
+                {% endif %}
+            </div>
+
+            <div class="info-list">
+                <div>
+                    <span>Action</span>
+                    <strong>{{ audit_log.get_action_display }}</strong>
+                </div>
+
+                <div>
+                    <span>Model Name</span>
+                    <strong>{{ audit_log.model_name }}</strong>
+                </div>
+
+                <div>
+                    <span>Object ID</span>
+                    <strong>{{ audit_log.object_id|default:"-" }}</strong>
+                </div>
+
+                <div>
+                    <span>User</span>
+                    <strong>
+                        {% if audit_log.user %}
+                            {{ audit_log.user.display_name }}
+                        {% else %}
+                            System
+                        {% endif %}
+                    </strong>
+                </div>
+
+                <div>
+                    <span>Organization</span>
+                    <strong>
+                        {% if audit_log.organization %}
+                            {{ audit_log.organization.name }}
+                        {% else %}
+                            Platform
+                        {% endif %}
+                    </strong>
+                </div>
+
+                <div>
+                    <span>IP Address</span>
+                    <strong>{{ audit_log.ip_address|default:"-" }}</strong>
+                </div>
+
+                <div>
+                    <span>Created At</span>
+                    <strong>{{ audit_log.created_at|date:"d M Y, h:i A" }}</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-7">
+        <div class="panel-card">
+            <div class="panel-card-header">
+                <div>
+                    <h5>Message</h5>
+                    <p>Human-readable audit event message</p>
+                </div>
+            </div>
+
+            <div class="audit-message-box">
+                {{ audit_log.message|linebreaksbr }}
+            </div>
+        </div>
+
+        <div class="panel-card mt-4">
+            <div class="panel-card-header">
+                <div>
+                    <h5>User Agent</h5>
+                    <p>Browser/device information</p>
+                </div>
+            </div>
+
+            <div class="audit-message-box">
+                {{ audit_log.user_agent|default:"-" }}
+            </div>
+        </div>
+
+        <div class="panel-card mt-4">
+            <div class="panel-card-header">
+                <div>
+                    <h5>Extra Data</h5>
+                    <p>Structured event metadata</p>
+                </div>
+            </div>
+
+            {% if audit_log.extra_data %}
+                <pre class="audit-json-box">{{ audit_log.extra_data }}</pre>
+            {% else %}
+                <div class="empty-state compact">
+                    <div class="empty-icon">🧾</div>
+                    <h5>No extra data</h5>
+                    <p>No structured metadata was stored for this audit event.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% endblock %}

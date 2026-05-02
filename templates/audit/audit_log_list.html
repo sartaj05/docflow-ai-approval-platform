@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <p class="eyebrow">System Audit</p>
+        <h1>Audit Logs</h1>
+        <p class="page-subtitle">
+            Track platform and organization activities with user, IP address, user-agent, and timestamp.
+        </p>
+    </div>
+</div>
+
+<div class="stats-grid">
+    <div class="metric-card">
+        <div class="metric-icon bg-soft-primary">🛡️</div>
+        <div>
+            <p>Matching Logs</p>
+            <h3>{{ recent_logs_count }}</h3>
+        </div>
+    </div>
+</div>
+
+<div class="panel-card mt-4">
+    <div class="panel-card-header">
+        <div>
+            <h5>Search & Filters</h5>
+            <p>Filter logs by action, model, object ID, user, organization, or IP address.</p>
+        </div>
+    </div>
+
+    <form method="get" class="row g-3 align-items-end">
+        <div class="col-lg-4 col-md-6">
+            <label class="form-label">Search</label>
+            <input
+                type="text"
+                name="q"
+                value="{{ search }}"
+                class="form-control"
+                placeholder="Search message, user, object ID, IP..."
+            >
+        </div>
+
+        <div class="col-lg-3 col-md-6">
+            <label class="form-label">Action</label>
+            <select name="action" class="form-select">
+                <option value="">All Actions</option>
+                {% for value, label in action_choices %}
+                    <option value="{{ value }}" {% if selected_action == value %}selected{% endif %}>
+                        {{ label }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="col-lg-3 col-md-6">
+            <label class="form-label">Model Name</label>
+            <input
+                type="text"
+                name="model_name"
+                value="{{ model_name }}"
+                class="form-control"
+                placeholder="DocumentRequest, ApprovalStep..."
+            >
+        </div>
+
+        <div class="col-lg-2 col-md-6">
+            <button type="submit" class="btn btn-primary w-100">
+                Apply
+            </button>
+        </div>
+
+        <div class="col-lg-2 col-md-6">
+            <a href="{% url 'audit:audit_log_list' %}" class="btn btn-outline-secondary w-100">
+                Reset
+            </a>
+        </div>
+    </form>
+</div>
+
+<div class="panel-card mt-4">
+    <div class="panel-card-header">
+        <div>
+            <h5>Audit Log Records</h5>
+            <p>Showing latest 300 matching records</p>
+        </div>
+    </div>
+
+    {% if logs %}
+        <div class="table-responsive">
+            <table class="table modern-table align-middle">
+                <thead>
+                    <tr>
+                        <th>Action</th>
+                        <th>Message</th>
+                        <th>Model</th>
+                        <th>User</th>
+                        <th>Organization</th>
+                        <th>IP</th>
+                        <th>Date</th>
+                        <th class="text-end">Action</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for log in logs %}
+                        <tr>
+                            <td>
+                                {% if log.action == "APPROVED" %}
+                                    <span class="status-badge status-approved">Approved</span>
+                                {% elif log.action == "REJECTED" %}
+                                    <span class="status-badge status-rejected">Rejected</span>
+                                {% elif log.action == "CREATED" %}
+                                    <span class="status-badge status-submitted">Created</span>
+                                {% elif log.action == "UPDATED" %}
+                                    <span class="status-badge status-review">Updated</span>
+                                {% elif log.action == "DELETED" %}
+                                    <span class="status-badge status-rejected">Deleted</span>
+                                {% elif log.action == "UPLOADED" %}
+                                    <span class="status-badge status-submitted">Uploaded</span>
+                                {% elif log.action == "SUBMITTED" %}
+                                    <span class="status-badge status-review">Submitted</span>
+                                {% elif log.action == "STATUS_CHANGED" %}
+                                    <span class="status-badge status-review">Status Changed</span>
+                                {% elif log.action == "CANCELLED" %}
+                                    <span class="status-badge status-draft">Cancelled</span>
+                                {% elif log.action == "COMMENTED" %}
+                                    <span class="status-badge status-submitted">Commented</span>
+                                {% else %}
+                                    <span class="status-badge status-draft">
+                                        {{ log.get_action_display }}
+                                    </span>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                <div class="fw-bold">{{ log.message|truncatechars:80 }}</div>
+                                <small class="text-muted">
+                                    Object ID: {{ log.object_id|default:"-" }}
+                                </small>
+                            </td>
+
+                            <td>{{ log.model_name }}</td>
+
+                            <td>
+                                {% if log.user %}
+                                    {{ log.user.display_name }}
+                                {% else %}
+                                    System
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {% if log.organization %}
+                                    {{ log.organization.name }}
+                                {% else %}
+                                    Platform
+                                {% endif %}
+                            </td>
+
+                            <td>{{ log.ip_address|default:"-" }}</td>
+
+                            <td>{{ log.created_at|date:"d M Y, h:i A" }}</td>
+
+                            <td class="text-end">
+                                <a href="{% url 'audit:audit_log_detail' log.pk %}" class="btn btn-sm btn-outline-primary">
+                                    View
+                                </a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">🛡️</div>
+            <h5>No audit logs found</h5>
+            <p>Audit activity will appear here when users perform important actions.</p>
+        </div>
+    {% endif %}
+</div>
+
+{% endblock %}
