@@ -1,0 +1,199 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <p class="eyebrow">Notifications</p>
+        <h1>Notification Preferences</h1>
+        <p class="page-subtitle">
+            Control in-app and email notifications for watched requests, comments,
+            approvals, AI processing, reminders, and certificates.
+        </p>
+    </div>
+
+    <div class="d-flex gap-2 flex-wrap">
+        <a href="{% url 'notifications:list' %}" class="btn btn-light">
+            Back to Notifications
+        </a>
+
+        <a href="{% url 'dashboard:my_activity' %}" class="btn btn-outline-primary">
+            My Activity
+        </a>
+    </div>
+</div>
+
+<form method="post" novalidate>
+    {% csrf_token %}
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+
+            <!-- Master Settings -->
+            <div class="panel-card">
+                <div class="panel-card-header">
+                    <div>
+                        <h5>Master Notification Settings</h5>
+                        <p>Turn notification channels on or off globally.</p>
+                    </div>
+                </div>
+
+                <div class="notification-pref-row">
+                    <div>
+                        <h6>In-App Notifications</h6>
+                        <p>Show notifications inside DocFlow AI notification center.</p>
+                    </div>
+
+                    <div class="form-check form-switch">
+                        {{ form.in_app_enabled }}
+                    </div>
+                </div>
+
+                <div class="notification-pref-row">
+                    <div>
+                        <h6>Email Notifications</h6>
+                        <p>Send matching alerts to your registered email address.</p>
+                    </div>
+
+                    <div class="form-check form-switch">
+                        {{ form.email_enabled }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Category Settings -->
+            <div class="panel-card mt-4">
+                <div class="panel-card-header">
+                    <div>
+                        <h5>Category Preferences</h5>
+                        <p>Choose exactly which events should notify you.</p>
+                    </div>
+                </div>
+
+                <div class="notification-pref-table">
+                    <div class="notification-pref-table-head">
+                        <div>Event Type</div>
+                        <div>In-App</div>
+                        <div>Email</div>
+                    </div>
+
+                    <div class="notification-pref-table-row">
+                        <div>
+                            <h6>Watched Request Updates</h6>
+                            <p>General activity on requests you follow.</p>
+                        </div>
+                        <div class="form-check form-switch">{{ form.watched_request_in_app }}</div>
+                        <div class="form-check form-switch">{{ form.watched_request_email }}</div>
+                    </div>
+
+                    <div class="notification-pref-table-row">
+                        <div>
+                            <h6>Comments & Mentions</h6>
+                            <p>Discussion comments, replies, and @mentions.</p>
+                        </div>
+                        <div class="form-check form-switch">{{ form.comments_in_app }}</div>
+                        <div class="form-check form-switch">{{ form.comments_email }}</div>
+                    </div>
+
+                    <div class="notification-pref-table-row">
+                        <div>
+                            <h6>Approval Actions</h6>
+                            <p>Assigned approvals, approvals, rejections, and step comments.</p>
+                        </div>
+                        <div class="form-check form-switch">{{ form.approvals_in_app }}</div>
+                        <div class="form-check form-switch">{{ form.approvals_email }}</div>
+                    </div>
+
+                    <div class="notification-pref-table-row">
+                        <div>
+                            <h6>Document Activity</h6>
+                            <p>Uploads, replacements, versions, and archive activity.</p>
+                        </div>
+                        <div class="form-check form-switch">{{ form.documents_in_app }}</div>
+                        <div class="form-check form-switch">{{ form.documents_email }}</div>
+                    </div>
+
+                    <div class="notification-pref-table-row">
+                        <div>
+                            <h6>AI / OCR Processing</h6>
+                            <p>AI summaries, OCR results, risk levels, and reprocessing events.</p>
+                        </div>
+                        <div class="form-check form-switch">{{ form.ai_in_app }}</div>
+                        <div class="form-check form-switch">{{ form.ai_email }}</div>
+                    </div>
+
+                    <div class="notification-pref-table-row">
+                        <div>
+                            <h6>Reminders & SLA</h6>
+                            <p>Manual reminders, overdue reminders, and SLA alerts.</p>
+                        </div>
+                        <div class="form-check form-switch">{{ form.reminders_in_app }}</div>
+                        <div class="form-check form-switch">{{ form.reminders_email }}</div>
+                    </div>
+
+                    <div class="notification-pref-table-row">
+                        <div>
+                            <h6>Certificates</h6>
+                            <p>Certificate generation, invalidation, verification, and seal events.</p>
+                        </div>
+                        <div class="form-check form-switch">{{ form.certificates_in_app }}</div>
+                        <div class="form-check form-switch">{{ form.certificates_email }}</div>
+                    </div>
+
+                    <div class="notification-pref-table-row">
+                        <div>
+                            <h6>Daily Pending Summary</h6>
+                            <p>Daily email summary of pending approvals and important work.</p>
+                        </div>
+                        <div>
+                            <span class="status-badge status-draft">Email Only</span>
+                        </div>
+                        <div class="form-check form-switch">{{ form.daily_summary_email }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex gap-2 flex-wrap mt-4">
+                <button type="submit" class="btn btn-primary">
+                    Save Preferences
+                </button>
+
+                <a href="{% url 'notifications:list' %}" class="btn btn-outline-secondary">
+                    Cancel
+                </a>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="help-card">
+                <h5>How preferences work</h5>
+
+                <ul>
+                    <li>Master switches disable a full notification channel.</li>
+                    <li>Category switches control specific event types.</li>
+                    <li>Watched request emails are sent only for requests you follow.</li>
+                    <li>Critical workflow events may still be visible in audit logs.</li>
+                    <li>Email delivery also depends on SMTP configuration.</li>
+                </ul>
+            </div>
+
+            <div class="help-card mt-4">
+                <h5>Your Email</h5>
+
+                <p class="text-muted mb-2">
+                    Notifications are sent to:
+                </p>
+
+                <strong>
+                    {{ request.user.email|default:"No email configured" }}
+                </strong>
+
+                <p class="text-muted mt-3 mb-0">
+                    Update your email from profile settings if needed.
+                </p>
+            </div>
+        </div>
+    </div>
+</form>
+
+{% endblock %}

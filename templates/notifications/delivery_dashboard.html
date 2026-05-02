@@ -1,0 +1,250 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <p class="eyebrow">Notification Monitoring</p>
+        <h1>Delivery Monitor</h1>
+        <p class="page-subtitle">
+            Audit-grade tracking for in-app and email notification delivery, retries,
+            failures, skipped sends, digest emails, and SMTP issues.
+        </p>
+    </div>
+
+    <div class="d-flex gap-2 flex-wrap">
+        <a href="{% url 'notifications:list' %}" class="btn btn-light">
+            Notifications
+        </a>
+
+        <a href="{% url 'notifications:digest_preview' %}" class="btn btn-outline-primary">
+            Digest
+        </a>
+    </div>
+</div>
+
+<div class="stats-grid request-stats-grid">
+    <div class="metric-card">
+        <div class="metric-icon bg-soft-primary">📨</div>
+        <div>
+            <p>Total Deliveries</p>
+            <h3>{{ total_count }}</h3>
+        </div>
+    </div>
+
+    <div class="metric-card">
+        <div class="metric-icon bg-soft-success">✅</div>
+        <div>
+            <p>Sent</p>
+            <h3>{{ sent_count }}</h3>
+        </div>
+    </div>
+
+    <div class="metric-card">
+        <div class="metric-icon bg-soft-danger">❌</div>
+        <div>
+            <p>Failed</p>
+            <h3>{{ failed_count }}</h3>
+        </div>
+    </div>
+
+    <div class="metric-card">
+        <div class="metric-icon bg-soft-warning">⏳</div>
+        <div>
+            <p>Pending</p>
+            <h3>{{ pending_count }}</h3>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mt-1">
+    <div class="col-xl-8">
+        <div class="panel-card">
+            <div class="panel-card-header">
+                <div>
+                    <h5>Delivery Logs</h5>
+                    <p>Latest 100 delivery records.</p>
+                </div>
+            </div>
+
+            <form method="get" class="row g-3 mb-4">
+                <div class="col-md-4">
+                    <input
+                        type="text"
+                        name="q"
+                        value="{{ search }}"
+                        class="form-control"
+                        placeholder="Search subject, user, email, error..."
+                    >
+                </div>
+
+                <div class="col-md-3">
+                    <select name="status" class="form-select">
+                        <option value="">All Status</option>
+                        {% for value, label in status_choices %}
+                            <option value="{{ value }}" {% if status_filter == value %}selected{% endif %}>
+                                {{ label }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-3">
+                    <select name="channel" class="form-select">
+                        <option value="">All Channels</option>
+                        {% for value, label in channel_choices %}
+                            <option value="{{ value }}" {% if channel_filter == value %}selected{% endif %}>
+                                {{ label }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-2 d-grid">
+                    <button type="submit" class="btn btn-primary">
+                        Filter
+                    </button>
+                </div>
+            </form>
+
+            {% if deliveries %}
+                <div class="table-responsive">
+                    <table class="table modern-table align-middle">
+                        <thead>
+                            <tr>
+                                <th>Recipient</th>
+                                <th>Channel</th>
+                                <th>Status</th>
+                                <th>Subject</th>
+                                <th>Retries</th>
+                                <th>Created</th>
+                                <th class="text-end">Action</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            {% for delivery in deliveries %}
+                                <tr>
+                                    <td>
+                                        <div class="fw-bold">
+                                            {{ delivery.recipient.display_name }}
+                                        </div>
+                                        <small class="text-muted">
+                                            {{ delivery.recipient_email|default:"-" }}
+                                        </small>
+                                    </td>
+
+                                    <td>
+                                        <span class="status-badge status-draft">
+                                            {{ delivery.get_channel_display }}
+                                        </span>
+                                    </td>
+
+                                    <td>
+                                        {% if delivery.status == "SENT" %}
+                                            <span class="status-badge status-approved">Sent</span>
+                                        {% elif delivery.status == "FAILED" %}
+                                            <span class="status-badge status-rejected">Failed</span>
+                                        {% elif delivery.status == "SKIPPED" %}
+                                            <span class="status-badge status-draft">Skipped</span>
+                                        {% elif delivery.status == "RETRYING" %}
+                                            <span class="status-badge status-review">Retrying</span>
+                                        {% else %}
+                                            <span class="status-badge status-submitted">{{ delivery.get_status_display }}</span>
+                                        {% endif %}
+                                    </td>
+
+                                    <td>
+                                        <div class="fw-bold">
+                                            {{ delivery.subject|truncatechars:55 }}
+                                        </div>
+                                        {% if delivery.error_message %}
+                                            <small class="text-danger">
+                                                {{ delivery.error_message|truncatechars:90 }}
+                                            </small>
+                                        {% endif %}
+                                    </td>
+
+                                    <td>
+                                        {{ delivery.retry_count }} / {{ delivery.max_retries }}
+                                    </td>
+
+                                    <td>
+                                        {{ delivery.created_at|date:"d M Y, h:i A" }}
+                                    </td>
+
+                                    <td class="text-end">
+                                        <a
+                                            href="{% url 'notifications:delivery_detail' delivery.pk %}"
+                                            class="btn btn-sm btn-outline-primary"
+                                        >
+                                            View
+                                        </a>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="empty-state compact">
+                    <div class="empty-icon">📨</div>
+                    <h5>No delivery logs found</h5>
+                    <p>Delivery logs will appear when notifications or emails are sent.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="col-xl-4">
+        <div class="panel-card danger-panel">
+            <div class="panel-card-header">
+                <div>
+                    <h5>Recent Failures</h5>
+                    <p>Latest failed email or notification attempts.</p>
+                </div>
+            </div>
+
+            {% if recent_failures %}
+                <div class="activity-side-list">
+                    {% for failure in recent_failures %}
+                        <a
+                            href="{% url 'notifications:delivery_detail' failure.pk %}"
+                            class="activity-notification-item"
+                        >
+                            <div class="fw-bold">
+                                {{ failure.subject|truncatechars:60 }}
+                            </div>
+
+                            <p class="text-danger small mb-1">
+                                {{ failure.error_message|truncatechars:120 }}
+                            </p>
+
+                            <div class="small text-muted">
+                                {{ failure.created_at|date:"d M Y, h:i A" }}
+                            </div>
+                        </a>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state compact">
+                    <div class="empty-icon">✅</div>
+                    <h5>No recent failures</h5>
+                    <p>Email and notification delivery is healthy.</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="help-card mt-4">
+            <h5>Monitoring Notes</h5>
+            <ul>
+                <li>Failed email delivery can be retried manually.</li>
+                <li>Skipped means user preferences blocked delivery.</li>
+                <li>In-app delivery is logged separately from email delivery.</li>
+                <li>Digest emails are linked to digest logs.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

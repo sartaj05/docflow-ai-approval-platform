@@ -1,0 +1,60 @@
+DocFlow AI Daily Digest
+
+Hello {{ user.display_name }},
+
+Here is your daily DocFlow AI activity summary.
+
+Period:
+{{ start_at|date:"d M Y, h:i A" }} to {{ end_at|date:"d M Y, h:i A" }}
+
+Summary:
+- Unread notifications: {{ unread_notification_count }}
+- Pending approvals: {{ pending_approval_count }}
+- Overdue approvals: {{ overdue_approval_count }}
+- Watched requests: {{ watched_request_count }}
+- Watched request activity: {{ watched_activity_count }}
+
+{% if overdue_approvals %}
+Overdue Approvals:
+{% for step in overdue_approvals %}
+- {{ step.request.request_number }} | {{ step.request.title }} | Step {{ step.step_order }} | Due: {% if step.due_at %}{{ step.due_at|date:"d M Y, h:i A" }}{% else %}-{% endif %}
+{% endfor %}
+{% endif %}
+
+{% if pending_approvals %}
+Pending Approvals:
+{% for step in pending_approvals %}
+- {{ step.request.request_number }} | {{ step.request.title }} | Step {{ step.step_order }}
+{% endfor %}
+{% endif %}
+
+{% if unread_notifications %}
+Unread Notifications:
+{% for notification in unread_notifications %}
+- {{ notification.title }} | {{ notification.created_at|date:"d M Y, h:i A" }}
+  {{ notification.message }}
+{% endfor %}
+{% endif %}
+
+{% if watched_activity_items %}
+Watched Request Activity:
+{% for item in watched_activity_items %}
+- {{ item.meta.request_number }} | {{ item.title }} | {{ item.timestamp|date:"d M Y, h:i A" }}
+  {{ item.description|truncatechars:200 }}
+{% endfor %}
+{% endif %}
+
+Open My Activity:
+{{ my_activity_url }}
+
+Open Approval Inbox:
+{{ approval_inbox_url }}
+
+Open Notifications:
+{{ notifications_url }}
+
+Notification Preferences:
+{{ preferences_url }}
+
+Regards,
+DocFlow AI

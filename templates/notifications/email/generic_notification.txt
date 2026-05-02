@@ -1,0 +1,15 @@
+{{ app_name }}
+
+Hello {{ user.display_name }},
+
+{{ message }}
+
+{% if target_url %}
+Open:
+{{ target_url }}
+{% endif %}
+
+You can change your notification preferences from your profile settings.
+
+Regards,
+{{ app_name }}

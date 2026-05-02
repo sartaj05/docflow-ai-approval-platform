@@ -1,0 +1,47 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>{{ email_title|default:"DocFlow AI" }}</title>
+</head>
+
+<body style="margin:0; padding:0; background:#f3f4f6; font-family:Arial, sans-serif; color:#111827;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#f3f4f6; padding:24px 0;">
+        <tr>
+            <td align="center">
+                <table width="640" cellpadding="0" cellspacing="0" style="background:#ffffff; border-radius:18px; overflow:hidden; border:1px solid #e5e7eb;">
+                    <tr>
+                        <td style="background:#0f172a; color:#ffffff; padding:24px;">
+                            <h1 style="margin:0; font-size:24px;">DocFlow AI</h1>
+                            <p style="margin:6px 0 0; color:#bfdbfe; font-size:13px;">
+                                Document Approval Automation SaaS
+                            </p>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td style="padding:28px;">
+                            {% block email_content %}{% endblock %}
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td style="padding:18px 28px; border-top:1px solid #e5e7eb; color:#6b7280; font-size:12px;">
+                            <p style="margin:0;">
+                                This is an automated notification from DocFlow AI.
+                            </p>
+                            <p style="margin:6px 0 0;">
+                                <a href="{{ app_url }}" style="color:#2563eb;">Open DocFlow AI</a>
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+
+                <p style="color:#9ca3af; font-size:12px; margin-top:14px;">
+                    Please do not reply to this email.
+                </p>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

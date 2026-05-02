@@ -1,0 +1,51 @@
+{% extends "emails/base_email.html" %}
+
+{% block email_content %}
+
+<h2 style="margin:0 0 12px; font-size:22px; color:#991b1b;">
+    Request Rejected
+</h2>
+
+<p style="font-size:15px; line-height:1.7; color:#374151;">
+    Hello {{ recipient.display_name }},
+</p>
+
+<p style="font-size:15px; line-height:1.7; color:#374151;">
+    Your approval request has been rejected.
+</p>
+
+<table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse; margin:18px 0;">
+    <tr>
+        <td style="padding:10px; border:1px solid #e5e7eb; background:#f9fafb; font-weight:bold;">Request No</td>
+        <td style="padding:10px; border:1px solid #e5e7eb;">{{ document_request.request_number }}</td>
+    </tr>
+    <tr>
+        <td style="padding:10px; border:1px solid #e5e7eb; background:#f9fafb; font-weight:bold;">Title</td>
+        <td style="padding:10px; border:1px solid #e5e7eb;">{{ document_request.title }}</td>
+    </tr>
+    <tr>
+        <td style="padding:10px; border:1px solid #e5e7eb; background:#f9fafb; font-weight:bold;">Rejected By</td>
+        <td style="padding:10px; border:1px solid #e5e7eb;">
+            {% if actor %}
+                {{ actor.display_name }}
+            {% else %}
+                System
+            {% endif %}
+        </td>
+    </tr>
+
+    {% if comment %}
+        <tr>
+            <td style="padding:10px; border:1px solid #e5e7eb; background:#f9fafb; font-weight:bold;">Reason</td>
+            <td style="padding:10px; border:1px solid #e5e7eb;">{{ comment }}</td>
+        </tr>
+    {% endif %}
+</table>
+
+<p style="margin:26px 0;">
+    <a href="{{ request_url }}" style="background:#dc2626; color:#ffffff; padding:12px 18px; text-decoration:none; border-radius:10px; font-weight:bold;">
+        View Request
+    </a>
+</p>
+
+{% endblock %}

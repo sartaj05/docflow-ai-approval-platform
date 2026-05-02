@@ -1,0 +1,308 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <p class="eyebrow">Notifications</p>
+        <h1>Notification Digest</h1>
+        <p class="page-subtitle">
+            Preview your daily or weekly digest summary and send yourself a test digest email.
+        </p>
+    </div>
+
+    <div class="d-flex gap-2 flex-wrap">
+        <a href="{% url 'notifications:list' %}" class="btn btn-light">
+            Back to Notifications
+        </a>
+
+        <a href="{% url 'notifications:preferences' %}" class="btn btn-outline-primary">
+            Preferences
+        </a>
+
+        <a href="{% url 'dashboard:my_activity' %}" class="btn btn-outline-info">
+            My Activity
+        </a>
+    </div>
+</div>
+
+<div class="stats-grid request-stats-grid">
+    <div class="metric-card">
+        <div class="metric-icon bg-soft-primary">🔔</div>
+        <div>
+            <p>Unread Notifications</p>
+            <h3>{{ digest_data.unread_notification_count }}</h3>
+        </div>
+    </div>
+
+    <div class="metric-card">
+        <div class="metric-icon bg-soft-warning">✅</div>
+        <div>
+            <p>Pending Approvals</p>
+            <h3>{{ digest_data.pending_approval_count }}</h3>
+        </div>
+    </div>
+
+    <div class="metric-card">
+        <div class="metric-icon bg-soft-danger">⏰</div>
+        <div>
+            <p>Overdue Approvals</p>
+            <h3>{{ digest_data.overdue_approval_count }}</h3>
+        </div>
+    </div>
+
+    <div class="metric-card">
+        <div class="metric-icon bg-soft-success">👁️</div>
+        <div>
+            <p>Watched Activity</p>
+            <h3>{{ digest_data.watched_activity_count }}</h3>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mt-1">
+    <div class="col-lg-8">
+
+        <div class="panel-card">
+            <div class="panel-card-header">
+                <div>
+                    <h5>Digest Preview</h5>
+                    <p>
+                        Current digest type:
+                        <strong>{{ digest_type }}</strong>
+                    </p>
+                </div>
+
+                <div class="d-flex gap-2 flex-wrap">
+                    <a href="?type=DAILY" class="btn btn-sm {% if digest_type == 'DAILY' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                        Daily
+                    </a>
+
+                    <a href="?type=WEEKLY" class="btn btn-sm {% if digest_type == 'WEEKLY' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                        Weekly
+                    </a>
+                </div>
+            </div>
+
+            <div class="info-list">
+                <div>
+                    <span>Digest Window</span>
+                    <strong>
+                        {{ digest_data.start_at|date:"d M Y, h:i A" }}
+                        —
+                        {{ digest_data.end_at|date:"d M Y, h:i A" }}
+                    </strong>
+                </div>
+
+                <div>
+                    <span>Email Recipient</span>
+                    <strong>{{ request.user.email|default:"No email configured" }}</strong>
+                </div>
+            </div>
+
+            <form method="post" action="{% url 'notifications:send_test_digest' %}" class="mt-4">
+                {% csrf_token %}
+                <input type="hidden" name="digest_type" value="{{ digest_type }}">
+
+                <button type="submit" class="btn btn-primary">
+                    Send Test {{ digest_type|title }} Digest
+                </button>
+            </form>
+        </div>
+
+        <div class="panel-card mt-4">
+            <div class="panel-card-header">
+                <div>
+                    <h5>Watched Request Activity</h5>
+                    <p>Activity from requests you are following.</p>
+                </div>
+            </div>
+
+            {% if digest_data.watched_activity_items %}
+                <div class="activity-feed compact-activity-feed">
+                    {% for item in digest_data.watched_activity_items %}
+                        <div class="activity-feed-item">
+                            <div class="activity-feed-icon">
+                                {{ item.icon }}
+                            </div>
+
+                            <div class="activity-feed-content">
+                                <div class="d-flex justify-content-between gap-3 flex-wrap">
+                                    <div>
+                                        <h6 class="mb-1">
+                                            {{ item.title }}
+                                        </h6>
+
+                                        <p class="text-muted mb-1">
+                                            <a href="{% url 'approvals:request_detail' item.meta.request_id %}">
+                                                {{ item.meta.request_number }}
+                                            </a>
+                                            —
+                                            {{ item.meta.request_title|truncatechars:80 }}
+                                        </p>
+                                    </div>
+
+                                    <div class="text-end">
+                                        <span class="status-badge {{ item.badge }}">
+                                            {{ item.activity_type|title }}
+                                        </span>
+
+                                        <div class="small text-muted mt-1">
+                                            {{ item.timestamp|date:"d M Y, h:i A" }}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {% if item.description %}
+                                    <div class="activity-description mt-2">
+                                        {{ item.description|linebreaksbr|truncatechars:260 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state compact">
+                    <div class="empty-icon">👁️</div>
+                    <h5>No watched activity</h5>
+                    <p>No watched request activity exists in this digest window.</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="panel-card mt-4">
+            <div class="panel-card-header">
+                <div>
+                    <h5>Pending Approvals</h5>
+                    <p>Your current pending approval queue.</p>
+                </div>
+            </div>
+
+            {% if digest_data.pending_approvals %}
+                <div class="table-responsive">
+                    <table class="table modern-table align-middle">
+                        <thead>
+                            <tr>
+                                <th>Request</th>
+                                <th>Step</th>
+                                <th>Due</th>
+                                <th>SLA</th>
+                                <th class="text-end">Action</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            {% for step in digest_data.pending_approvals %}
+                                <tr>
+                                    <td>
+                                        <div class="fw-bold">
+                                            {{ step.request.request_number }}
+                                        </div>
+                                        <small class="text-muted">
+                                            {{ step.request.title|truncatechars:70 }}
+                                        </small>
+                                    </td>
+
+                                    <td>Step {{ step.step_order }}</td>
+
+                                    <td>
+                                        {% if step.due_at %}
+                                            {{ step.due_at|date:"d M Y, h:i A" }}
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </td>
+
+                                    <td>
+                                        {% if step.is_overdue %}
+                                            <span class="status-badge status-rejected">Overdue</span>
+                                        {% else %}
+                                            <span class="status-badge status-review">Active</span>
+                                        {% endif %}
+                                    </td>
+
+                                    <td class="text-end">
+                                        <a href="{% url 'approvals:request_detail' step.request.pk %}" class="btn btn-sm btn-outline-primary">
+                                            Open
+                                        </a>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="empty-state compact">
+                    <div class="empty-icon">✅</div>
+                    <h5>No pending approvals</h5>
+                    <p>You have no pending approval steps.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="panel-card">
+            <div class="panel-card-header">
+                <div>
+                    <h5>Recent Digest Logs</h5>
+                    <p>Latest digest email attempts.</p>
+                </div>
+            </div>
+
+            {% if digest_logs %}
+                <div class="activity-side-list">
+                    {% for log in digest_logs %}
+                        <div class="activity-side-item">
+                            <div class="d-flex justify-content-between gap-2">
+                                <div class="fw-bold">
+                                    {{ log.get_digest_type_display }} Digest
+                                </div>
+
+                                {% if log.success %}
+                                    <span class="status-badge status-approved">Sent</span>
+                                {% else %}
+                                    <span class="status-badge status-rejected">Failed</span>
+                                {% endif %}
+                            </div>
+
+                            <p class="text-muted small mb-1">
+                                {{ log.subject }}
+                            </p>
+
+                            <div class="small text-muted">
+                                {{ log.sent_at|date:"d M Y, h:i A" }}
+                            </div>
+
+                            {% if log.error_message %}
+                                <div class="text-danger small mt-2">
+                                    {{ log.error_message|truncatechars:120 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state compact">
+                    <div class="empty-icon">📧</div>
+                    <h5>No digest logs</h5>
+                    <p>Digest send history will appear here.</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="help-card mt-4">
+            <h5>Digest Rules</h5>
+            <ul>
+                <li>Daily digest checks the last 24 hours.</li>
+                <li>Weekly digest checks the last 7 days.</li>
+                <li>Emails respect notification preferences.</li>
+                <li>Empty digests are skipped unless manually tested.</li>
+                <li>Celery Beat sends scheduled summaries.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

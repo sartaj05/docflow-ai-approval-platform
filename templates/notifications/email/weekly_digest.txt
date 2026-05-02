@@ -1,0 +1,45 @@
+DocFlow AI Weekly Digest
+
+Hello {{ user.display_name }},
+
+Here is your weekly DocFlow AI summary.
+
+Period:
+{{ start_at|date:"d M Y, h:i A" }} to {{ end_at|date:"d M Y, h:i A" }}
+
+Weekly Summary:
+- Unread notifications: {{ unread_notification_count }}
+- Pending approvals: {{ pending_approval_count }}
+- Overdue approvals: {{ overdue_approval_count }}
+- Watched requests: {{ watched_request_count }}
+- Watched request activity events: {{ watched_activity_count }}
+
+{% if overdue_approvals %}
+Overdue Approval Items:
+{% for step in overdue_approvals %}
+- {{ step.request.request_number }} | {{ step.request.title }} | Assigned Step {{ step.step_order }}
+{% endfor %}
+{% endif %}
+
+{% if pending_approvals %}
+Pending Approval Queue:
+{% for step in pending_approvals %}
+- {{ step.request.request_number }} | {{ step.request.title }} | Step {{ step.step_order }}
+{% endfor %}
+{% endif %}
+
+{% if watched_activity_items %}
+Watched Request Highlights:
+{% for item in watched_activity_items %}
+- {{ item.meta.request_number }} | {{ item.title }} | {{ item.timestamp|date:"d M Y, h:i A" }}
+{% endfor %}
+{% endif %}
+
+Open My Activity:
+{{ my_activity_url }}
+
+Notification Preferences:
+{{ preferences_url }}
+
+Regards,
+DocFlow AI
