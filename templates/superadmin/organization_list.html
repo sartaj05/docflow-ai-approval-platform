@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <p class="eyebrow">Platform Organizations</p>
+        <h1>Manage Organizations</h1>
+        <p class="page-subtitle">
+            View, search, activate, and deactivate organization workspaces from the SaaS dashboard.
+        </p>
+    </div>
+
+    <a href="{% url 'dashboard:super_admin' %}" class="btn btn-light">
+        Back to Dashboard
+    </a>
+</div>
+
+<div class="panel-card mb-4">
+    <div class="panel-card-header">
+        <div>
+            <h5>Search & Filters</h5>
+            <p>Find organizations by name, slug, email, phone, or status.</p>
+        </div>
+    </div>
+
+    <form method="get" class="row g-3 align-items-end">
+        <div class="col-lg-6 col-md-6">
+            <label class="form-label">Search Organization</label>
+            <input
+                type="text"
+                name="q"
+                value="{{ search }}"
+                class="form-control"
+                placeholder="Search by name, slug, email or phone"
+            >
+        </div>
+
+        <div class="col-lg-3 col-md-6">
+            <label class="form-label">Status</label>
+            <select name="status" class="form-select">
+                <option value="">All Status</option>
+                <option value="active" {% if status == "active" %}selected{% endif %}>Active</option>
+                <option value="inactive" {% if status == "inactive" %}selected{% endif %}>Inactive</option>
+            </select>
+        </div>
+
+        <div class="col-lg-2 col-md-6">
+            <button type="submit" class="btn btn-primary w-100">
+                Apply
+            </button>
+        </div>
+
+        <div class="col-lg-1 col-md-6">
+            <a href="{% url 'superadmin:organizations' %}" class="btn btn-outline-secondary w-100">
+                Reset
+            </a>
+        </div>
+    </form>
+</div>
+
+<div class="panel-card">
+    <div class="panel-card-header">
+        <div>
+            <h5>Organizations</h5>
+            <p>{{ organizations.count }} records found</p>
+        </div>
+    </div>
+
+    {% if organizations %}
+        <div class="table-responsive">
+            <table class="table modern-table align-middle">
+                <thead>
+                    <tr>
+                        <th>Organization</th>
+                        <th>Contact</th>
+                        <th>Status</th>
+                        <th>Created</th>
+                        <th class="text-end">Action</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for organization in organizations %}
+                        <tr>
+                            <td>
+                                <div class="fw-bold">{{ organization.name }}</div>
+                                <small class="text-muted">{{ organization.slug }}</small>
+                            </td>
+
+                            <td>
+                                <div>{{ organization.email }}</div>
+                                <small class="text-muted">
+                                    {{ organization.phone|default:"No phone" }}
+                                </small>
+                            </td>
+
+                            <td>
+                                {% if organization.is_active %}
+                                    <span class="status-badge status-approved">Active</span>
+                                {% else %}
+                                    <span class="status-badge status-rejected">Inactive</span>
+                                {% endif %}
+                            </td>
+
+                            <td>{{ organization.created_at|date:"d M Y" }}</td>
+
+                            <td class="text-end">
+                                <a href="{% url 'superadmin:organization_detail' organization.pk %}" class="btn btn-sm btn-outline-primary">
+                                    View
+                                </a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">🏢</div>
+            <h5>No organizations found</h5>
+            <p>Try changing the search or status filter.</p>
+        </div>
+    {% endif %}
+</div>
+
+{% endblock %}

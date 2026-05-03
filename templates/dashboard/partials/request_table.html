@@ -1,0 +1,93 @@
+{% if requests %}
+    <div class="table-responsive">
+        <table class="table modern-table align-middle">
+            <thead>
+                <tr>
+                    <th>Request</th>
+                    <th>Department</th>
+                    <th>Status</th>
+                    <th>Priority</th>
+                    <th>Created By</th>
+                    <th class="text-end">Action</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for item in requests %}
+                    <tr>
+                        <td>
+                            <div class="fw-bold">{{ item.request_number }}</div>
+                            <small class="text-muted">
+                                {{ item.title|truncatechars:55 }}
+                            </small>
+                        </td>
+
+                        <td>
+                            {% if item.department %}
+                                {{ item.department.name }}
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {% if item.status == "DRAFT" %}
+                                <span class="status-badge status-draft">Draft</span>
+                            {% elif item.status == "SUBMITTED" %}
+                                <span class="status-badge status-submitted">Submitted</span>
+                            {% elif item.status == "IN_REVIEW" %}
+                                <span class="status-badge status-review">In Review</span>
+                            {% elif item.status == "APPROVED" %}
+                                <span class="status-badge status-approved">Approved</span>
+                            {% elif item.status == "REJECTED" %}
+                                <span class="status-badge status-rejected">Rejected</span>
+                            {% elif item.status == "CANCELLED" %}
+                                <span class="status-badge status-draft">Cancelled</span>
+                            {% else %}
+                                <span class="status-badge status-draft">
+                                    {{ item.get_status_display }}
+                                </span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {% if item.priority == "URGENT" %}
+                                <span class="status-badge status-rejected">Urgent</span>
+                            {% elif item.priority == "HIGH" %}
+                                <span class="status-badge status-review">High</span>
+                            {% elif item.priority == "MEDIUM" %}
+                                <span class="status-badge status-submitted">Medium</span>
+                            {% elif item.priority == "LOW" %}
+                                <span class="status-badge status-draft">Low</span>
+                            {% else %}
+                                <span class="status-badge status-draft">
+                                    {{ item.get_priority_display }}
+                                </span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {% if item.created_by %}
+                                {{ item.created_by.display_name }}
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+
+                        <td class="text-end">
+                            <a href="{% url 'approvals:request_detail' item.pk %}" class="btn btn-sm btn-outline-primary">
+                                View
+                            </a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% else %}
+    <div class="empty-state compact">
+        <div class="empty-icon">📄</div>
+        <h5>No requests yet</h5>
+        <p>Approval requests will appear here.</p>
+    </div>
+{% endif %}

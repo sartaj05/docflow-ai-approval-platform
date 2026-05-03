@@ -1,0 +1,248 @@
+{% load static %}
+
+<div class="row g-4 mt-2">
+    <div class="col-xl-8">
+        <div class="panel-card dashboard-chart-card">
+            <div class="panel-card-header">
+                <div>
+                    <h5>Monthly Approval Trends</h5>
+                    <p>Request volume, approved, rejected, and in-review trends.</p>
+                </div>
+            </div>
+
+            <div class="chart-box">
+                <canvas id="monthlyTrendChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-4">
+        <div class="panel-card dashboard-chart-card">
+            <div class="panel-card-header">
+                <div>
+                    <h5>Risk Distribution</h5>
+                    <p>AI risk level distribution.</p>
+                </div>
+            </div>
+
+            <div class="chart-box chart-box-sm">
+                <canvas id="riskDistributionChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mt-2">
+    <div class="col-xl-7">
+        <div class="panel-card dashboard-chart-card">
+            <div class="panel-card-header">
+                <div>
+                    <h5>Department Performance</h5>
+                    <p>Top departments by request count and approval outcome.</p>
+                </div>
+            </div>
+
+            <div class="chart-box">
+                <canvas id="departmentPerformanceChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-5">
+        <div class="panel-card">
+            <div class="panel-card-header">
+                <div>
+                    <h5>Recent Activity Timeline</h5>
+                    <p>Latest audit events and workflow activity.</p>
+                </div>
+            </div>
+
+            {% if recent_activity %}
+                <div class="activity-timeline">
+                    {% for log in recent_activity %}
+                        <div class="activity-item">
+                            <div class="activity-dot">
+                                {% if log.action == "APPROVED" %}
+                                    ✅
+                                {% elif log.action == "REJECTED" %}
+                                    ❌
+                                {% elif log.action == "CREATED" %}
+                                    ➕
+                                {% elif log.action == "UPDATED" %}
+                                    ✏️
+                                {% elif log.action == "UPLOADED" %}
+                                    📎
+                                {% elif log.action == "LOGIN" %}
+                                    🔐
+                                {% else %}
+                                    🔔
+                                {% endif %}
+                            </div>
+
+                            <div class="activity-content">
+                                <div class="fw-bold">
+                                    {{ log.get_action_display }}
+                                </div>
+
+                                <p class="mb-1 text-muted">
+                                    {{ log.message|truncatechars:95 }}
+                                </p>
+
+                                <small class="text-muted">
+                                    {% if log.user %}
+                                        {{ log.user.display_name }}
+                                    {% else %}
+                                        System
+                                    {% endif %}
+                                    · {{ log.created_at|date:"d M Y, h:i A" }}
+                                </small>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state compact">
+                    <div class="empty-icon">🕒</div>
+                    <h5>No recent activity</h5>
+                    <p>Activity will appear after users perform actions.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{{ monthly_trends|json_script:"monthly-trends-data" }}
+{{ department_performance|json_script:"department-performance-data" }}
+{{ risk_distribution|json_script:"risk-distribution-data" }}
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+    function readJsonScript(id) {
+        const element = document.getElementById(id);
+
+        if (!element) {
+            return {};
+        }
+
+        return JSON.parse(element.textContent);
+    }
+
+    const monthlyTrends = readJsonScript("monthly-trends-data");
+    const departmentPerformance = readJsonScript("department-performance-data");
+    const riskDistribution = readJsonScript("risk-distribution-data");
+
+    const chartDefaultOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                labels: {
+                    usePointStyle: true,
+                    boxWidth: 8,
+                },
+            },
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    precision: 0,
+                },
+            },
+        },
+    };
+
+    const monthlyTrendCanvas = document.getElementById("monthlyTrendChart");
+
+    if (monthlyTrendCanvas && monthlyTrends.labels) {
+        new Chart(monthlyTrendCanvas, {
+            type: "line",
+            data: {
+                labels: monthlyTrends.labels,
+                datasets: [
+                    {
+                        label: "Total",
+                        data: monthlyTrends.total,
+                        tension: 0.35,
+                    },
+                    {
+                        label: "Approved",
+                        data: monthlyTrends.approved,
+                        tension: 0.35,
+                    },
+                    {
+                        label: "Rejected",
+                        data: monthlyTrends.rejected,
+                        tension: 0.35,
+                    },
+                    {
+                        label: "In Review",
+                        data: monthlyTrends.in_review,
+                        tension: 0.35,
+                    },
+                ],
+            },
+            options: chartDefaultOptions,
+        });
+    }
+
+    const riskDistributionCanvas = document.getElementById("riskDistributionChart");
+
+    if (riskDistributionCanvas && riskDistribution.labels) {
+        new Chart(riskDistributionCanvas, {
+            type: "doughnut",
+            data: {
+                labels: riskDistribution.labels,
+                datasets: [
+                    {
+                        data: riskDistribution.values,
+                    },
+                ],
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: "bottom",
+                        labels: {
+                            usePointStyle: true,
+                            boxWidth: 8,
+                        },
+                    },
+                },
+            },
+        });
+    }
+
+    const departmentPerformanceCanvas = document.getElementById("departmentPerformanceChart");
+
+    if (departmentPerformanceCanvas && departmentPerformance.labels) {
+        new Chart(departmentPerformanceCanvas, {
+            type: "bar",
+            data: {
+                labels: departmentPerformance.labels,
+                datasets: [
+                    {
+                        label: "Total",
+                        data: departmentPerformance.total,
+                    },
+                    {
+                        label: "Approved",
+                        data: departmentPerformance.approved,
+                    },
+                    {
+                        label: "Rejected",
+                        data: departmentPerformance.rejected,
+                    },
+                    {
+                        label: "High Risk",
+                        data: departmentPerformance.high_risk,
+                    },
+                ],
+            },
+            options: chartDefaultOptions,
+        });
+    }
+</script>

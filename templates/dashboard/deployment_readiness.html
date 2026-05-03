@@ -1,0 +1,270 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <p class="eyebrow">Production Launch</p>
+        <h1>Deployment Readiness Checklist</h1>
+        <p class="page-subtitle">
+            Validate environment settings, security configuration, required services,
+            SMTP, Celery, Redis, static/media files, backups, and production launch tasks.
+        </p>
+    </div>
+
+    <div class="d-flex gap-2 flex-wrap">
+        <a href="{% url 'dashboard:system_health' %}" class="btn btn-light">
+            System Health
+        </a>
+
+        <a href="{% url 'dashboard:backup_export' %}" class="btn btn-outline-primary">
+            Backup & Export
+        </a>
+
+        <a href="{% url 'dashboard:deployment_readiness' %}" class="btn btn-outline-success">
+            Refresh
+        </a>
+    </div>
+</div>
+
+<div class="panel-card mb-4">
+    <div class="d-flex justify-content-between gap-3 flex-wrap align-items-center">
+        <div>
+            <p class="eyebrow mb-1">Overall Deployment Status</p>
+
+            <h3 class="mb-1">
+                {% if readiness.overall_status == "PASS" %}
+                    <span class="text-success">Ready</span>
+                {% elif readiness.overall_status == "WARNING" %}
+                    <span class="text-warning">Review Required</span>
+                {% elif readiness.overall_status == "FAIL" %}
+                    <span class="text-danger">Not Ready</span>
+                {% else %}
+                    <span class="text-muted">Unknown</span>
+                {% endif %}
+            </h3>
+
+            <p class="text-muted mb-0">
+                {{ readiness.overall_message }}
+            </p>
+        </div>
+
+        <div class="text-end">
+            <div class="fw-bold">
+                Host: {{ readiness.hostname }}
+            </div>
+
+            <div class="small text-muted">
+                Checked at {{ readiness.checked_at|date:"d M Y, h:i A" }}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="stats-grid request-stats-grid">
+    <div class="metric-card">
+        <div class="metric-icon bg-soft-success">✅</div>
+        <div>
+            <p>Passed</p>
+            <h3>{{ readiness.pass_count }}</h3>
+        </div>
+    </div>
+
+    <div class="metric-card">
+        <div class="metric-icon bg-soft-warning">⚠️</div>
+        <div>
+            <p>Warnings</p>
+            <h3>{{ readiness.warning_count }}</h3>
+        </div>
+    </div>
+
+    <div class="metric-card">
+        <div class="metric-icon bg-soft-danger">❌</div>
+        <div>
+            <p>Failed</p>
+            <h3>{{ readiness.fail_count }}</h3>
+        </div>
+    </div>
+
+    <div class="metric-card">
+        <div class="metric-icon bg-soft-primary">🚀</div>
+        <div>
+            <p>Total Checks</p>
+            <h3>{{ readiness.checks|length }}</h3>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mt-1">
+    <div class="col-xl-8">
+
+        <div class="panel-card">
+            <div class="panel-card-header">
+                <div>
+                    <h5>Automated Readiness Checks</h5>
+                    <p>
+                        These checks inspect Django settings, services, security flags,
+                        background workers, storage, and backup readiness.
+                    </p>
+                </div>
+            </div>
+
+            <div class="readiness-check-list">
+                {% for check in readiness.checks %}
+                    <div class="readiness-check-card">
+                        <div class="d-flex justify-content-between gap-3 flex-wrap">
+                            <div>
+                                <h5 class="mb-1">
+                                    {{ check.title }}
+                                </h5>
+
+                                <p class="text-muted mb-2">
+                                    {{ check.message }}
+                                </p>
+                            </div>
+
+                            <div>
+                                {% if check.status == "PASS" %}
+                                    <span class="status-badge status-approved">Pass</span>
+                                {% elif check.status == "WARNING" %}
+                                    <span class="status-badge status-review">Warning</span>
+                                {% elif check.status == "FAIL" %}
+                                    <span class="status-badge status-rejected">Fail</span>
+                                {% else %}
+                                    <span class="status-badge status-draft">Info</span>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        {% if check.recommendation %}
+                            <div class="readiness-recommendation">
+                                <strong>Recommendation:</strong>
+                                {{ check.recommendation }}
+                            </div>
+                        {% endif %}
+
+                        {% if check.details %}
+                            <div class="readiness-detail-list mt-3">
+                                {% for key, value in check.details.items %}
+                                    <div>
+                                        <span>{{ key|title }}</span>
+                                        <strong>{{ value }}</strong>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="panel-card mt-4">
+            <div class="panel-card-header">
+                <div>
+                    <h5>Production Command Checklist</h5>
+                    <p>Run these commands before production launch. Yes, boring commands save weekends.</p>
+                </div>
+            </div>
+
+            <div class="command-list">
+                <div>
+                    <span>Django Deploy Check</span>
+                    <code>python manage.py check --deploy</code>
+                </div>
+
+                <div>
+                    <span>Database Migrations</span>
+                    <code>python manage.py migrate</code>
+                </div>
+
+                <div>
+                    <span>Collect Static Files</span>
+                    <code>python manage.py collectstatic --noinput</code>
+                </div>
+
+                <div>
+                    <span>Create Full Backup</span>
+                    <code>python manage.py create_backup --type full</code>
+                </div>
+
+                <div>
+                    <span>Run Server Test</span>
+                    <code>python manage.py runserver</code>
+                </div>
+
+                <div>
+                    <span>Celery Worker</span>
+                    <code>celery -A config worker -l info -P solo</code>
+                </div>
+
+                <div>
+                    <span>Celery Beat</span>
+                    <code>celery -A config beat -l info</code>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-4">
+
+        <div class="panel-card">
+            <div class="panel-card-header">
+                <div>
+                    <h5>Launch Checklist</h5>
+                    <p>Manual production launch checklist grouped by area.</p>
+                </div>
+            </div>
+
+            <div class="launch-checklist">
+                {% for group in readiness.launch_checklist %}
+                    <div class="launch-checklist-group">
+                        <h6>{{ group.group }}</h6>
+
+                        {% for item in group.items %}
+                            <label class="launch-check-item">
+                                <input type="checkbox">
+                                <span>{{ item }}</span>
+                            </label>
+                        {% endfor %}
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="panel-card mt-4 danger-panel">
+            <div class="panel-card-header">
+                <div>
+                    <h5>Before Going Live</h5>
+                    <p>Final sanity checks, because hope is not an architecture.</p>
+                </div>
+            </div>
+
+            <ul class="mb-0">
+                <li>Take a full backup.</li>
+                <li>Test login/logout.</li>
+                <li>Test upload and approval flow.</li>
+                <li>Test SMTP email.</li>
+                <li>Test Celery worker and Beat.</li>
+                <li>Check system health dashboard.</li>
+                <li>Disable maintenance mode.</li>
+                <li>Confirm HTTPS works.</li>
+            </ul>
+        </div>
+
+        <div class="help-card mt-4">
+            <h5>Recommended Production Stack</h5>
+
+            <ul>
+                <li>Nginx reverse proxy with HTTPS.</li>
+                <li>Gunicorn or Daphne depending on sync/ASGI needs.</li>
+                <li>PostgreSQL database.</li>
+                <li>Redis for Celery and cache/session if configured.</li>
+                <li>Celery worker and Celery Beat as separate services.</li>
+                <li>Scheduled backups enabled.</li>
+                <li>SMTP configured with app password.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,262 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <p class="eyebrow">Organization Workspace</p>
+        <h1>{{ organization.name }}</h1>
+        <p class="page-subtitle">
+            Platform-level organization overview, users, departments, and workspace status.
+        </p>
+    </div>
+
+    <div class="d-flex gap-2 flex-wrap">
+        <a href="{% url 'superadmin:organizations' %}" class="btn btn-light">
+            Back
+        </a>
+
+        <form method="post" action="{% url 'superadmin:organization_toggle_status' organization.pk %}" class="d-inline">
+            {% csrf_token %}
+
+            {% if organization.is_active %}
+                <button type="submit" class="btn btn-outline-danger">
+                    Deactivate
+                </button>
+            {% else %}
+                <button type="submit" class="btn btn-outline-success">
+                    Activate
+                </button>
+            {% endif %}
+        </form>
+    </div>
+</div>
+
+<div class="stats-grid">
+    <div class="metric-card">
+        <div class="metric-icon bg-soft-primary">👥</div>
+        <div>
+            <p>Total Users</p>
+            <h3>{{ users.count }}</h3>
+        </div>
+    </div>
+
+    <div class="metric-card">
+        <div class="metric-icon bg-soft-success">🏬</div>
+        <div>
+            <p>Departments</p>
+            <h3>{{ departments.count }}</h3>
+        </div>
+    </div>
+
+    <div class="metric-card">
+        <div class="metric-icon {% if organization.is_active %}bg-soft-success{% else %}bg-soft-danger{% endif %}">
+            {% if organization.is_active %}✅{% else %}⛔{% endif %}
+        </div>
+
+        <div>
+            <p>Status</p>
+            <h3>
+                {% if organization.is_active %}
+                    Active
+                {% else %}
+                    Inactive
+                {% endif %}
+            </h3>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mt-2">
+    <div class="col-lg-5">
+        <div class="panel-card">
+            <div class="panel-card-header">
+                <div>
+                    <h5>Organization Details</h5>
+                    <p>Workspace profile</p>
+                </div>
+
+                {% if organization.is_active %}
+                    <span class="status-badge status-approved">Active</span>
+                {% else %}
+                    <span class="status-badge status-rejected">Inactive</span>
+                {% endif %}
+            </div>
+
+            <div class="info-list">
+                <div>
+                    <span>Name</span>
+                    <strong>{{ organization.name }}</strong>
+                </div>
+
+                <div>
+                    <span>Slug</span>
+                    <strong>{{ organization.slug }}</strong>
+                </div>
+
+                <div>
+                    <span>Email</span>
+                    <strong>{{ organization.email }}</strong>
+                </div>
+
+                <div>
+                    <span>Phone</span>
+                    <strong>{{ organization.phone|default:"-" }}</strong>
+                </div>
+
+                <div>
+                    <span>Address</span>
+                    <strong>{{ organization.address|default:"-" }}</strong>
+                </div>
+
+                <div>
+                    <span>Created</span>
+                    <strong>{{ organization.created_at|date:"d M Y, h:i A" }}</strong>
+                </div>
+
+                <div>
+                    <span>Last Updated</span>
+                    <strong>{{ organization.updated_at|date:"d M Y, h:i A" }}</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-7">
+        <div class="panel-card">
+            <div class="panel-card-header">
+                <div>
+                    <h5>Users</h5>
+                    <p>Users under this organization</p>
+                </div>
+
+                <a href="{% url 'superadmin:users' %}?q={{ organization.name }}" class="btn btn-sm btn-outline-primary">
+                    View Platform Users
+                </a>
+            </div>
+
+            {% if users %}
+                <div class="table-responsive">
+                    <table class="table modern-table align-middle">
+                        <thead>
+                            <tr>
+                                <th>User</th>
+                                <th>Role</th>
+                                <th>Department</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            {% for user_obj in users %}
+                                <tr>
+                                    <td>
+                                        <div class="fw-bold">{{ user_obj.display_name }}</div>
+                                        <small class="text-muted">{{ user_obj.email|default:user_obj.username }}</small>
+                                    </td>
+
+                                    <td>
+                                        {% if user_obj.is_superuser %}
+                                            <span class="status-badge status-draft">Super Admin</span>
+                                        {% elif user_obj.profile %}
+                                            <span class="status-badge status-submitted">
+                                                {{ user_obj.profile.get_role_display }}
+                                            </span>
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+
+                                    <td>
+                                        {% if user_obj.profile and user_obj.profile.department %}
+                                            {{ user_obj.profile.department.name }}
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+
+                                    <td>
+                                        {% if user_obj.is_active %}
+                                            <span class="status-badge status-approved">Active</span>
+                                        {% else %}
+                                            <span class="status-badge status-rejected">Inactive</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="empty-state compact">
+                    <div class="empty-icon">👥</div>
+                    <h5>No users found</h5>
+                    <p>This organization does not have users yet.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="panel-card mt-4">
+    <div class="panel-card-header">
+        <div>
+            <h5>Departments</h5>
+            <p>Departments created inside this organization</p>
+        </div>
+    </div>
+
+    {% if departments %}
+        <div class="table-responsive">
+            <table class="table modern-table align-middle">
+                <thead>
+                    <tr>
+                        <th>Department</th>
+                        <th>Head</th>
+                        <th>Status</th>
+                        <th>Created</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for department in departments %}
+                        <tr>
+                            <td>
+                                <div class="fw-bold">{{ department.name }}</div>
+                                <small class="text-muted">
+                                    {{ department.description|default:"No description"|truncatechars:80 }}
+                                </small>
+                            </td>
+
+                            <td>
+                                {% if department.head %}
+                                    {{ department.head.display_name }}
+                                {% else %}
+                                    <span class="text-muted">Not assigned</span>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {% if department.is_active %}
+                                    <span class="status-badge status-approved">Active</span>
+                                {% else %}
+                                    <span class="status-badge status-rejected">Inactive</span>
+                                {% endif %}
+                            </td>
+
+                            <td>{{ department.created_at|date:"d M Y" }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="empty-state compact">
+            <div class="empty-icon">🏬</div>
+            <h5>No departments found</h5>
+            <p>This organization has not created departments yet.</p>
+        </div>
+    {% endif %}
+</div>
+
+{% endblock %}

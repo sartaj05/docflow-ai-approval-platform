@@ -1,0 +1,399 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <p class="eyebrow">Super Admin Operations</p>
+        <h1>Backup & Export Dashboard</h1>
+        <p class="page-subtitle">
+            Create manual backups, review automated backup logs, monitor failed backup jobs,
+            and manage backup retention.
+        </p>
+    </div>
+
+    <div class="d-flex gap-2 flex-wrap">
+        <a href="{% url 'dashboard:super_admin' %}" class="btn btn-light">
+            Super Dashboard
+        </a>
+
+        <a href="{% url 'dashboard:system_health' %}" class="btn btn-outline-primary">
+            System Health
+        </a>
+    </div>
+</div>
+
+<div class="stats-grid request-stats-grid">
+    <div class="metric-card">
+        <div class="metric-icon bg-soft-primary">📦</div>
+        <div>
+            <p>Backup Files</p>
+            <h3>{{ summary.total_files }}</h3>
+        </div>
+    </div>
+
+    <div class="metric-card">
+        <div class="metric-icon bg-soft-success">✅</div>
+        <div>
+            <p>Successful Jobs</p>
+            <h3>{{ backup_stats.success }}</h3>
+        </div>
+    </div>
+
+    <div class="metric-card">
+        <div class="metric-icon bg-soft-danger">❌</div>
+        <div>
+            <p>Failed Jobs</p>
+            <h3>{{ backup_stats.failed }}</h3>
+        </div>
+    </div>
+
+    <div class="metric-card">
+        <div class="metric-icon bg-soft-warning">🧱</div>
+        <div>
+            <p>Disk Used</p>
+            <h3>{{ summary.disk_used_percent }}%</h3>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mt-1">
+    <div class="col-xl-8">
+
+        <div class="panel-card">
+            <div class="panel-card-header">
+                <div>
+                    <h5>Create Manual Backup / Export</h5>
+                    <p>
+                        Manual actions are logged in Backup Job Logs and downloaded immediately.
+                    </p>
+                </div>
+            </div>
+
+            <div class="backup-action-grid">
+                <form method="post" action="{% url 'dashboard:backup_export_action' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="database">
+
+                    <div class="backup-action-card">
+                        <div class="backup-action-icon">🛢️</div>
+                        <h5>Database Backup</h5>
+                        <p>
+                            Creates PostgreSQL backup using pg_dump if available,
+                            otherwise falls back to Django JSON dumpdata.
+                        </p>
+
+                        <button type="submit" class="btn btn-primary w-100">
+                            Download Database Backup
+                        </button>
+                    </div>
+                </form>
+
+                <form method="post" action="{% url 'dashboard:backup_export_action' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="media">
+
+                    <div class="backup-action-card">
+                        <div class="backup-action-icon">🖼️</div>
+                        <h5>Media Backup ZIP</h5>
+                        <p>
+                            Exports uploaded files, logos, documents, certificates,
+                            and media assets into a ZIP archive.
+                        </p>
+
+                        <button type="submit" class="btn btn-outline-primary w-100">
+                            Download Media ZIP
+                        </button>
+                    </div>
+                </form>
+
+                <form method="post" action="{% url 'dashboard:backup_export_action' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="full">
+
+                    <div class="backup-action-card">
+                        <div class="backup-action-icon">📦</div>
+                        <h5>Full Backup Bundle</h5>
+                        <p>
+                            Combines database backup and media backup into one downloadable ZIP file.
+                        </p>
+
+                        <button type="submit" class="btn btn-success w-100">
+                            Download Full Backup
+                        </button>
+                    </div>
+                </form>
+
+                <form method="post" action="{% url 'dashboard:backup_export_action' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="audit">
+
+                    <div class="backup-action-card">
+                        <div class="backup-action-icon">🛡️</div>
+                        <h5>Audit Log Export</h5>
+                        <p>
+                            Exports audit logs into CSV for compliance and review.
+                        </p>
+
+                        <button type="submit" class="btn btn-outline-dark w-100">
+                            Export Audit CSV
+                        </button>
+                    </div>
+                </form>
+
+                <form method="post" action="{% url 'dashboard:backup_export_action' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="notifications">
+
+                    <div class="backup-action-card">
+                        <div class="backup-action-icon">📡</div>
+                        <h5>Notification Log Export</h5>
+                        <p>
+                            Exports notification delivery logs, failures, retries, and skipped alerts.
+                        </p>
+
+                        <button type="submit" class="btn btn-outline-info w-100">
+                            Export Notification CSV
+                        </button>
+                    </div>
+                </form>
+
+                <form method="post" action="{% url 'dashboard:backup_export_action' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="requests">
+
+                    <div class="backup-action-card">
+                        <div class="backup-action-icon">📄</div>
+                        <h5>Approval Request Export</h5>
+                        <p>
+                            Exports approval requests with status, workflow, department, and risk details.
+                        </p>
+
+                        <button type="submit" class="btn btn-outline-success w-100">
+                            Export Requests CSV
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="panel-card mt-4">
+            <div class="panel-card-header">
+                <div>
+                    <h5>Automated Backup Job Logs</h5>
+                    <p>
+                        Shows manual and scheduled backup jobs from Celery Beat.
+                    </p>
+                </div>
+            </div>
+
+            {% if backup_logs %}
+                <div class="table-responsive">
+                    <table class="table modern-table align-middle">
+                        <thead>
+                            <tr>
+                                <th>Type</th>
+                                <th>Status</th>
+                                <th>File</th>
+                                <th>Size</th>
+                                <th>Duration</th>
+                                <th>Triggered By</th>
+                                <th>Started</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            {% for log in backup_logs %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ log.get_job_type_display }}</strong>
+                                    </td>
+
+                                    <td>
+                                        {% if log.status == "SUCCESS" %}
+                                            <span class="status-badge status-approved">Success</span>
+                                        {% elif log.status == "FAILED" %}
+                                            <span class="status-badge status-rejected">Failed</span>
+                                        {% elif log.status == "CLEANED" %}
+                                            <span class="status-badge status-review">Cleaned</span>
+                                        {% else %}
+                                            <span class="status-badge status-submitted">{{ log.get_status_display }}</span>
+                                        {% endif %}
+                                    </td>
+
+                                    <td>
+                                        {% if log.file_name %}
+                                            <div class="fw-bold">{{ log.file_name|truncatechars:55 }}</div>
+                                            <small class="text-muted">{{ log.file_path|truncatechars:80 }}</small>
+                                        {% else %}
+                                            -
+                                        {% endif %}
+
+                                        {% if log.error_message %}
+                                            <div class="text-danger small mt-1">
+                                                {{ log.error_message|truncatechars:120 }}
+                                            </div>
+                                        {% endif %}
+                                    </td>
+
+                                    <td>{{ log.file_size_mb }} MB</td>
+
+                                    <td>{{ log.duration_ms }} ms</td>
+
+                                    <td>
+                                        {% if log.triggered_by %}
+                                            {{ log.triggered_by.display_name }}
+                                        {% else %}
+                                            System / Celery
+                                        {% endif %}
+                                    </td>
+
+                                    <td>{{ log.started_at|date:"d M Y, h:i A" }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="empty-state compact">
+                    <div class="empty-icon">🕒</div>
+                    <h5>No backup logs yet</h5>
+                    <p>Manual and scheduled backup logs will appear here.</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="panel-card mt-4">
+            <div class="panel-card-header">
+                <div>
+                    <h5>Recent Backup Files</h5>
+                    <p>Recently generated files stored under media/backups.</p>
+                </div>
+
+                <form method="post" action="{% url 'dashboard:backup_export_action' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="cleanup">
+
+                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                        Delete Backups Older Than 15 Days
+                    </button>
+                </form>
+            </div>
+
+            {% if summary.recent_files %}
+                <div class="table-responsive">
+                    <table class="table modern-table align-middle">
+                        <thead>
+                            <tr>
+                                <th>File Name</th>
+                                <th>Size</th>
+                                <th>Created</th>
+                                <th>Path</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            {% for file_item in summary.recent_files %}
+                                <tr>
+                                    <td>
+                                        <div class="fw-bold">
+                                            {{ file_item.name }}
+                                        </div>
+                                    </td>
+
+                                    <td>{{ file_item.size_mb }} MB</td>
+
+                                    <td>{{ file_item.created_at|date:"d M Y, h:i A" }}</td>
+
+                                    <td>
+                                        <code>{{ file_item.path }}</code>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="empty-state compact">
+                    <div class="empty-icon">📦</div>
+                    <h5>No backup files yet</h5>
+                    <p>Create your first backup or export using the actions above.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="col-xl-4">
+        <div class="help-card">
+            <h5>Scheduled Backup Policy</h5>
+
+            <ul>
+                <li>Database backup: daily at 11:30 PM.</li>
+                <li>Audit export: daily at 12:20 AM.</li>
+                <li>Notification export: daily at 12:40 AM.</li>
+                <li>Media backup: every Sunday at 11:45 PM.</li>
+                <li>Full backup: every Monday at 1:00 AM.</li>
+                <li>Cleanup: daily at 2:00 AM.</li>
+            </ul>
+        </div>
+
+        <div class="panel-card mt-4">
+            <div class="panel-card-header">
+                <div>
+                    <h5>Backup Storage</h5>
+                    <p>Current local backup directory.</p>
+                </div>
+            </div>
+
+            <div class="info-list">
+                <div>
+                    <span>Backup Folder</span>
+                    <strong class="text-break">{{ summary.backup_root }}</strong>
+                </div>
+
+                <div>
+                    <span>Total Files</span>
+                    <strong>{{ summary.total_files }}</strong>
+                </div>
+
+                <div>
+                    <span>Total Size</span>
+                    <strong>{{ summary.total_size_mb }} MB</strong>
+                </div>
+
+                <div>
+                    <span>Disk Total</span>
+                    <strong>{{ summary.disk_total_gb }} GB</strong>
+                </div>
+
+                <div>
+                    <span>Disk Free</span>
+                    <strong>{{ summary.disk_free_gb }} GB</strong>
+                </div>
+
+                <div>
+                    <span>Disk Used</span>
+                    <strong>{{ summary.disk_used_percent }}%</strong>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel-card danger-panel mt-4">
+            <h5 class="fw-bold mb-2">Failure Alerts</h5>
+            <p class="text-muted mb-0">
+                If an automated backup fails, Super Admin users will receive
+                in-app and email notification alerts.
+            </p>
+        </div>
+
+        <div class="panel-card danger-panel mt-4">
+            <h5 class="fw-bold mb-2">Security Reminder</h5>
+            <p class="text-muted mb-0">
+                Backup files may include user data, uploaded documents, audit trails,
+                and approval records. Do not share backup files publicly.
+            </p>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

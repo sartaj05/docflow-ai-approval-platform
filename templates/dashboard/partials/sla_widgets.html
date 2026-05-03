@@ -1,0 +1,33 @@
+<div class="stats-grid super-grid mt-4">
+    <div class="metric-card">
+        <div class="metric-icon bg-soft-primary">⏱️</div>
+        <div>
+            <p>Pending SLA Steps</p>
+            <h3>{{ sla_widgets.pending_sla_steps }}</h3>
+        </div>
+    </div>
+
+    <div class="metric-card">
+        <div class="metric-icon bg-soft-warning">📅</div>
+        <div>
+            <p>Due Today</p>
+            <h3>{{ sla_widgets.due_today }}</h3>
+        </div>
+    </div>
+
+    <div class="metric-card">
+        <div class="metric-icon bg-soft-danger">🔥</div>
+        <div>
+            <p>Overdue Steps</p>
+            <h3>{{ sla_widgets.overdue_steps }}</h3>
+        </div>
+    </div>
+
+    <div class="metric-card">
+        <div class="metric-icon bg-soft-danger">🚨</div>
+        <div>
+            <p>Escalated</p>
+            <h3>{{ sla_widgets.escalated_steps }}</h3>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <p class="eyebrow">Department Dashboard</p>
+        <h1>Department Head Dashboard</h1>
+        <p class="page-subtitle">
+            View requests created under your assigned department.
+        </p>
+    </div>
+</div>
+
+<div class="stats-grid">
+    <div class="metric-card">
+        <div class="metric-icon bg-soft-primary">📄</div>
+        <div>
+            <p>Department Requests</p>
+            <h3>{{ total_requests }}</h3>
+        </div>
+    </div>
+
+    <div class="metric-card">
+        <div class="metric-icon bg-soft-warning">⏳</div>
+        <div>
+            <p>Pending</p>
+            <h3>{{ pending_requests }}</h3>
+        </div>
+    </div>
+
+    <div class="metric-card">
+        <div class="metric-icon bg-soft-success">✅</div>
+        <div>
+            <p>Approved</p>
+            <h3>{{ approved_requests }}</h3>
+        </div>
+    </div>
+</div>
+
+<div class="panel-card mt-4">
+    <div class="panel-card-header">
+        <div>
+            <h5>Recent Department Requests</h5>
+            <p>Latest requests in your department</p>
+        </div>
+
+        <a href="{% url 'approvals:request_list' %}" class="btn btn-sm btn-outline-primary">
+            View All
+        </a>
+    </div>
+
+    {% include "dashboard/partials/request_table.html" with requests=recent_requests %}
+</div>
+{% include "dashboard/partials/role_widgets.html" %}
+{% include "dashboard/partials/sla_widgets.html" %}
+{% include "dashboard/partials/advanced_analytics.html" %}
+
+{% endblock %}

@@ -1,0 +1,307 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <p class="eyebrow">Restore Detail</p>
+        <h1>{{ restore_job.original_filename }}</h1>
+        <p class="page-subtitle">
+            Validate, dry-run, preview, and safely prepare restore action.
+        </p>
+    </div>
+
+    <div class="d-flex gap-2 flex-wrap">
+        <a href="{% url 'dashboard:restore_dashboard' %}" class="btn btn-light">
+            Restore Center
+        </a>
+
+        <a href="{% url 'dashboard:backup_export' %}" class="btn btn-outline-primary">
+            Backup & Export
+        </a>
+    </div>
+</div>
+
+{% if restore_job.status == "FAILED" or restore_job.status == "FAILED_VALIDATION" %}
+    <div class="alert alert-danger">
+        <strong>Restore Error:</strong> {{ restore_job.error_message }}
+    </div>
+{% endif %}
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="panel-card">
+            <div class="panel-card-header">
+                <div>
+                    <h5>Restore File Information</h5>
+                    <p>Uploaded restore file metadata and validation status.</p>
+                </div>
+
+                {% if restore_job.status == "VALIDATED" or restore_job.status == "DRY_RUN" or restore_job.status == "READY_FOR_RESTORE" %}
+                    <span class="status-badge status-approved">{{ restore_job.get_status_display }}</span>
+                {% elif restore_job.status == "FAILED" or restore_job.status == "FAILED_VALIDATION" %}
+                    <span class="status-badge status-rejected">{{ restore_job.get_status_display }}</span>
+                {% else %}
+                    <span class="status-badge status-submitted">{{ restore_job.get_status_display }}</span>
+                {% endif %}
+            </div>
+
+            <div class="info-list">
+                <div>
+                    <span>Original Filename</span>
+                    <strong>{{ restore_job.original_filename }}</strong>
+                </div>
+
+                <div>
+                    <span>File Type</span>
+                    <strong>{{ restore_job.get_file_type_display }}</strong>
+                </div>
+
+                <div>
+                    <span>File Size</span>
+                    <strong>{{ restore_job.file_size_mb }} MB</strong>
+                </div>
+
+                <div>
+                    <span>Uploaded By</span>
+                    <strong>
+                        {% if restore_job.uploaded_by %}
+                            {{ restore_job.uploaded_by.display_name }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </strong>
+                </div>
+
+                <div>
+                    <span>Uploaded At</span>
+                    <strong>{{ restore_job.created_at|date:"d M Y, h:i A" }}</strong>
+                </div>
+
+                <div>
+                    <span>Confirmed</span>
+                    <strong>
+                        {% if restore_job.is_confirmed %}
+                            <span class="status-badge status-approved">Yes</span>
+                        {% else %}
+                            <span class="status-badge status-draft">No</span>
+                        {% endif %}
+                    </strong>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel-card mt-4">
+            <div class="panel-card-header">
+                <div>
+                    <h5>Validation Summary</h5>
+                    <p>Result of file validation.</p>
+                </div>
+            </div>
+
+            {% if restore_job.validation_summary %}
+                <pre class="audit-json-box">{{ restore_job.validation_summary }}</pre>
+            {% else %}
+                <div class="empty-state compact">
+                    <div class="empty-icon">🔍</div>
+                    <h5>No validation summary</h5>
+                    <p>Validation summary will appear after upload.</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="panel-card mt-4">
+            <div class="panel-card-header">
+                <div>
+                    <h5>Dry-Run Summary</h5>
+                    <p>Non-destructive restore preview.</p>
+                </div>
+
+                {% if restore_job.can_dry_run %}
+                    <form method="post" action="{% url 'dashboard:restore_dry_run' restore_job.pk %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-sm btn-primary">
+                            Run Dry-Run
+                        </button>
+                    </form>
+                {% endif %}
+            </div>
+
+            {% if restore_job.dry_run_summary %}
+                <pre class="audit-json-box">{{ restore_job.dry_run_summary }}</pre>
+            {% else %}
+                <div class="empty-state compact">
+                    <div class="empty-icon">🧪</div>
+                    <h5>No dry-run yet</h5>
+                    <p>Run dry-run to generate restore commands and preview details.</p>
+                </div>
+            {% endif %}
+        </div>
+
+        {% if restore_job.media_preview.files %}
+            <div class="panel-card mt-4">
+                <div class="panel-card-header">
+                    <div>
+                        <h5>Media ZIP Preview</h5>
+                        <p>Preview of media archive contents. Display limited for sanity, somehow still necessary.</p>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table modern-table align-middle">
+                        <thead>
+                            <tr>
+                                <th>File</th>
+                                <th>Size</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            {% for item in restore_job.media_preview.files %}
+                                <tr>
+                                    <td>{{ item.name }}</td>
+                                    <td>{{ item.size_mb }} MB</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <p class="text-muted small mb-0">
+                    Showing up to {{ restore_job.media_preview.preview_limit }} files.
+                    Total files: {{ restore_job.media_preview.file_count }}.
+                </p>
+            </div>
+        {% endif %}
+
+        {% if restore_job.error_message %}
+            <div class="panel-card danger-panel mt-4">
+                <div class="panel-card-header">
+                    <div>
+                        <h5>Error Details</h5>
+                        <p>Failure reason and traceback.</p>
+                    </div>
+                </div>
+
+                <div class="audit-message-box mb-3">
+                    {{ restore_job.error_message }}
+                </div>
+
+                {% if restore_job.traceback_text %}
+                    <pre class="audit-json-box">{{ restore_job.traceback_text }}</pre>
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+
+    <div class="col-lg-4">
+        <div class="panel-card danger-panel">
+            <div class="panel-card-header">
+                <div>
+                    <h5>Confirmation Flow</h5>
+                    <p>Required before restore action.</p>
+                </div>
+            </div>
+
+            {% if restore_job.can_confirm and not restore_job.is_confirmed %}
+                <form method="post" action="{% url 'dashboard:restore_confirm' restore_job.pk %}">
+                    {% csrf_token %}
+
+                    <label class="form-label">
+                        Type RESTORE CONFIRM
+                    </label>
+
+                    {{ confirm_form.confirmation_text }}
+
+                    <button type="submit" class="btn btn-danger w-100 mt-3">
+                        Confirm Restore Preparation
+                    </button>
+                </form>
+            {% elif restore_job.is_confirmed %}
+                <div class="alert alert-success mb-0">
+                    Restore job is confirmed.
+                </div>
+            {% else %}
+                <div class="alert alert-warning mb-0">
+                    Run dry-run before confirmation.
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="panel-card mt-4">
+            <div class="panel-card-header">
+                <div>
+                    <h5>Safe Restore Instructions</h5>
+                    <p>Use these instructions based on restore type.</p>
+                </div>
+            </div>
+
+            {% if restore_job.file_type == "DATABASE_JSON" %}
+                <div class="command-list">
+                    <div>
+                        <span>Django JSON Restore</span>
+                        <code>python manage.py loaddata "{{ restore_job.uploaded_file.path }}"</code>
+                    </div>
+                </div>
+
+                <p class="text-muted mt-3 mb-0">
+                    Recommended: create a fresh database backup first, enable maintenance mode,
+                    then run the command from terminal.
+                </p>
+
+            {% elif restore_job.file_type == "DATABASE_SQL" %}
+                <div class="command-list">
+                    <div>
+                        <span>PostgreSQL SQL Restore</span>
+                        <code>psql -h HOST -p PORT -U USER -d DATABASE -f "{{ restore_job.uploaded_file.path }}"</code>
+                    </div>
+                </div>
+
+                <p class="text-muted mt-3 mb-0">
+                    Run manually from terminal after confirming database target.
+                    The browser is not the place to drop a database. Civilization barely survived enough already.
+                </p>
+
+            {% elif restore_job.file_type == "MEDIA_ZIP" or restore_job.file_type == "FULL_ZIP" %}
+                <p class="text-muted">
+                    Media restore extracts files to:
+                </p>
+
+                <code>media/restored_media_preview/</code>
+
+                {% if restore_job.can_restore_media %}
+                    <form
+                        method="post"
+                        action="{% url 'dashboard:restore_media_execute' restore_job.pk %}"
+                        class="mt-3"
+                    >
+                        {% csrf_token %}
+
+                        <button type="submit" class="btn btn-warning w-100">
+                            Restore Media to Preview Folder
+                        </button>
+                    </form>
+                {% endif %}
+            {% else %}
+                <p class="text-muted mb-0">
+                    Unsupported restore type.
+                </p>
+            {% endif %}
+        </div>
+
+        <div class="help-card mt-4">
+            <h5>Restore Checklist</h5>
+
+            <ul>
+                <li>Create a fresh backup before restore.</li>
+                <li>Stop Celery worker and Beat during database restore.</li>
+                <li>Use maintenance mode for production.</li>
+                <li>Confirm correct database target.</li>
+                <li>Validate media restore before replacing live media.</li>
+                <li>Restart services after restore.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

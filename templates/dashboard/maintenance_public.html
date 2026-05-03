@@ -1,0 +1,50 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+
+    <title>
+        {{ maintenance.title|default:"System Maintenance" }}
+    </title>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
+    <link rel="stylesheet" href="{% static 'css/app.css' %}">
+</head>
+
+<body class="maintenance-public-body">
+
+<div class="maintenance-public-wrapper">
+    <div class="maintenance-public-card">
+        <div class="maintenance-public-icon">
+            {% if restore_safe_lock %}
+                ♻️
+            {% else %}
+                🚧
+            {% endif %}
+        </div>
+
+        <h1>
+            {{ maintenance.title|default:"System Maintenance" }}
+        </h1>
+
+        <p>
+            {{ maintenance.message|default:"DocFlow AI is currently under maintenance. Please try again later."|linebreaksbr }}
+        </p>
+
+        {% if restore_safe_lock %}
+            <div class="maintenance-public-warning">
+                Restore-safe lock mode is active. Access is temporarily restricted while system restore or recovery work is in progress.
+            </div>
+        {% endif %}
+
+        <div class="maintenance-public-footer">
+            DocFlow AI · Approval Automation SaaS
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <p class="eyebrow">Super Admin Operations</p>
+        <h1>Restore Center</h1>
+        <p class="page-subtitle">
+            Upload backup files, validate them, run dry-runs, preview media archives,
+            and follow safe restore instructions.
+        </p>
+    </div>
+
+    <div class="d-flex gap-2 flex-wrap">
+        <a href="{% url 'dashboard:backup_export' %}" class="btn btn-light">
+            Backup & Export
+        </a>
+
+        <a href="{% url 'dashboard:system_health' %}" class="btn btn-outline-primary">
+            System Health
+        </a>
+    </div>
+</div>
+
+<div class="alert alert-warning">
+    <strong>Restore Safety:</strong>
+    Database restore is intentionally not executed directly from browser.
+    Validate the file, run dry-run, then follow the generated manual command during maintenance mode.
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-5">
+        <div class="panel-card">
+            <div class="panel-card-header">
+                <div>
+                    <h5>Upload Restore File</h5>
+                    <p>Allowed: Django JSON dump, PostgreSQL SQL dump, media ZIP, or full backup ZIP.</p>
+                </div>
+            </div>
+
+            <form
+                method="post"
+                action="{% url 'dashboard:restore_upload' %}"
+                enctype="multipart/form-data"
+                novalidate
+            >
+                {% csrf_token %}
+
+                <div class="mb-3">
+                    <label class="form-label">Restore File</label>
+                    {{ upload_form.uploaded_file }}
+
+                    {% if upload_form.uploaded_file.errors %}
+                        <div class="text-danger small mt-1">
+                            {{ upload_form.uploaded_file.errors|striptags }}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Restore Notes</label>
+                    {{ upload_form.restore_notes }}
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100">
+                    Upload & Validate
+                </button>
+            </form>
+        </div>
+
+        <div class="help-card mt-4">
+            <h5>Safe Restore Flow</h5>
+            <ul>
+                <li>Upload backup file.</li>
+                <li>System validates structure.</li>
+                <li>Run dry-run preview.</li>
+                <li>Type confirmation text.</li>
+                <li>For database restore, use manual command in maintenance mode.</li>
+                <li>For media ZIP, restore is extracted to a safe preview folder.</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="col-lg-7">
+        <div class="panel-card">
+            <div class="panel-card-header">
+                <div>
+                    <h5>Recent Restore Jobs</h5>
+                    <p>Recent restore upload, validation, dry-run, and restore attempts.</p>
+                </div>
+            </div>
+
+            {% if recent_restore_jobs %}
+                <div class="table-responsive">
+                    <table class="table modern-table align-middle">
+                        <thead>
+                            <tr>
+                                <th>File</th>
+                                <th>Type</th>
+                                <th>Status</th>
+                                <th>Size</th>
+                                <th>Uploaded</th>
+                                <th class="text-end">Action</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            {% for job in recent_restore_jobs %}
+                                <tr>
+                                    <td>
+                                        <div class="fw-bold">
+                                            {{ job.original_filename|truncatechars:45 }}
+                                        </div>
+                                        {% if job.error_message %}
+                                            <small class="text-danger">
+                                                {{ job.error_message|truncatechars:80 }}
+                                            </small>
+                                        {% endif %}
+                                    </td>
+
+                                    <td>{{ job.get_file_type_display }}</td>
+
+                                    <td>
+                                        {% if job.status == "VALIDATED" or job.status == "DRY_RUN" or job.status == "READY_FOR_RESTORE" %}
+                                            <span class="status-badge status-approved">
+                                                {{ job.get_status_display }}
+                                            </span>
+                                        {% elif job.status == "FAILED" or job.status == "FAILED_VALIDATION" %}
+                                            <span class="status-badge status-rejected">
+                                                {{ job.get_status_display }}
+                                            </span>
+                                        {% else %}
+                                            <span class="status-badge status-submitted">
+                                                {{ job.get_status_display }}
+                                            </span>
+                                        {% endif %}
+                                    </td>
+
+                                    <td>{{ job.file_size_mb }} MB</td>
+
+                                    <td>{{ job.created_at|date:"d M Y, h:i A" }}</td>
+
+                                    <td class="text-end">
+                                        <a
+                                            href="{% url 'dashboard:restore_detail' job.pk %}"
+                                            class="btn btn-sm btn-outline-primary"
+                                        >
+                                            View
+                                        </a>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="empty-state compact">
+                    <div class="empty-icon">♻️</div>
+                    <h5>No restore jobs yet</h5>
+                    <p>Upload a backup file to start validation.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% endblock %}

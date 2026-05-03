@@ -1,0 +1,490 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <p class="eyebrow">Personal Workspace</p>
+        <h1>My Activity Dashboard</h1>
+        <p class="page-subtitle">
+            Track watched approval requests, pending approvals, overdue activity,
+            recent notifications, and request timeline updates in one place.
+        </p>
+    </div>
+
+    <div class="d-flex gap-2 flex-wrap">
+        <a href="{% url 'dashboard:home' %}" class="btn btn-light">
+            Back to Dashboard
+        </a>
+
+        {% if can_open_approval_inbox %}
+            <a href="{% url 'approvals:approval_inbox' %}" class="btn btn-primary">
+                My Approval Inbox
+            </a>
+        {% endif %}
+
+        <a href="{% url 'notifications:list' %}" class="btn btn-outline-info">
+            Notifications
+            {% if unread_notifications_count %}
+                <span class="badge bg-danger ms-1">{{ unread_notifications_count }}</span>
+            {% endif %}
+        </a>
+    </div>
+</div>
+
+<div class="stats-grid request-stats-grid">
+    <div class="metric-card">
+        <div class="metric-icon bg-soft-primary">👁️</div>
+        <div>
+            <p>Watched Requests</p>
+            <h3>{{ watched_count }}</h3>
+        </div>
+    </div>
+
+    <div class="metric-card">
+        <div class="metric-icon bg-soft-warning">✅</div>
+        <div>
+            <p>My Pending Approvals</p>
+            <h3>{{ pending_count }}</h3>
+        </div>
+    </div>
+
+    <div class="metric-card">
+        <div class="metric-icon bg-soft-danger">⏰</div>
+        <div>
+            <p>Overdue Approvals</p>
+            <h3>{{ overdue_count }}</h3>
+        </div>
+    </div>
+
+    <div class="metric-card">
+        <div class="metric-icon bg-soft-success">🔔</div>
+        <div>
+            <p>Unread Notifications</p>
+            <h3>{{ unread_notifications_count }}</h3>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mt-1">
+    <div class="col-xl-8">
+
+        <!-- Recent Activity Feed -->
+        <div class="panel-card">
+            <div class="panel-card-header">
+                <div>
+                    <h5>Recent Activity Feed</h5>
+                    <p>Latest timeline activity from watched approval requests.</p>
+                </div>
+
+                <span class="status-badge status-submitted">
+                    {{ recent_activity_items|length }} Events
+                </span>
+            </div>
+
+            {% if recent_activity_items %}
+                <div class="activity-feed compact-activity-feed">
+                    {% for item in recent_activity_items %}
+                        <div class="activity-feed-item">
+                            <div class="activity-feed-icon">
+                                {{ item.icon }}
+                            </div>
+
+                            <div class="activity-feed-content">
+                                <div class="d-flex justify-content-between gap-3 flex-wrap">
+                                    <div>
+                                        <h6 class="mb-1">
+                                            {{ item.title }}
+                                        </h6>
+
+                                        <p class="text-muted mb-1">
+                                            {% if item.meta.request_number %}
+                                                <a href="{% url 'approvals:request_detail' item.meta.request_id %}">
+                                                    {{ item.meta.request_number }}
+                                                </a>
+                                                —
+                                                {{ item.meta.request_title|truncatechars:70 }}
+                                            {% endif %}
+                                        </p>
+
+                                        <p class="text-muted mb-0">
+                                            {% if item.actor %}
+                                                By <strong>{{ item.actor.display_name }}</strong>
+                                            {% else %}
+                                                By <strong>System</strong>
+                                            {% endif %}
+                                        </p>
+                                    </div>
+
+                                    <div class="text-end">
+                                        <span class="status-badge {{ item.badge }}">
+                                            {{ item.activity_type|title }}
+                                        </span>
+
+                                        <div class="small text-muted mt-1">
+                                            {{ item.timestamp|date:"d M Y, h:i A" }}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {% if item.description %}
+                                    <div class="activity-description mt-2">
+                                        {{ item.description|linebreaksbr|truncatechars:260 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state compact">
+                    <div class="empty-icon">🕒</div>
+                    <h5>No recent watched activity</h5>
+                    <p>Watch approval requests to see their timeline activity here.</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- My Pending Approvals -->
+        <div class="panel-card mt-4">
+            <div class="panel-card-header">
+                <div>
+                    <h5>My Pending Approvals</h5>
+                    <p>Approval steps currently assigned to you.</p>
+                </div>
+
+                {% if can_open_approval_inbox %}
+                    <a href="{% url 'approvals:approval_inbox' %}" class="btn btn-sm btn-outline-primary">
+                        Open Inbox
+                    </a>
+                {% endif %}
+            </div>
+
+            {% if my_pending_steps %}
+                <div class="table-responsive">
+                    <table class="table modern-table align-middle">
+                        <thead>
+                            <tr>
+                                <th>Request</th>
+                                <th>Department</th>
+                                <th>Priority</th>
+                                <th>Step</th>
+                                <th>Due</th>
+                                <th>SLA</th>
+                                <th class="text-end">Action</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            {% for step in my_pending_steps %}
+                                <tr>
+                                    <td>
+                                        <div class="fw-bold">
+                                            {{ step.request.request_number }}
+                                        </div>
+                                        <small class="text-muted">
+                                            {{ step.request.title|truncatechars:60 }}
+                                        </small>
+                                    </td>
+
+                                    <td>
+                                        {% if step.request.department %}
+                                            {{ step.request.department.name }}
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </td>
+
+                                    <td>
+                                        {% if step.request.priority == "URGENT" %}
+                                            <span class="status-badge status-rejected">Urgent</span>
+                                        {% elif step.request.priority == "HIGH" %}
+                                            <span class="status-badge status-review">High</span>
+                                        {% elif step.request.priority == "MEDIUM" %}
+                                            <span class="status-badge status-submitted">Medium</span>
+                                        {% else %}
+                                            <span class="status-badge status-draft">
+                                                {{ step.request.get_priority_display }}
+                                            </span>
+                                        {% endif %}
+                                    </td>
+
+                                    <td>
+                                        Step {{ step.step_order }}
+                                    </td>
+
+                                    <td>
+                                        {% if step.due_at %}
+                                            {{ step.due_at|date:"d M Y, h:i A" }}
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </td>
+
+                                    <td>
+                                        {% if step.is_overdue %}
+                                            <span class="status-badge status-rejected">
+                                                Overdue
+                                            </span>
+                                        {% elif step.due_at %}
+                                            <span class="status-badge status-review">
+                                                Active
+                                            </span>
+                                        {% else %}
+                                            <span class="status-badge status-draft">
+                                                No SLA
+                                            </span>
+                                        {% endif %}
+                                    </td>
+
+                                    <td class="text-end">
+                                        <a
+                                            href="{% url 'approvals:request_detail' step.request.pk %}"
+                                            class="btn btn-sm btn-outline-primary"
+                                        >
+                                            Review
+                                        </a>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="empty-state compact">
+                    <div class="empty-icon">✅</div>
+                    <h5>No pending approvals</h5>
+                    <p>You do not have any current approval step assigned.</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Overdue Watched Items -->
+        <div class="panel-card mt-4 danger-panel">
+            <div class="panel-card-header">
+                <div>
+                    <h5>Overdue Watched Approvals</h5>
+                    <p>Watched requests where the current approval step is overdue.</p>
+                </div>
+            </div>
+
+            {% if overdue_watched_steps %}
+                <div class="table-responsive">
+                    <table class="table modern-table align-middle">
+                        <thead>
+                            <tr>
+                                <th>Request</th>
+                                <th>Assigned To</th>
+                                <th>Due</th>
+                                <th>Overdue</th>
+                                <th class="text-end">Action</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            {% for step in overdue_watched_steps %}
+                                <tr>
+                                    <td>
+                                        <div class="fw-bold">
+                                            {{ step.request.request_number }}
+                                        </div>
+                                        <small class="text-muted">
+                                            {{ step.request.title|truncatechars:70 }}
+                                        </small>
+                                    </td>
+
+                                    <td>
+                                        {% if step.assigned_to %}
+                                            {{ step.assigned_to.display_name }}
+                                        {% else %}
+                                            Not assigned
+                                        {% endif %}
+                                    </td>
+
+                                    <td>
+                                        {% if step.due_at %}
+                                            {{ step.due_at|date:"d M Y, h:i A" }}
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </td>
+
+                                    <td>
+                                        <span class="status-badge status-rejected">
+                                            {{ step.overdue_hours }} hr
+                                        </span>
+                                    </td>
+
+                                    <td class="text-end">
+                                        <a
+                                            href="{% url 'approvals:request_detail' step.request.pk %}"
+                                            class="btn btn-sm btn-outline-danger"
+                                        >
+                                            Open
+                                        </a>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="empty-state compact">
+                    <div class="empty-icon">🎯</div>
+                    <h5>No overdue watched approvals</h5>
+                    <p>Your watched requests do not have overdue active approval steps.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="col-xl-4">
+
+        <!-- Watched Requests -->
+        <div class="panel-card">
+            <div class="panel-card-header">
+                <div>
+                    <h5>Watched Requests</h5>
+                    <p>Requests you are currently following.</p>
+                </div>
+            </div>
+
+            {% if watched_requests %}
+                <div class="activity-side-list">
+                    {% for request_item in watched_requests %}
+                        <div class="activity-side-item">
+                            <div>
+                                <div class="fw-bold">
+                                    {{ request_item.request_number }}
+                                </div>
+
+                                <div class="text-muted small">
+                                    {{ request_item.title|truncatechars:65 }}
+                                </div>
+
+                                <div class="mt-2">
+                                    {% if request_item.status == "APPROVED" %}
+                                        <span class="status-badge status-approved">Approved</span>
+                                    {% elif request_item.status == "REJECTED" %}
+                                        <span class="status-badge status-rejected">Rejected</span>
+                                    {% elif request_item.status == "IN_REVIEW" %}
+                                        <span class="status-badge status-review">In Review</span>
+                                    {% elif request_item.status == "SUBMITTED" %}
+                                        <span class="status-badge status-submitted">Submitted</span>
+                                    {% else %}
+                                        <span class="status-badge status-draft">
+                                            {{ request_item.get_status_display }}
+                                        </span>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="d-grid gap-2 mt-3">
+                                <a
+                                    href="{% url 'approvals:request_detail' request_item.pk %}"
+                                    class="btn btn-sm btn-outline-primary"
+                                >
+                                    Open Request
+                                </a>
+
+                                <a
+                                    href="{% url 'approvals:request_watcher_list' request_item.pk %}"
+                                    class="btn btn-sm btn-outline-secondary"
+                                >
+                                    Watchers
+                                </a>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state compact">
+                    <div class="empty-icon">👁️</div>
+                    <h5>No watched requests</h5>
+                    <p>Open a request detail page and click Watch Request.</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Recent Notifications -->
+        <div class="panel-card mt-4">
+            <div class="panel-card-header">
+                <div>
+                    <h5>Recent Notifications</h5>
+                    <p>Your latest in-app notifications.</p>
+                </div>
+
+                <a href="{% url 'notifications:list' %}" class="btn btn-sm btn-outline-info">
+                    View All
+                </a>
+            </div>
+
+            {% if recent_notifications %}
+                <div class="activity-side-list">
+                    {% for notification in recent_notifications %}
+                        <a
+                            href="{% if notification.target_url %}{{ notification.target_url }}{% else %}{% url 'notifications:list' %}{% endif %}"
+                            class="activity-notification-item {% if not notification.is_read %}unread{% endif %}"
+                        >
+                            <div class="d-flex justify-content-between gap-2">
+                                <div class="fw-bold">
+                                    {{ notification.title }}
+                                </div>
+
+                                {% if not notification.is_read %}
+                                    <span class="notification-dot"></span>
+                                {% endif %}
+                            </div>
+
+                            <p class="text-muted small mb-1">
+                                {{ notification.message|truncatechars:110 }}
+                            </p>
+
+                            <div class="small text-muted">
+                                {{ notification.created_at|date:"d M Y, h:i A" }}
+                            </div>
+                        </a>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state compact">
+                    <div class="empty-icon">🔔</div>
+                    <h5>No notifications</h5>
+                    <p>Your recent notifications will appear here.</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Quick Links -->
+        <div class="panel-card mt-4">
+            <div class="panel-card-header">
+                <div>
+                    <h5>Quick Links</h5>
+                    <p>Fast navigation for daily work.</p>
+                </div>
+            </div>
+
+            <div class="d-grid gap-2">
+                <a href="{% url 'approvals:request_list' %}" class="btn btn-outline-primary">
+                    Approval Requests
+                </a>
+
+                {% if can_open_approval_inbox %}
+                    <a href="{% url 'approvals:approval_inbox' %}" class="btn btn-outline-success">
+                        Approval Inbox
+                    </a>
+                {% endif %}
+
+                <a href="{% url 'notifications:list' %}" class="btn btn-outline-info">
+                    Notification Center
+                </a>
+
+                <a href="{% url 'dashboard:home' %}" class="btn btn-outline-secondary">
+                    Role Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

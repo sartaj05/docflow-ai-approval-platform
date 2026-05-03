@@ -1,0 +1,456 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <p class="eyebrow">Platform Control</p>
+        <h1>Super Admin Dashboard</h1>
+        <p class="page-subtitle">
+            Manage DocFlow AI organizations, users, platform activity, approval requests,
+            audit activity, and SaaS-level settings.
+        </p>
+    </div>
+
+    <div class="d-flex gap-2 flex-wrap">
+        <a href="{% url 'superadmin:organizations' %}" class="btn btn-primary">
+            Manage Organizations
+        </a>
+
+        <a href="{% url 'superadmin:users' %}" class="btn btn-outline-dark">
+            Manage Users
+        </a>
+
+        <a href="{% url 'approvals:request_list' %}" class="btn btn-outline-primary">
+            View Requests
+        </a>
+        <a href="{% url 'reports:certificate_list' %}" class="btn btn-outline-success">
+    Certificates
+</a>
+        <a href="{% url 'audit:audit_log_list' %}" class="btn btn-outline-secondary">
+            Audit Logs
+        </a>
+    </div>
+</div>
+
+<div class="stats-grid super-grid">
+    <div class="metric-card">
+        <div class="metric-icon bg-soft-primary">🏢</div>
+        <div>
+            <p>Total Organizations</p>
+            <h3>{{ total_organizations }}</h3>
+        </div>
+    </div>
+
+    <div class="metric-card">
+        <div class="metric-icon bg-soft-success">✅</div>
+        <div>
+            <p>Active Organizations</p>
+            <h3>{{ active_organizations }}</h3>
+        </div>
+    </div>
+
+    <div class="metric-card">
+        <div class="metric-icon bg-soft-danger">⛔</div>
+        <div>
+            <p>Inactive Organizations</p>
+            <h3>{{ inactive_organizations }}</h3>
+        </div>
+    </div>
+
+    <div class="metric-card">
+        <div class="metric-icon bg-soft-warning">👥</div>
+        <div>
+            <p>Total Users</p>
+            <h3>{{ total_users }}</h3>
+        </div>
+    </div>
+
+    <div class="metric-card">
+        <div class="metric-icon bg-soft-primary">🧑‍💼</div>
+        <div>
+            <p>Organization Admins</p>
+            <h3>{{ organization_admins }}</h3>
+        </div>
+    </div>
+
+    <div class="metric-card">
+        <div class="metric-icon bg-soft-success">🏬</div>
+        <div>
+            <p>Total Departments</p>
+            <h3>{{ total_departments }}</h3>
+        </div>
+    </div>
+
+    <div class="metric-card">
+        <div class="metric-icon bg-soft-primary">📄</div>
+        <div>
+            <p>Total Requests</p>
+            <h3>{{ total_requests }}</h3>
+        </div>
+    </div>
+
+    <div class="metric-card">
+        <div class="metric-icon bg-soft-warning">⏳</div>
+        <div>
+            <p>Pending Requests</p>
+            <h3>{{ pending_requests }}</h3>
+        </div>
+    </div>
+
+    <div class="metric-card">
+        <div class="metric-icon bg-soft-success">✅</div>
+        <div>
+            <p>Approved Requests</p>
+            <h3>{{ approved_requests }}</h3>
+        </div>
+    </div>
+
+    <div class="metric-card">
+        <div class="metric-icon bg-soft-primary">📜</div>
+        <div>
+            <p>Total Certificates</p>
+            <h3>{{ total_certificates|default:0 }}</h3>
+        </div>
+    </div>
+
+    <div class="metric-card">
+        <div class="metric-icon bg-soft-success">🟢</div>
+        <div>
+            <p>Valid Certificates</p>
+            <h3>{{ valid_certificates|default:0 }}</h3>
+        </div>
+    </div>
+
+    <div class="metric-card">
+        <div class="metric-icon bg-soft-danger">⛔</div>
+        <div>
+            <p>Invalid Certificates</p>
+            <h3>{{ invalid_certificates|default:0 }}</h3>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mt-2">
+    <div class="col-lg-6">
+        <div class="panel-card">
+            <div class="panel-card-header">
+                <div>
+                    <h5>Recent Organizations</h5>
+                    <p>Latest registered workspaces</p>
+                </div>
+
+                <a href="{% url 'superadmin:organizations' %}" class="btn btn-sm btn-outline-primary">
+                    View All
+                </a>
+            </div>
+
+            {% if recent_organizations %}
+                <div class="table-responsive">
+                    <table class="table modern-table align-middle">
+                        <thead>
+                            <tr>
+                                <th>Organization</th>
+                                <th>Status</th>
+                                <th>Created</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            {% for organization in recent_organizations %}
+                                <tr>
+                                    <td>
+                                        <div class="fw-bold">{{ organization.name }}</div>
+                                        <small class="text-muted">{{ organization.email }}</small>
+                                    </td>
+
+                                    <td>
+                                        {% if organization.is_active %}
+                                            <span class="status-badge status-approved">Active</span>
+                                        {% else %}
+                                            <span class="status-badge status-rejected">Inactive</span>
+                                        {% endif %}
+                                    </td>
+
+                                    <td>{{ organization.created_at|date:"d M Y" }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="empty-state compact">
+                    <div class="empty-icon">🏢</div>
+                    <h5>No organizations yet</h5>
+                    <p>New organizations will appear here.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="panel-card">
+            <div class="panel-card-header">
+                <div>
+                    <h5>Recent Users</h5>
+                    <p>Latest user accounts across platform</p>
+                </div>
+
+                <a href="{% url 'superadmin:users' %}" class="btn btn-sm btn-outline-primary">
+                    View All
+                </a>
+            </div>
+
+            {% if recent_users %}
+                <div class="table-responsive">
+                    <table class="table modern-table align-middle">
+                        <thead>
+                            <tr>
+                                <th>User</th>
+                                <th>Role</th>
+                                <th>Organization</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            {% for user_obj in recent_users %}
+                                <tr>
+                                    <td>
+                                        <div class="fw-bold">{{ user_obj.display_name }}</div>
+                                        <small class="text-muted">{{ user_obj.email }}</small>
+                                    </td>
+
+                                    <td>
+                                        {% if user_obj.is_superuser %}
+                                            <span class="status-badge status-draft">Super Admin</span>
+                                        {% elif user_obj.profile %}
+                                            <span class="status-badge status-submitted">
+                                                {{ user_obj.profile.get_role_display }}
+                                            </span>
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+
+                                    <td>
+                                        {% if user_obj.profile and user_obj.profile.organization %}
+                                            {{ user_obj.profile.organization.name }}
+                                        {% else %}
+                                            Platform
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="empty-state compact">
+                    <div class="empty-icon">👥</div>
+                    <h5>No users yet</h5>
+                    <p>New users will appear here.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="panel-card mt-4">
+    <div class="panel-card-header">
+        <div>
+            <h5>Recent Approval Requests</h5>
+            <p>Latest approval requests across all organizations</p>
+        </div>
+
+        <a href="{% url 'approvals:request_list' %}" class="btn btn-sm btn-outline-primary">
+            View All
+        </a>
+    </div>
+
+    {% if recent_requests %}
+        <div class="table-responsive">
+            <table class="table modern-table align-middle">
+                <thead>
+                    <tr>
+                        <th>Request</th>
+                        <th>Organization</th>
+                        <th>Department</th>
+                        <th>Status</th>
+                        <th>Priority</th>
+                        <th>Created By</th>
+                        <th>Created</th>
+                        <th class="text-end">Action</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for item in recent_requests %}
+                        <tr>
+                            <td>
+                                <div class="fw-bold">{{ item.request_number }}</div>
+                                <small class="text-muted">
+                                    {{ item.title|truncatechars:55 }}
+                                </small>
+                            </td>
+
+                            <td>
+                                {% if item.organization %}
+                                    {{ item.organization.name }}
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {% if item.department %}
+                                    {{ item.department.name }}
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {% if item.status == "DRAFT" %}
+                                    <span class="status-badge status-draft">Draft</span>
+                                {% elif item.status == "SUBMITTED" %}
+                                    <span class="status-badge status-submitted">Submitted</span>
+                                {% elif item.status == "IN_REVIEW" %}
+                                    <span class="status-badge status-review">In Review</span>
+                                {% elif item.status == "APPROVED" %}
+                                    <span class="status-badge status-approved">Approved</span>
+                                {% elif item.status == "REJECTED" %}
+                                    <span class="status-badge status-rejected">Rejected</span>
+                                {% elif item.status == "CANCELLED" %}
+                                    <span class="status-badge status-draft">Cancelled</span>
+                                {% else %}
+                                    <span class="status-badge status-draft">
+                                        {{ item.get_status_display }}
+                                    </span>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {% if item.priority == "URGENT" %}
+                                    <span class="status-badge status-rejected">Urgent</span>
+                                {% elif item.priority == "HIGH" %}
+                                    <span class="status-badge status-review">High</span>
+                                {% elif item.priority == "MEDIUM" %}
+                                    <span class="status-badge status-submitted">Medium</span>
+                                {% elif item.priority == "LOW" %}
+                                    <span class="status-badge status-draft">Low</span>
+                                {% else %}
+                                    <span class="status-badge status-draft">
+                                        {{ item.get_priority_display }}
+                                    </span>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {% if item.created_by %}
+                                    {{ item.created_by.display_name }}
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+
+                            <td>{{ item.created_at|date:"d M Y" }}</td>
+
+                            <td class="text-end">
+                                <a href="{% url 'approvals:request_detail' item.pk %}" class="btn btn-sm btn-outline-primary">
+                                    View
+                                </a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="empty-state compact">
+            <div class="empty-icon">📄</div>
+            <h5>No approval requests yet</h5>
+            <p>Approval requests from all organizations will appear here.</p>
+        </div>
+    {% endif %}
+</div>
+
+<div class="panel-card mt-4">
+    <div class="panel-card-header">
+        <div>
+            <h5>Recent Audit Activity</h5>
+            <p>Latest platform and organization actions</p>
+        </div>
+
+        <a href="{% url 'audit:audit_log_list' %}" class="btn btn-sm btn-outline-primary">
+            View Audit Logs
+        </a>
+    </div>
+
+    {% if recent_audit_logs %}
+        <div class="audit-mini-list">
+            {% for log in recent_audit_logs %}
+                <div class="audit-mini-item">
+                    <div class="audit-mini-icon">
+                        {% if log.action == "APPROVED" %}
+                            ✅
+                        {% elif log.action == "REJECTED" %}
+                            ❌
+                        {% elif log.action == "UPLOADED" %}
+                            📎
+                        {% elif log.action == "DELETED" %}
+                            🗑️
+                        {% elif log.action == "STATUS_CHANGED" %}
+                            🔁
+                        {% elif log.action == "SUBMITTED" %}
+                            📤
+                        {% elif log.action == "CREATED" %}
+                            ✨
+                        {% elif log.action == "UPDATED" %}
+                            📝
+                        {% else %}
+                            🛡️
+                        {% endif %}
+                    </div>
+
+                    <div>
+                        <div class="d-flex justify-content-between gap-3 flex-wrap">
+                            <strong>{{ log.get_action_display }}</strong>
+                            <small class="text-muted">
+                                {{ log.created_at|date:"d M Y, h:i A" }}
+                            </small>
+                        </div>
+
+                        <p class="text-muted mb-1">
+                            {{ log.message|truncatechars:120 }}
+                        </p>
+
+                        <small class="text-muted">
+                            {% if log.user %}
+                                By {{ log.user.display_name }}
+                            {% else %}
+                                By System
+                            {% endif %}
+
+                            {% if log.organization %}
+                                · {{ log.organization.name }}
+                            {% else %}
+                                · Platform
+                            {% endif %}
+                        </small>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-state compact">
+            <div class="empty-icon">🛡️</div>
+            <h5>No audit activity yet</h5>
+            <p>Platform actions will appear here.</p>
+        </div>
+    {% endif %}
+</div>
+{% include "dashboard/partials/role_widgets.html" %}
+{% include "dashboard/partials/sla_widgets.html" %}
+{% include "dashboard/partials/advanced_analytics.html" %}
+
+{% endblock %}

@@ -1,0 +1,180 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <p class="eyebrow">Platform Users</p>
+        <h1>Manage Users</h1>
+        <p class="page-subtitle">
+            View and activate/deactivate users across all organizations.
+        </p>
+    </div>
+
+    <a href="{% url 'dashboard:super_admin' %}" class="btn btn-light">
+        Back to Dashboard
+    </a>
+</div>
+
+<div class="panel-card mb-4">
+    <div class="panel-card-header">
+        <div>
+            <h5>Search & Filters</h5>
+            <p>Find users by name, username, email, organization, department, role, or status.</p>
+        </div>
+    </div>
+
+    <form method="get" class="row g-3 align-items-end">
+        <div class="col-lg-5 col-md-6">
+            <label class="form-label">Search User</label>
+            <input
+                type="text"
+                name="q"
+                value="{{ search }}"
+                class="form-control"
+                placeholder="Search by name, username, email, organization..."
+            >
+        </div>
+
+        <div class="col-lg-3 col-md-6">
+            <label class="form-label">Role</label>
+            <select name="role" class="form-select">
+                <option value="">All Roles</option>
+                <option value="SUPER_ADMIN" {% if role == "SUPER_ADMIN" %}selected{% endif %}>Super Admin</option>
+                <option value="ORG_ADMIN" {% if role == "ORG_ADMIN" %}selected{% endif %}>Organization Admin</option>
+                <option value="DEPARTMENT_HEAD" {% if role == "DEPARTMENT_HEAD" %}selected{% endif %}>Department Head</option>
+                <option value="STAFF" {% if role == "STAFF" %}selected{% endif %}>Staff</option>
+                <option value="APPROVER" {% if role == "APPROVER" %}selected{% endif %}>Approver</option>
+                <option value="AUDITOR" {% if role == "AUDITOR" %}selected{% endif %}>Auditor</option>
+            </select>
+        </div>
+
+        <div class="col-lg-2 col-md-6">
+            <label class="form-label">Status</label>
+            <select name="status" class="form-select">
+                <option value="">All Status</option>
+                <option value="active" {% if status == "active" %}selected{% endif %}>Active</option>
+                <option value="inactive" {% if status == "inactive" %}selected{% endif %}>Inactive</option>
+            </select>
+        </div>
+
+        <div class="col-lg-1 col-md-3">
+            <button type="submit" class="btn btn-primary w-100">
+                Apply
+            </button>
+        </div>
+
+        <div class="col-lg-1 col-md-3">
+            <a href="{% url 'superadmin:users' %}" class="btn btn-outline-secondary w-100">
+                Reset
+            </a>
+        </div>
+    </form>
+</div>
+
+<div class="panel-card">
+    <div class="panel-card-header">
+        <div>
+            <h5>Users</h5>
+            <p>{{ users.count }} users found</p>
+        </div>
+    </div>
+
+    {% if users %}
+        <div class="table-responsive">
+            <table class="table modern-table align-middle">
+                <thead>
+                    <tr>
+                        <th>User</th>
+                        <th>Organization</th>
+                        <th>Department</th>
+                        <th>Role</th>
+                        <th>Status</th>
+                        <th class="text-end">Action</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for user_obj in users %}
+                        <tr>
+                            <td>
+                                <div class="fw-bold">{{ user_obj.display_name }}</div>
+                                <small class="text-muted">
+                                    {{ user_obj.email|default:user_obj.username }}
+                                </small>
+                            </td>
+
+                            <td>
+                                {% if user_obj.profile and user_obj.profile.organization %}
+                                    {{ user_obj.profile.organization.name }}
+                                {% else %}
+                                    Platform
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {% if user_obj.profile and user_obj.profile.department %}
+                                    {{ user_obj.profile.department.name }}
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {% if user_obj.is_superuser %}
+                                    <span class="status-badge status-draft">Super Admin</span>
+                                {% elif user_obj.profile %}
+                                    <span class="status-badge status-submitted">
+                                        {{ user_obj.profile.get_role_display }}
+                                    </span>
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {% if user_obj.is_active %}
+                                    <span class="status-badge status-approved">Active</span>
+                                {% else %}
+                                    <span class="status-badge status-rejected">Inactive</span>
+                                {% endif %}
+                            </td>
+
+                            <td class="text-end">
+                                {% if user_obj != request.user %}
+                                    <form
+                                        method="post"
+                                        action="{% url 'superadmin:user_toggle_status' user_obj.pk %}"
+                                        class="d-inline"
+                                    >
+                                        {% csrf_token %}
+
+                                        {% if user_obj.is_active %}
+                                            <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                Deactivate
+                                            </button>
+                                        {% else %}
+                                            <button type="submit" class="btn btn-sm btn-outline-success">
+                                                Activate
+                                            </button>
+                                        {% endif %}
+                                    </form>
+                                {% else %}
+                                    <span class="text-muted small">Current user</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">👥</div>
+            <h5>No users found</h5>
+            <p>Try changing the search, role, or status filter.</p>
+        </div>
+    {% endif %}
+</div>
+
+{% endblock %}

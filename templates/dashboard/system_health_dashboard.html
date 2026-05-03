@@ -1,0 +1,331 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <p class="eyebrow">Operations</p>
+        <h1>System Health Dashboard</h1>
+        <p class="page-subtitle">
+            Monitor Redis, Celery worker, Celery Beat, SMTP, database, disk usage,
+            scheduled jobs, and notification delivery failures.
+        </p>
+    </div>
+
+    <div class="d-flex gap-2 flex-wrap">
+        <a href="{% url 'dashboard:home' %}" class="btn btn-light">
+            Back to Dashboard
+        </a>
+
+        <a href="{% url 'notifications:delivery_dashboard' %}" class="btn btn-outline-primary">
+            Delivery Monitor
+        </a>
+
+        <a href="{% url 'dashboard:system_health' %}" class="btn btn-outline-success">
+            Refresh
+        </a>
+    </div>
+</div>
+
+<div class="panel-card mb-4">
+    <div class="d-flex justify-content-between gap-3 flex-wrap align-items-center">
+        <div>
+            <p class="eyebrow mb-1">Overall Status</p>
+
+            <h3 class="mb-1">
+                {% if health_summary.overall_status == "HEALTHY" %}
+                    <span class="text-success">Healthy</span>
+                {% elif health_summary.overall_status == "WARNING" %}
+                    <span class="text-warning">Warning</span>
+                {% elif health_summary.overall_status == "DOWN" %}
+                    <span class="text-danger">Critical</span>
+                {% else %}
+                    <span class="text-muted">Unknown</span>
+                {% endif %}
+            </h3>
+
+            <p class="text-muted mb-0">
+                {{ health_summary.overall_message }}
+            </p>
+        </div>
+
+        <div class="text-end">
+            <div class="fw-bold">
+                Host: {{ health_summary.hostname }}
+            </div>
+
+            <div class="small text-muted">
+                Checked at {{ health_summary.checked_at|date:"d M Y, h:i A" }}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="stats-grid request-stats-grid">
+    <div class="metric-card">
+        <div class="metric-icon bg-soft-success">✅</div>
+        <div>
+            <p>Healthy</p>
+            <h3>{{ health_summary.healthy_count }}</h3>
+        </div>
+    </div>
+
+    <div class="metric-card">
+        <div class="metric-icon bg-soft-warning">⚠️</div>
+        <div>
+            <p>Warnings</p>
+            <h3>{{ health_summary.warning_count }}</h3>
+        </div>
+    </div>
+
+    <div class="metric-card">
+        <div class="metric-icon bg-soft-danger">❌</div>
+        <div>
+            <p>Down</p>
+            <h3>{{ health_summary.down_count }}</h3>
+        </div>
+    </div>
+
+    <div class="metric-card">
+        <div class="metric-icon bg-soft-primary">⏱️</div>
+        <div>
+            <p>Checks</p>
+            <h3>{{ health_summary.checks|length }}</h3>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mt-1">
+    <div class="col-xl-8">
+
+        <!-- Service Checks -->
+        <div class="panel-card">
+            <div class="panel-card-header">
+                <div>
+                    <h5>Service Health Checks</h5>
+                    <p>Live status of core infrastructure services.</p>
+                </div>
+            </div>
+
+            <div class="health-check-grid">
+                {% for check in health_summary.checks %}
+                    <div class="health-check-card">
+                        <div class="d-flex justify-content-between gap-3 flex-wrap">
+                            <div>
+                                <h5 class="mb-1">{{ check.name }}</h5>
+
+                                <p class="text-muted mb-2">
+                                    {{ check.message }}
+                                </p>
+                            </div>
+
+                            <div>
+                                {% if check.status == "HEALTHY" %}
+                                    <span class="status-badge status-approved">Healthy</span>
+                                {% elif check.status == "WARNING" %}
+                                    <span class="status-badge status-review">Warning</span>
+                                {% elif check.status == "DOWN" %}
+                                    <span class="status-badge status-rejected">Down</span>
+                                {% else %}
+                                    <span class="status-badge status-draft">Unknown</span>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="small text-muted mb-3">
+                            Response time: {{ check.response_time_ms }} ms
+                        </div>
+
+                        {% if check.details %}
+                            <div class="health-detail-list">
+                                {% for key, value in check.details.items %}
+                                    {% if value != None and value != "" %}
+                                        <div>
+                                            <span>{{ key|title }}</span>
+                                            <strong>{{ value }}</strong>
+                                        </div>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Scheduled Jobs -->
+        <div class="panel-card mt-4">
+            <div class="panel-card-header">
+                <div>
+                    <h5>Scheduled Jobs</h5>
+                    <p>Celery Beat jobs configured from settings and database schedules.</p>
+                </div>
+
+                <span class="status-badge status-submitted">
+                    {{ health_summary.scheduled_jobs|length }} Jobs
+                </span>
+            </div>
+
+            {% if health_summary.scheduled_jobs %}
+                <div class="table-responsive">
+                    <table class="table modern-table align-middle">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Task</th>
+                                <th>Source</th>
+                                <th>Enabled</th>
+                                <th>Last Run</th>
+                                <th>Total Runs</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            {% for job in health_summary.scheduled_jobs %}
+                                <tr>
+                                    <td>
+                                        <div class="fw-bold">
+                                            {{ job.name }}
+                                        </div>
+                                        <small class="text-muted">
+                                            {{ job.schedule|truncatechars:80 }}
+                                        </small>
+                                    </td>
+
+                                    <td>
+                                        <code>{{ job.task }}</code>
+                                    </td>
+
+                                    <td>
+                                        <span class="status-badge status-draft">
+                                            {{ job.source }}
+                                        </span>
+                                    </td>
+
+                                    <td>
+                                        {% if job.enabled %}
+                                            <span class="status-badge status-approved">Enabled</span>
+                                        {% else %}
+                                            <span class="status-badge status-rejected">Disabled</span>
+                                        {% endif %}
+                                    </td>
+
+                                    <td>
+                                        {% if job.last_run_at %}
+                                            {{ job.last_run_at|date:"d M Y, h:i A" }}
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </td>
+
+                                    <td>
+                                        {% if job.total_run_count != None %}
+                                            {{ job.total_run_count }}
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="empty-state compact">
+                    <div class="empty-icon">⏱️</div>
+                    <h5>No scheduled jobs found</h5>
+                    <p>Add CELERY_BEAT_SCHEDULE or django-celery-beat PeriodicTask entries.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="col-xl-4">
+
+        <!-- Quick Commands -->
+        <div class="panel-card">
+            <div class="panel-card-header">
+                <div>
+                    <h5>Development Commands</h5>
+                    <p>Useful commands for Windows local development.</p>
+                </div>
+            </div>
+
+            <div class="command-list">
+                <div>
+                    <span>Django Server</span>
+                    <code>python manage.py runserver</code>
+                </div>
+
+                <div>
+                    <span>Celery Worker</span>
+                    <code>celery -A config worker -l info -P solo</code>
+                </div>
+
+                <div>
+                    <span>Celery Beat</span>
+                    <code>celery -A config beat -l info</code>
+                </div>
+
+                <div>
+                    <span>Django Check</span>
+                    <code>python manage.py check</code>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Notification Failures -->
+        <div class="panel-card danger-panel mt-4">
+            <div class="panel-card-header">
+                <div>
+                    <h5>Recent Delivery Failures</h5>
+                    <p>Latest failed notification/email delivery attempts.</p>
+                </div>
+            </div>
+
+            {% if health_summary.recent_notification_failures %}
+                <div class="activity-side-list">
+                    {% for failure in health_summary.recent_notification_failures %}
+                        <a
+                            href="{% url 'notifications:delivery_detail' failure.pk %}"
+                            class="activity-notification-item"
+                        >
+                            <div class="fw-bold">
+                                {{ failure.subject|truncatechars:65 }}
+                            </div>
+
+                            <p class="text-danger small mb-1">
+                                {{ failure.error_message|truncatechars:120 }}
+                            </p>
+
+                            <div class="small text-muted">
+                                {{ failure.created_at|date:"d M Y, h:i A" }}
+                            </div>
+                        </a>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state compact">
+                    <div class="empty-icon">✅</div>
+                    <h5>No recent failures</h5>
+                    <p>No recent failed notification delivery logs found.</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Help -->
+        <div class="help-card mt-4">
+            <h5>Health Dashboard Notes</h5>
+
+            <ul>
+                <li>Celery Worker status requires the worker terminal to be running.</li>
+                <li>Celery Beat status is best when django-celery-beat is installed.</li>
+                <li>SMTP check opens a connection but does not send an email.</li>
+                <li>Disk status becomes warning after 75% usage and critical after 90%.</li>
+                <li>Redis check uses your Celery broker URL.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

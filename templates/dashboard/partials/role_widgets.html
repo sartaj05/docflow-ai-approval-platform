@@ -1,0 +1,157 @@
+{% if user.is_superuser %}
+    <div class="stats-grid super-grid mt-4">
+        <div class="metric-card">
+            <div class="metric-icon bg-soft-primary">🏢</div>
+            <div>
+                <p>Total Organizations</p>
+                <h3>{{ role_widgets.total_organizations }}</h3>
+            </div>
+        </div>
+
+        <div class="metric-card">
+            <div class="metric-icon bg-soft-success">✅</div>
+            <div>
+                <p>Active Organizations</p>
+                <h3>{{ role_widgets.active_organizations }}</h3>
+            </div>
+        </div>
+
+        <div class="metric-card">
+            <div class="metric-icon bg-soft-danger">⛔</div>
+            <div>
+                <p>Inactive Organizations</p>
+                <h3>{{ role_widgets.inactive_organizations }}</h3>
+            </div>
+        </div>
+    </div>
+{% elif user.profile.role == "ORG_ADMIN" %}
+    <div class="stats-grid super-grid mt-4">
+        <div class="metric-card">
+            <div class="metric-icon bg-soft-primary">👥</div>
+            <div>
+                <p>Organization Users</p>
+                <h3>{{ role_widgets.total_users }}</h3>
+            </div>
+        </div>
+
+        <div class="metric-card">
+            <div class="metric-icon bg-soft-success">🏢</div>
+            <div>
+                <p>Active Departments</p>
+                <h3>{{ role_widgets.active_departments }}</h3>
+            </div>
+        </div>
+
+        <div class="metric-card">
+            <div class="metric-icon bg-soft-warning">⏳</div>
+            <div>
+                <p>Pending Requests</p>
+                <h3>{{ role_widgets.pending_requests }}</h3>
+            </div>
+        </div>
+    </div>
+{% elif user.profile.role == "DEPARTMENT_HEAD" %}
+    <div class="stats-grid super-grid mt-4">
+        <div class="metric-card">
+            <div class="metric-icon bg-soft-primary">🏢</div>
+            <div>
+                <p>Department</p>
+                <h3 class="small-metric-text">{{ role_widgets.department_name }}</h3>
+            </div>
+        </div>
+
+        <div class="metric-card">
+            <div class="metric-icon bg-soft-warning">📄</div>
+            <div>
+                <p>Department Requests</p>
+                <h3>{{ role_widgets.department_requests }}</h3>
+            </div>
+        </div>
+
+        <div class="metric-card">
+            <div class="metric-icon bg-soft-danger">🔥</div>
+            <div>
+                <p>High Risk</p>
+                <h3>{{ role_widgets.department_high_risk }}</h3>
+            </div>
+        </div>
+    </div>
+{% elif user.profile.role == "STAFF" %}
+    <div class="stats-grid super-grid mt-4">
+        <div class="metric-card">
+            <div class="metric-icon bg-soft-primary">📄</div>
+            <div>
+                <p>My Requests</p>
+                <h3>{{ role_widgets.my_requests }}</h3>
+            </div>
+        </div>
+
+        <div class="metric-card">
+            <div class="metric-icon bg-soft-warning">📝</div>
+            <div>
+                <p>My Drafts</p>
+                <h3>{{ role_widgets.my_drafts }}</h3>
+            </div>
+        </div>
+
+        <div class="metric-card">
+            <div class="metric-icon bg-soft-success">✅</div>
+            <div>
+                <p>My Approved</p>
+                <h3>{{ role_widgets.my_approved }}</h3>
+            </div>
+        </div>
+    </div>
+{% elif user.profile.role == "APPROVER" %}
+    <div class="stats-grid super-grid mt-4">
+        <div class="metric-card">
+            <div class="metric-icon bg-soft-warning">✅</div>
+            <div>
+                <p>Pending Assigned</p>
+                <h3>{{ role_widgets.assigned_pending }}</h3>
+            </div>
+        </div>
+
+        <div class="metric-card">
+            <div class="metric-icon bg-soft-danger">🚨</div>
+            <div>
+                <p>Urgent Pending</p>
+                <h3>{{ role_widgets.urgent_pending }}</h3>
+            </div>
+        </div>
+
+        <div class="metric-card">
+            <div class="metric-icon bg-soft-success">👍</div>
+            <div>
+                <p>Approved By Me</p>
+                <h3>{{ role_widgets.approved_by_me }}</h3>
+            </div>
+        </div>
+    </div>
+{% elif user.profile.role == "AUDITOR" %}
+    <div class="stats-grid super-grid mt-4">
+        <div class="metric-card">
+            <div class="metric-icon bg-soft-primary">🛡️</div>
+            <div>
+                <p>Audit Logs</p>
+                <h3>{{ role_widgets.audit_logs }}</h3>
+            </div>
+        </div>
+
+        <div class="metric-card">
+            <div class="metric-icon bg-soft-success">✅</div>
+            <div>
+                <p>Approved</p>
+                <h3>{{ role_widgets.approved_requests }}</h3>
+            </div>
+        </div>
+
+        <div class="metric-card">
+            <div class="metric-icon bg-soft-danger">🔥</div>
+            <div>
+                <p>High Risk</p>
+                <h3>{{ role_widgets.high_risk_requests }}</h3>
+            </div>
+        </div>
+    </div>
+{% endif %}
