@@ -1,0 +1,234 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <p class="eyebrow">Reports Center</p>
+        <h1>Reports Dashboard</h1>
+        <p class="page-subtitle">
+            Analyze approval requests, department performance, AI risk levels, and export report data.
+        </p>
+    </div>
+
+    <div class="d-flex gap-2 flex-wrap">
+        <a href="{% url 'reports:approval_requests' %}?{{ query_string }}" class="btn btn-outline-primary">
+            Request Report
+        </a>
+
+        <a href="{% url 'reports:department_wise' %}?{{ query_string }}" class="btn btn-outline-primary">
+            Department Report
+        </a>
+
+        <a href="{% url 'reports:risk_level' %}?{{ query_string }}" class="btn btn-outline-danger">
+            Risk Report
+        </a>
+    </div>
+</div>
+
+{% include "reports/partials/report_summary_cards.html" %}
+
+<div class="stats-grid mt-4">
+    <div class="metric-card">
+        <div class="metric-icon bg-soft-danger">🔥</div>
+        <div>
+            <p>High Risk</p>
+            <h3>{{ summary.high_risk_count }}</h3>
+        </div>
+    </div>
+
+    <div class="metric-card">
+        <div class="metric-icon bg-soft-warning">⚠️</div>
+        <div>
+            <p>Medium Risk</p>
+            <h3>{{ summary.medium_risk_count }}</h3>
+        </div>
+    </div>
+
+    <div class="metric-card">
+        <div class="metric-icon bg-soft-success">🟢</div>
+        <div>
+            <p>Low Risk</p>
+            <h3>{{ summary.low_risk_count }}</h3>
+        </div>
+    </div>
+</div>
+
+{% include "reports/partials/report_filters.html" %}
+
+<div class="row g-4 mt-2">
+    <div class="col-lg-6">
+        <div class="panel-card">
+            <div class="panel-card-header">
+                <div>
+                    <h5>Department Summary</h5>
+                    <p>Request count by department</p>
+                </div>
+
+                <a href="{% url 'reports:export_department_csv' %}?{{ query_string }}" class="btn btn-sm btn-outline-success">
+                    Export CSV
+                </a>
+            </div>
+
+            {% if department_summary %}
+                <div class="table-responsive">
+                    <table class="table modern-table align-middle">
+                        <thead>
+                            <tr>
+                                <th>Department</th>
+                                <th>Total</th>
+                                <th>Approved</th>
+                                <th>Rejected</th>
+                                <th>High Risk</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            {% for row in department_summary %}
+                                <tr>
+                                    <td>{{ row.department__name|default:"No Department" }}</td>
+                                    <td>{{ row.total }}</td>
+                                    <td>{{ row.approved }}</td>
+                                    <td>{{ row.rejected }}</td>
+                                    <td>{{ row.high_risk }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="empty-state compact">
+                    <div class="empty-icon">🏢</div>
+                    <h5>No department data</h5>
+                    <p>Department report data will appear here.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="panel-card">
+            <div class="panel-card-header">
+                <div>
+                    <h5>Risk Summary</h5>
+                    <p>Request count by AI risk level</p>
+                </div>
+
+                <a href="{% url 'reports:export_risk_csv' %}?{{ query_string }}" class="btn btn-sm btn-outline-success">
+                    Export CSV
+                </a>
+            </div>
+
+            {% if risk_summary %}
+                <div class="table-responsive">
+                    <table class="table modern-table align-middle">
+                        <thead>
+                            <tr>
+                                <th>Risk Level</th>
+                                <th>Total</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            {% for row in risk_summary %}
+                                <tr>
+                                    <td>
+                                        {% if row.risk_level == "HIGH" %}
+                                            <span class="status-badge status-rejected">High</span>
+                                        {% elif row.risk_level == "MEDIUM" %}
+                                            <span class="status-badge status-review">Medium</span>
+                                        {% elif row.risk_level == "LOW" %}
+                                            <span class="status-badge status-approved">Low</span>
+                                        {% else %}
+                                            <span class="status-badge status-draft">Pending</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ row.total }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="empty-state compact">
+                    <div class="empty-icon">⚠️</div>
+                    <h5>No risk data</h5>
+                    <p>Risk-level data will appear after AI processing.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="panel-card mt-4">
+    <div class="panel-card-header">
+        <div>
+            <h5>Recent Requests</h5>
+            <p>Latest filtered approval requests</p>
+        </div>
+
+        <a href="{% url 'reports:export_approval_requests_csv' %}?{{ query_string }}" class="btn btn-sm btn-outline-success">
+            Export CSV
+        </a>
+    </div>
+
+    {% if recent_requests %}
+        <div class="table-responsive">
+            <table class="table modern-table align-middle">
+                <thead>
+                    <tr>
+                        <th>Request</th>
+                        <th>Department</th>
+                        <th>Status</th>
+                        <th>Risk</th>
+                        <th>Created</th>
+                        <th class="text-end">Print</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for item in recent_requests %}
+                        <tr>
+                            <td>
+                                <div class="fw-bold">{{ item.request_number }}</div>
+                                <small class="text-muted">{{ item.title|truncatechars:60 }}</small>
+                            </td>
+
+                            <td>{{ item.department.name|default:"-" }}</td>
+
+                            <td>{{ item.get_status_display }}</td>
+
+                            <td>
+                                {% if item.risk_level == "HIGH" %}
+                                    <span class="status-badge status-rejected">High</span>
+                                {% elif item.risk_level == "MEDIUM" %}
+                                    <span class="status-badge status-review">Medium</span>
+                                {% elif item.risk_level == "LOW" %}
+                                    <span class="status-badge status-approved">Low</span>
+                                {% else %}
+                                    <span class="status-badge status-draft">Pending</span>
+                                {% endif %}
+                            </td>
+
+                            <td>{{ item.created_at|date:"d M Y" }}</td>
+
+                            <td class="text-end">
+                                <a href="{% url 'reports:printable_request_summary' item.pk %}" class="btn btn-sm btn-outline-primary" target="_blank">
+                                    Print
+                                </a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="empty-state compact">
+            <div class="empty-icon">📄</div>
+            <h5>No requests found</h5>
+            <p>Change filters or create approval requests.</p>
+        </div>
+    {% endif %}
+</div>
+
+{% endblock %}

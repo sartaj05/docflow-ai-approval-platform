@@ -1,0 +1,163 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Verify {{ document_request.request_number }}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
+    <link rel="stylesheet" href="{% static 'css/app.css' %}">
+</head>
+
+<body class="bg-light">
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="panel-card">
+                <div class="text-center mb-4">
+                    <div class="empty-icon mx-auto">✅</div>
+                    <p class="eyebrow">Verification</p>
+                    <h1 class="fw-bold">{{ document_request.request_number }}</h1>
+                    <p class="text-muted">
+                        This approval request exists in DocFlow AI.
+                    </p>
+                </div>
+
+                <div class="info-list">
+                    <div>
+                        <span>Title</span>
+                        <strong>{{ document_request.title }}</strong>
+                    </div>
+
+                    <div>
+                        <span>Organization</span>
+                        <strong>{{ document_request.organization.name }}</strong>
+                    </div>
+
+                    <div>
+                        <span>Department</span>
+                        <strong>
+                            {% if document_request.department %}
+                                {{ document_request.department.name }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </strong>
+                    </div>
+
+                    <div>
+                        <span>Status</span>
+                        <strong>
+                            {% if document_request.status == "APPROVED" %}
+                                <span class="status-badge status-approved">Approved</span>
+                            {% elif document_request.status == "REJECTED" %}
+                                <span class="status-badge status-rejected">Rejected</span>
+                            {% elif document_request.status == "IN_REVIEW" %}
+                                <span class="status-badge status-review">In Review</span>
+                            {% else %}
+                                <span class="status-badge status-draft">{{ document_request.get_status_display }}</span>
+                            {% endif %}
+                        </strong>
+                    </div>
+
+                    <div>
+                        <span>Created By</span>
+                        <strong>
+                            {% if document_request.created_by %}
+                                {{ document_request.created_by.display_name }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </strong>
+                    </div>
+
+                    <div>
+                        <span>Created At</span>
+                        <strong>{{ document_request.created_at|date:"d M Y, h:i A" }}</strong>
+                    </div>
+
+                    <div>
+                        <span>Approved At</span>
+                        <strong>
+                            {% if document_request.approved_at %}
+                                {{ document_request.approved_at|date:"d M Y, h:i A" }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </strong>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel-card mt-4">
+                <div class="panel-card-header">
+                    <div>
+                        <h5>Approval Chain</h5>
+                        <p>Workflow steps linked with this request.</p>
+                    </div>
+                </div>
+
+                {% if approval_steps %}
+                    <div class="table-responsive">
+                        <table class="table modern-table align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Step</th>
+                                    <th>Approver</th>
+                                    <th>Status</th>
+                                    <th>Decision Time</th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                {% for step in approval_steps %}
+                                    <tr>
+                                        <td>Step {{ step.step_order }}</td>
+
+                                        <td>
+                                            {% if step.assigned_to %}
+                                                {{ step.assigned_to.display_name }}
+                                            {% else %}
+                                                -
+                                            {% endif %}
+                                        </td>
+
+                                        <td>
+                                            {% if step.status == "APPROVED" %}
+                                                <span class="status-badge status-approved">Approved</span>
+                                            {% elif step.status == "REJECTED" %}
+                                                <span class="status-badge status-rejected">Rejected</span>
+                                            {% else %}
+                                                <span class="status-badge status-draft">{{ step.get_status_display }}</span>
+                                            {% endif %}
+                                        </td>
+
+                                        <td>
+                                            {% if step.approved_at %}
+                                                {{ step.approved_at|date:"d M Y, h:i A" }}
+                                            {% elif step.rejected_at %}
+                                                {{ step.rejected_at|date:"d M Y, h:i A" }}
+                                            {% else %}
+                                                -
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="empty-state compact">
+                        <div class="empty-icon">🔁</div>
+                        <h5>No approval chain found</h5>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

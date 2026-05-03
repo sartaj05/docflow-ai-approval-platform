@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <p class="eyebrow">Secure Sharing</p>
+        <h1>Share Links</h1>
+        <p class="page-subtitle">
+            Manage public expiring links for {{ document_request.request_number }}.
+        </p>
+    </div>
+
+    <div class="d-flex gap-2 flex-wrap">
+        <a href="{% url 'approvals:request_detail' document_request.pk %}" class="btn btn-light">
+            Back to Request
+        </a>
+
+        {% if document_request.status == "APPROVED" %}
+            <a href="{% url 'reports:request_share_link_create' document_request.pk %}" class="btn btn-primary">
+                + Create Share Link
+            </a>
+        {% endif %}
+    </div>
+</div>
+
+{% if document_request.status != "APPROVED" %}
+    <div class="alert alert-warning">
+        Share links can be created only after request approval.
+    </div>
+{% endif %}
+
+<div class="panel-card">
+    <div class="panel-card-header">
+        <div>
+            <h5>Existing Share Links</h5>
+            <p>Copy, open, monitor, or revoke secure public links.</p>
+        </div>
+    </div>
+
+    {% if share_links %}
+        <div class="table-responsive">
+            <table class="table modern-table align-middle">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Permissions</th>
+                        <th>Status</th>
+                        <th>Access</th>
+                        <th>Expiry</th>
+                        <th>Created By</th>
+                        <th class="text-end">Action</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for link in share_links %}
+                        <tr>
+                            <td>
+                                <div class="fw-bold">{{ link.title }}</div>
+                                <small class="text-muted">
+                                    Token: {{ link.token|truncatechars:18 }}
+                                </small>
+                            </td>
+
+                            <td>
+                                {% if link.allow_summary_view %}
+                                    <span class="status-badge status-approved">Summary</span>
+                                {% endif %}
+
+                                {% if link.allow_archive_download %}
+                                    <span class="status-badge status-submitted">Archive</span>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {% if link.is_valid %}
+                                    <span class="status-badge status-approved">Active</span>
+                                {% elif link.is_expired %}
+                                    <span class="status-badge status-review">Expired</span>
+                                {% else %}
+                                    <span class="status-badge status-rejected">Revoked</span>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {{ link.access_count }} visit(s)
+                                <div class="small text-muted">
+                                    Last:
+                                    {% if link.last_accessed_at %}
+                                        {{ link.last_accessed_at|date:"d M Y, h:i A" }}
+                                    {% else %}
+                                        Never
+                                    {% endif %}
+                                </div>
+                            </td>
+
+                            <td>{{ link.expires_at|date:"d M Y, h:i A" }}</td>
+
+                            <td>
+                                {% if link.created_by %}
+                                    {{ link.created_by.display_name }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+
+                            <td class="text-end">
+                                <a
+                                    href="{% url 'reports:public_request_summary' link.token %}"
+                                    target="_blank"
+                                    class="btn btn-sm btn-outline-primary"
+                                >
+                                    Open
+                                </a>
+
+                                {% if link.allow_archive_download %}
+                                    <a
+                                        href="{% url 'reports:public_request_archive' link.token %}"
+                                        target="_blank"
+                                        class="btn btn-sm btn-outline-dark"
+                                    >
+                                        Archive
+                                    </a>
+                                {% endif %}
+
+                                {% if link.is_active %}
+                                    <form
+                                        method="post"
+                                        action="{% url 'reports:request_share_link_revoke' document_request.pk link.pk %}"
+                                        class="d-inline"
+                                    >
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                                            Revoke
+                                        </button>
+                                    </form>
+                                {% endif %}
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td colspan="7">
+                                <div class="share-url-box">
+                                    {{ request.scheme }}://{{ request.get_host }}{% url 'reports:public_request_summary' link.token %}
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">🔗</div>
+            <h5>No share links created</h5>
+            <p>Create an expiring secure link after the request is approved.</p>
+
+            {% if document_request.status == "APPROVED" %}
+                <a href="{% url 'reports:request_share_link_create' document_request.pk %}" class="btn btn-primary">
+                    Create Share Link
+                </a>
+            {% endif %}
+        </div>
+    {% endif %}
+</div>
+
+{% endblock %}

@@ -1,0 +1,39 @@
+{% load static %}
+
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ page_title|default:"Invalid Link" }}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
+    <link rel="stylesheet" href="{% static 'css/app.css' %}">
+</head>
+
+<body>
+<div class="auth-page">
+    <div class="auth-card text-center">
+        <div class="empty-icon mx-auto">🔒</div>
+
+        <h3 class="fw-bold mb-2">{{ page_title|default:"Invalid Share Link" }}</h3>
+
+        <p class="text-muted mb-4">
+            {% if message %}
+                {{ message }}
+            {% elif share_link and share_link.is_expired %}
+                This share link has expired.
+            {% elif share_link and not share_link.is_active %}
+                This share link has been revoked.
+            {% else %}
+                This share link is invalid or no longer available.
+            {% endif %}
+        </p>
+
+        <a href="/" class="btn btn-primary">
+            Go Home
+        </a>
+    </div>
+</div>
+</body>
+</html>

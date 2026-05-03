@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <p class="eyebrow">Department Reports</p>
+        <h1>Department Wise Report</h1>
+        <p class="page-subtitle">
+            Compare request volume, approval status, and high-risk requests across departments.
+        </p>
+    </div>
+
+    <div class="d-flex gap-2 flex-wrap">
+        <a href="{% url 'reports:dashboard' %}?{{ query_string }}" class="btn btn-light">
+            Back
+        </a>
+
+        <a href="{% url 'reports:export_department_csv' %}?{{ query_string }}" class="btn btn-outline-success">
+            Export CSV
+        </a>
+    </div>
+</div>
+
+{% include "reports/partials/report_filters.html" %}
+
+<div class="panel-card mt-4">
+    <div class="panel-card-header">
+        <div>
+            <h5>Department Summary</h5>
+            <p>Department-wise report table</p>
+        </div>
+    </div>
+
+    {% if department_summary %}
+        <div class="table-responsive">
+            <table class="table modern-table align-middle">
+                <thead>
+                    <tr>
+                        <th>Department</th>
+                        <th>Total</th>
+                        <th>Approved</th>
+                        <th>Rejected</th>
+                        <th>In Review</th>
+                        <th>High Risk</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for row in department_summary %}
+                        <tr>
+                            <td>
+                                <div class="fw-bold">
+                                    {{ row.department__name|default:"No Department" }}
+                                </div>
+                            </td>
+
+                            <td>{{ row.total }}</td>
+                            <td>
+                                <span class="status-badge status-approved">
+                                    {{ row.approved }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="status-badge status-rejected">
+                                    {{ row.rejected }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="status-badge status-review">
+                                    {{ row.in_review }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="status-badge status-rejected">
+                                    {{ row.high_risk }}
+                                </span>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">🏢</div>
+            <h5>No department data</h5>
+            <p>Try changing filters.</p>
+        </div>
+    {% endif %}
+</div>
+
+{% endblock %}

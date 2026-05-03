@@ -1,0 +1,316 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <p class="eyebrow">Reports</p>
+        <h1>Platform Reports</h1>
+        <p class="page-subtitle">
+            Approval request analytics, risk summary, department performance, and recent report activity.
+        </p>
+    </div>
+
+    <div class="d-flex gap-2 flex-wrap">
+        <a href="{% url 'dashboard:home' %}" class="btn btn-light">
+            ← Back to Dashboard
+        </a>
+
+        <a href="{% url 'approvals:request_list' %}" class="btn btn-outline-primary">
+            View Requests
+        </a>
+
+        <a href="{% url 'reports:certificate_list' %}" class="btn btn-outline-success">
+            Certificates
+        </a>
+    </div>
+</div>
+
+<div class="stats-grid request-stats-grid">
+    <div class="metric-card">
+        <div class="metric-icon bg-soft-primary">📄</div>
+        <div>
+            <p>Total Requests</p>
+            <h3>{{ total_requests }}</h3>
+        </div>
+    </div>
+
+    <div class="metric-card">
+        <div class="metric-icon bg-soft-warning">⏳</div>
+        <div>
+            <p>Pending</p>
+            <h3>{{ pending_requests }}</h3>
+        </div>
+    </div>
+
+    <div class="metric-card">
+        <div class="metric-icon bg-soft-success">✅</div>
+        <div>
+            <p>Approved</p>
+            <h3>{{ approved_requests }}</h3>
+        </div>
+    </div>
+
+    <div class="metric-card">
+        <div class="metric-icon bg-soft-danger">❌</div>
+        <div>
+            <p>Rejected</p>
+            <h3>{{ rejected_requests }}</h3>
+        </div>
+    </div>
+</div>
+
+<div class="stats-grid request-stats-grid mt-4">
+    <div class="metric-card">
+        <div class="metric-icon bg-soft-danger">🔴</div>
+        <div>
+            <p>High Risk</p>
+            <h3>{{ high_risk }}</h3>
+        </div>
+    </div>
+
+    <div class="metric-card">
+        <div class="metric-icon bg-soft-warning">🟠</div>
+        <div>
+            <p>Medium Risk</p>
+            <h3>{{ medium_risk }}</h3>
+        </div>
+    </div>
+
+    <div class="metric-card">
+        <div class="metric-icon bg-soft-success">🟢</div>
+        <div>
+            <p>Low Risk</p>
+            <h3>{{ low_risk }}</h3>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mt-2">
+    <div class="col-lg-6">
+        <div class="panel-card">
+            <div class="panel-card-header">
+                <div>
+                    <h5>Department Summary</h5>
+                    <p>Top departments by request count and approval outcome.</p>
+                </div>
+            </div>
+
+            {% if department_rows %}
+                <div class="table-responsive">
+                    <table class="table modern-table align-middle">
+                        <thead>
+                            <tr>
+                                <th>Department</th>
+                                <th>Total</th>
+                                <th>Approved</th>
+                                <th>Rejected</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            {% for row in department_rows %}
+                                <tr>
+                                    <td>
+                                        <strong>
+                                            {{ row.department__name|default:"No Department" }}
+                                        </strong>
+                                    </td>
+
+                                    <td>{{ row.total }}</td>
+
+                                    <td>
+                                        <span class="status-badge status-approved">
+                                            {{ row.approved }}
+                                        </span>
+                                    </td>
+
+                                    <td>
+                                        <span class="status-badge status-rejected">
+                                            {{ row.rejected }}
+                                        </span>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="empty-state compact">
+                    <div class="empty-icon">🏬</div>
+                    <h5>No department data</h5>
+                    <p>Department report data will appear after requests are created.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="panel-card">
+            <div class="panel-card-header">
+                <div>
+                    <h5>Risk Summary</h5>
+                    <p>AI risk level distribution for approval requests.</p>
+                </div>
+            </div>
+
+            <div class="risk-summary-list">
+                <div class="info-list">
+                    <div>
+                        <span>High Risk</span>
+                        <strong>
+                            <span class="status-badge status-rejected">{{ high_risk }}</span>
+                        </strong>
+                    </div>
+
+                    <div>
+                        <span>Medium Risk</span>
+                        <strong>
+                            <span class="status-badge status-review">{{ medium_risk }}</span>
+                        </strong>
+                    </div>
+
+                    <div>
+                        <span>Low Risk</span>
+                        <strong>
+                            <span class="status-badge status-approved">{{ low_risk }}</span>
+                        </strong>
+                    </div>
+                </div>
+            </div>
+
+            <div class="alert alert-info mt-3 mb-0">
+                Risk values come from document AI/OCR analysis where available.
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="panel-card mt-4">
+    <div class="panel-card-header">
+        <div>
+            <h5>Recent Approval Requests</h5>
+            <p>Latest approval requests available in your reporting scope.</p>
+        </div>
+
+        <a href="{% url 'approvals:request_list' %}" class="btn btn-sm btn-outline-primary">
+            View All
+        </a>
+    </div>
+
+    {% if recent_requests %}
+        <div class="table-responsive">
+            <table class="table modern-table align-middle">
+                <thead>
+                    <tr>
+                        <th>Request</th>
+                        <th>Department</th>
+                        <th>Status</th>
+                        <th>Priority</th>
+                        <th>Risk</th>
+                        <th>Created By</th>
+                        <th>Created</th>
+                        <th class="text-end">Action</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for item in recent_requests %}
+                        <tr>
+                            <td>
+                                <div class="fw-bold">
+                                    {{ item.request_number }}
+                                </div>
+                                <small class="text-muted">
+                                    {{ item.title|truncatechars:55 }}
+                                </small>
+                            </td>
+
+                            <td>
+                                {% if item.department %}
+                                    {{ item.department.name }}
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {% if item.status == "DRAFT" %}
+                                    <span class="status-badge status-draft">Draft</span>
+                                {% elif item.status == "SUBMITTED" %}
+                                    <span class="status-badge status-submitted">Submitted</span>
+                                {% elif item.status == "IN_REVIEW" %}
+                                    <span class="status-badge status-review">In Review</span>
+                                {% elif item.status == "APPROVED" %}
+                                    <span class="status-badge status-approved">Approved</span>
+                                {% elif item.status == "REJECTED" %}
+                                    <span class="status-badge status-rejected">Rejected</span>
+                                {% elif item.status == "CANCELLED" %}
+                                    <span class="status-badge status-draft">Cancelled</span>
+                                {% else %}
+                                    <span class="status-badge status-draft">
+                                        {{ item.get_status_display }}
+                                    </span>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {% if item.priority == "URGENT" %}
+                                    <span class="status-badge status-rejected">Urgent</span>
+                                {% elif item.priority == "HIGH" %}
+                                    <span class="status-badge status-review">High</span>
+                                {% elif item.priority == "MEDIUM" %}
+                                    <span class="status-badge status-submitted">Medium</span>
+                                {% else %}
+                                    <span class="status-badge status-draft">
+                                        {{ item.get_priority_display }}
+                                    </span>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {% if item.risk_level == "HIGH" %}
+                                    <span class="status-badge status-rejected">High</span>
+                                {% elif item.risk_level == "MEDIUM" %}
+                                    <span class="status-badge status-review">Medium</span>
+                                {% elif item.risk_level == "LOW" %}
+                                    <span class="status-badge status-approved">Low</span>
+                                {% else %}
+                                    <span class="status-badge status-draft">Pending</span>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {% if item.created_by %}
+                                    {{ item.created_by.display_name }}
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+
+                            <td>{{ item.created_at|date:"d M Y" }}</td>
+
+                            <td class="text-end">
+                                <a href="{% url 'approvals:request_detail' item.pk %}" class="btn btn-sm btn-outline-primary">
+                                    View
+                                </a>
+
+                                <a href="{% url 'reports:printable_request_summary' item.pk %}" class="btn btn-sm btn-outline-secondary">
+                                    Print
+                                </a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="empty-state compact">
+            <div class="empty-icon">📊</div>
+            <h5>No report data found</h5>
+            <p>Reports will appear after approval requests are created.</p>
+        </div>
+    {% endif %}
+</div>
+
+{% endblock %}

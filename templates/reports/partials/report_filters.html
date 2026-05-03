@@ -1,0 +1,64 @@
+<div class="panel-card mt-4">
+    <div class="panel-card-header">
+        <div>
+            <h5>Search & Filters</h5>
+            <p>Filter by date, status, category, department, priority, or AI risk.</p>
+        </div>
+    </div>
+
+    <form method="get" class="row g-3 align-items-end">
+        <div class="col-lg-4 col-md-6">
+            <label class="form-label">Search</label>
+            {{ filter_form.q }}
+        </div>
+
+        <div class="col-lg-2 col-md-6">
+            <label class="form-label">Status</label>
+            {{ filter_form.status }}
+        </div>
+
+        <div class="col-lg-2 col-md-6">
+            <label class="form-label">Category</label>
+            {{ filter_form.category }}
+        </div>
+
+        <div class="col-lg-2 col-md-6">
+            <label class="form-label">Priority</label>
+            {{ filter_form.priority }}
+        </div>
+
+        {% if filter_form.department %}
+            <div class="col-lg-2 col-md-6">
+                <label class="form-label">Department</label>
+                {{ filter_form.department }}
+            </div>
+        {% endif %}
+
+        <div class="col-lg-2 col-md-6">
+            <label class="form-label">Risk Level</label>
+            {{ filter_form.risk_level }}
+        </div>
+
+        <div class="col-lg-2 col-md-6">
+            <label class="form-label">From Date</label>
+            {{ filter_form.date_from }}
+        </div>
+
+        <div class="col-lg-2 col-md-6">
+            <label class="form-label">To Date</label>
+            {{ filter_form.date_to }}
+        </div>
+
+        <div class="col-lg-2 col-md-6">
+            <button type="submit" class="btn btn-primary w-100">
+                Apply
+            </button>
+        </div>
+
+        <div class="col-lg-2 col-md-6">
+            <a href="{{ request.path }}" class="btn btn-outline-secondary w-100">
+                Reset
+            </a>
+        </div>
+    </form>
+</div>

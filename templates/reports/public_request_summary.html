@@ -1,0 +1,312 @@
+{% load static %}
+
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ document_request.request_number }} Public Summary</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
+    <link rel="stylesheet" href="{% static 'css/app.css' %}">
+</head>
+
+<body>
+<div class="public-share-page">
+    <div class="container py-4 py-lg-5">
+
+        <div class="panel-card mb-4">
+            <div class="d-flex justify-content-between gap-3 flex-wrap">
+                <div>
+                    <p class="eyebrow">Public Approved Summary</p>
+                    <h1 class="mb-2">{{ document_request.request_number }}</h1>
+                    <p class="page-subtitle mb-0">
+                        {{ document_request.title }}
+                    </p>
+                </div>
+
+                <div class="text-end">
+                    <span class="status-badge status-approved">Approved</span>
+
+                    <div class="small text-muted mt-2">
+                        Link expires:
+                        {{ share_link.expires_at|date:"d M Y, h:i A" }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-lg-8">
+                <div class="panel-card">
+                    <div class="panel-card-header">
+                        <div>
+                            <h5>Request Information</h5>
+                            <p>Approved request details.</p>
+                        </div>
+                    </div>
+
+                    <div class="info-list">
+                        <div>
+                            <span>Title</span>
+                            <strong>{{ document_request.title }}</strong>
+                        </div>
+
+                        <div>
+                            <span>Description</span>
+                            <strong>{{ document_request.description|linebreaksbr|default:"-" }}</strong>
+                        </div>
+
+                        <div>
+                            <span>Organization</span>
+                            <strong>{{ document_request.organization.name }}</strong>
+                        </div>
+
+                        <div>
+                            <span>Department</span>
+                            <strong>
+                                {% if document_request.department %}
+                                    {{ document_request.department.name }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </strong>
+                        </div>
+
+                        <div>
+                            <span>Category</span>
+                            <strong>{{ document_request.get_category_display }}</strong>
+                        </div>
+
+                        <div>
+                            <span>Priority</span>
+                            <strong>{{ document_request.get_priority_display }}</strong>
+                        </div>
+
+                        <div>
+                            <span>Approved At</span>
+                            <strong>
+                                {% if document_request.approved_at %}
+                                    {{ document_request.approved_at|date:"d M Y, h:i A" }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </strong>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel-card mt-4">
+                    <div class="panel-card-header">
+                        <div>
+                            <h5>Approval Steps</h5>
+                            <p>Final approval route.</p>
+                        </div>
+                    </div>
+
+                    {% if approval_steps %}
+                        <div class="workflow-timeline">
+                            {% for step in approval_steps %}
+                                <div class="workflow-step-item">
+                                    <div class="workflow-step-marker">
+                                        {{ step.step_order }}
+                                    </div>
+
+                                    <div class="workflow-step-content">
+                                        <div class="d-flex justify-content-between gap-3 flex-wrap">
+                                            <div>
+                                                <h6 class="mb-1">
+                                                    Step {{ step.step_order }} — {{ step.role_required }}
+                                                </h6>
+
+                                                <p class="text-muted mb-1">
+                                                    Assigned:
+                                                    {% if step.assigned_to %}
+                                                        {{ step.assigned_to.display_name }}
+                                                    {% else %}
+                                                        -
+                                                    {% endif %}
+                                                </p>
+
+                                                {% if step.comments %}
+                                                    <p class="mb-0">{{ step.comments|linebreaksbr }}</p>
+                                                {% endif %}
+                                            </div>
+
+                                            {% if step.status == "APPROVED" %}
+                                                <span class="status-badge status-approved">Approved</span>
+                                            {% elif step.status == "REJECTED" %}
+                                                <span class="status-badge status-rejected">Rejected</span>
+                                            {% else %}
+                                                <span class="status-badge status-draft">{{ step.get_status_display }}</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="empty-state compact">
+                            <div class="empty-icon">🔁</div>
+                            <h5>No workflow steps</h5>
+                            <p>No approval steps are available.</p>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="panel-card mt-4">
+                    <div class="panel-card-header">
+                        <div>
+                            <h5>Approval Timeline</h5>
+                            <p>Approval actions and comments.</p>
+                        </div>
+                    </div>
+
+                    {% if approval_actions %}
+                        <div class="action-timeline">
+                            {% for action in approval_actions %}
+                                <div class="action-item">
+                                    <div class="action-dot">
+                                        {% if action.action_type == "APPROVED" %}
+                                            ✅
+                                        {% elif action.action_type == "REJECTED" %}
+                                            ❌
+                                        {% elif action.action_type == "COMMENTED" %}
+                                            💬
+                                        {% elif action.action_type == "SUBMITTED" %}
+                                            📤
+                                        {% else %}
+                                            🔔
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="action-content">
+                                        <h6 class="mb-1">
+                                            {{ action.get_action_type_display }}
+                                            {% if action.step %}
+                                                — Step {{ action.step.step_order }}
+                                            {% endif %}
+                                        </h6>
+
+                                        <p class="text-muted mb-1">
+                                            By:
+                                            {% if action.action_by %}
+                                                {{ action.action_by.display_name }}
+                                            {% else %}
+                                                System
+                                            {% endif %}
+                                            |
+                                            {{ action.created_at|date:"d M Y, h:i A" }}
+                                        </p>
+
+                                        {% if action.comment %}
+                                            <p class="mb-0">{{ action.comment|linebreaksbr }}</p>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="empty-state compact">
+                            <div class="empty-icon">🕒</div>
+                            <h5>No timeline activity</h5>
+                            <p>No actions found.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="panel-card">
+                    <div class="panel-card-header">
+                        <div>
+                            <h5>AI / Risk Summary</h5>
+                            <p>Document analysis result.</p>
+                        </div>
+                    </div>
+
+                    <div class="info-list">
+                        <div>
+                            <span>AI Summary</span>
+                            <strong>{{ document_request.ai_summary|default:"Pending AI processing" }}</strong>
+                        </div>
+
+                        <div>
+                            <span>AI Category</span>
+                            <strong>{{ document_request.ai_category|default:"-" }}</strong>
+                        </div>
+
+                        <div>
+                            <span>Risk Level</span>
+                            <strong>{{ document_request.risk_level|default:"-" }}</strong>
+                        </div>
+
+                        <div>
+                            <span>Risk Notes</span>
+                            <strong>{{ document_request.risk_notes|default:"-" }}</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel-card mt-4">
+                    <div class="panel-card-header">
+                        <div>
+                            <h5>Attachments</h5>
+                            <p>Uploaded document metadata.</p>
+                        </div>
+                    </div>
+
+                    {% if attachments %}
+                        <div class="audit-mini-list">
+                            {% for attachment in attachments %}
+                                <div class="audit-mini-item">
+                                    <div class="audit-mini-icon">📎</div>
+                                    <div>
+                                        <div class="fw-bold">
+                                            {{ attachment.original_filename|truncatechars:40 }}
+                                        </div>
+
+                                        <div class="small text-muted">
+                                            {{ attachment.display_file_type }}
+                                            |
+                                            {{ attachment.file_size_mb }} MB
+                                        </div>
+
+                                        {% if attachment.ai_processed %}
+                                            <span class="status-badge status-approved mt-2">AI Processed</span>
+                                        {% else %}
+                                            <span class="status-badge status-draft mt-2">AI Pending</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="empty-state compact">
+                            <div class="empty-icon">📎</div>
+                            <h5>No attachments</h5>
+                            <p>No documents available.</p>
+                        </div>
+                    {% endif %}
+                </div>
+
+                {% if share_link.allow_archive_download %}
+                    <div class="panel-card mt-4">
+                        <div class="panel-card-header">
+                            <div>
+                                <h5>Archive Download</h5>
+                                <p>Download approved archive package.</p>
+                            </div>
+                        </div>
+
+                        <a href="{% url 'reports:public_request_archive' share_link.token %}" class="btn btn-outline-dark w-100">
+                            Download Archive ZIP
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

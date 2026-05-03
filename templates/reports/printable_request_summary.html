@@ -1,0 +1,487 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ document_request.request_number }} Approval Summary</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <style>
+        @page {
+            size: A4;
+            margin: 14mm;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: #f1f5f9;
+            color: #111827;
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+        }
+
+        .print-actions {
+            max-width: 210mm;
+            margin: 16px auto;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        .print-actions a,
+        .print-actions button {
+            border: 1px solid #d1d5db;
+            background: #ffffff;
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-weight: 700;
+            cursor: pointer;
+            text-decoration: none;
+            color: #111827;
+        }
+
+        .print-actions button {
+            background: #2563eb;
+            border-color: #2563eb;
+            color: #ffffff;
+        }
+
+        .page {
+            width: 210mm;
+            min-height: 297mm;
+            margin: 0 auto 18px;
+            background: #ffffff;
+            padding: 14mm;
+            box-shadow: 0 10px 35px rgba(15, 23, 42, 0.15);
+        }
+
+        .header {
+            border-bottom: 2px solid #111827;
+            padding-bottom: 10px;
+            margin-bottom: 14px;
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+        }
+
+        .brand h1 {
+            font-size: 22px;
+            margin: 0;
+            letter-spacing: -0.5px;
+        }
+
+        .brand p {
+            margin: 4px 0 0;
+            color: #4b5563;
+        }
+
+        .print-meta {
+            text-align: right;
+            color: #4b5563;
+        }
+
+        .title-block {
+            text-align: center;
+            margin: 16px 0;
+        }
+
+        .title-block h2 {
+            margin: 0;
+            font-size: 18px;
+            text-transform: uppercase;
+        }
+
+        .title-block p {
+            margin: 6px 0 0;
+            color: #4b5563;
+        }
+
+        .section {
+            margin-top: 14px;
+            page-break-inside: avoid;
+        }
+
+        .section h3 {
+            margin: 0 0 8px;
+            font-size: 14px;
+            background: #f3f4f6;
+            padding: 8px;
+            border: 1px solid #e5e7eb;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            border: 1px solid #e5e7eb;
+            border-bottom: 0;
+        }
+
+        .info-item {
+            padding: 8px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .info-item:nth-child(odd) {
+            border-right: 1px solid #e5e7eb;
+        }
+
+        .label {
+            display: block;
+            color: #6b7280;
+            font-size: 10px;
+            text-transform: uppercase;
+            font-weight: 700;
+            margin-bottom: 3px;
+        }
+
+        .value {
+            font-weight: 700;
+            color: #111827;
+            word-break: break-word;
+        }
+
+        .full {
+            grid-column: 1 / -1;
+            border-right: 0 !important;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            page-break-inside: auto;
+        }
+
+        th,
+        td {
+            border: 1px solid #e5e7eb;
+            padding: 7px;
+            text-align: left;
+            vertical-align: top;
+        }
+
+        th {
+            background: #f3f4f6;
+            font-size: 10px;
+            text-transform: uppercase;
+            color: #374151;
+        }
+
+        .badge {
+            display: inline-block;
+            border-radius: 999px;
+            padding: 4px 8px;
+            font-size: 10px;
+            font-weight: 700;
+        }
+
+        .approved {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .rejected {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .review {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .draft {
+            background: #f1f5f9;
+            color: #475569;
+        }
+
+        .footer {
+            margin-top: 18px;
+            padding-top: 10px;
+            border-top: 1px solid #e5e7eb;
+            color: #6b7280;
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+        }
+
+        @media print {
+            body {
+                background: #ffffff;
+            }
+
+            .print-actions {
+                display: none;
+            }
+
+            .page {
+                width: auto;
+                min-height: auto;
+                margin: 0;
+                padding: 0;
+                box-shadow: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="print-actions">
+    <a href="{% url 'approvals:request_detail' document_request.pk %}">
+        Back
+    </a>
+
+    <button type="button" onclick="window.print()">
+        Print / Save PDF
+    </button>
+</div>
+
+<div class="page">
+    <div class="header">
+        <div class="brand">
+            <h1>DocFlow AI</h1>
+            <p>Document Approval Automation System</p>
+        </div>
+
+        <div class="print-meta">
+            <div>Printed: {{ printed_at|date:"d M Y, h:i A" }}</div>
+            <div>Request: {{ document_request.request_number }}</div>
+        </div>
+    </div>
+
+    <div class="title-block">
+        <h2>Approval Request Summary</h2>
+        <p>{{ document_request.title }}</p>
+    </div>
+
+    <div class="section">
+        <h3>1. Request Information</h3>
+
+        <div class="info-grid">
+            <div class="info-item">
+                <span class="label">Request No</span>
+                <span class="value">{{ document_request.request_number }}</span>
+            </div>
+
+            <div class="info-item">
+                <span class="label">Status</span>
+                <span class="value">{{ document_request.get_status_display }}</span>
+            </div>
+
+            <div class="info-item">
+                <span class="label">Organization</span>
+                <span class="value">{{ document_request.organization.name }}</span>
+            </div>
+
+            <div class="info-item">
+                <span class="label">Department</span>
+                <span class="value">{{ document_request.department.name|default:"-" }}</span>
+            </div>
+
+            <div class="info-item">
+                <span class="label">Category</span>
+                <span class="value">{{ document_request.get_category_display }}</span>
+            </div>
+
+            <div class="info-item">
+                <span class="label">Priority</span>
+                <span class="value">{{ document_request.get_priority_display }}</span>
+            </div>
+
+            <div class="info-item">
+                <span class="label">Created By</span>
+                <span class="value">
+                    {% if document_request.created_by %}
+                        {{ document_request.created_by.display_name }}
+                    {% else %}
+                        -
+                    {% endif %}
+                </span>
+            </div>
+
+            <div class="info-item">
+                <span class="label">Workflow</span>
+                <span class="value">{{ document_request.workflow.name|default:"-" }}</span>
+            </div>
+
+            <div class="info-item full">
+                <span class="label">Description</span>
+                <span class="value">{{ document_request.description|linebreaksbr|default:"-" }}</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h3>2. AI Analysis</h3>
+
+        <div class="info-grid">
+            <div class="info-item">
+                <span class="label">AI Category</span>
+                <span class="value">{{ document_request.ai_category|default:"-" }}</span>
+            </div>
+
+            <div class="info-item">
+                <span class="label">Risk Level</span>
+                <span class="value">
+                    {% if document_request.risk_level == "HIGH" %}
+                        <span class="badge rejected">High</span>
+                    {% elif document_request.risk_level == "MEDIUM" %}
+                        <span class="badge review">Medium</span>
+                    {% elif document_request.risk_level == "LOW" %}
+                        <span class="badge approved">Low</span>
+                    {% else %}
+                        <span class="badge draft">Pending</span>
+                    {% endif %}
+                </span>
+            </div>
+
+            <div class="info-item full">
+                <span class="label">AI Summary</span>
+                <span class="value">{{ document_request.ai_summary|default:"Pending AI processing" }}</span>
+            </div>
+
+            <div class="info-item full">
+                <span class="label">Risk Notes</span>
+                <span class="value">{{ document_request.risk_notes|default:"-" }}</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h3>3. Attached Documents</h3>
+
+        {% if attachments %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>File</th>
+                        <th>Type</th>
+                        <th>Size</th>
+                        <th>AI</th>
+                        <th>Uploaded By</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for attachment in attachments %}
+                        <tr>
+                            <td>{{ attachment.original_filename }}</td>
+                            <td>{{ attachment.display_file_type }}</td>
+                            <td>{{ attachment.file_size_mb }} MB</td>
+                            <td>
+                                {% if attachment.ai_processed %}
+                                    Processed
+                                {% else %}
+                                    Pending
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if attachment.uploaded_by %}
+                                    {{ attachment.uploaded_by.display_name }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p>No documents attached.</p>
+        {% endif %}
+    </div>
+
+    <div class="section">
+        <h3>4. Approval Workflow</h3>
+
+        {% if approval_steps %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Step</th>
+                        <th>Role</th>
+                        <th>Assigned To</th>
+                        <th>Status</th>
+                        <th>Comment</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for step in approval_steps %}
+                        <tr>
+                            <td>{{ step.step_order }}</td>
+                            <td>{{ step.role_required }}</td>
+                            <td>
+                                {% if step.assigned_to %}
+                                    {{ step.assigned_to.display_name }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            <td>{{ step.get_status_display }}</td>
+                            <td>{{ step.comments|default:"-" }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p>No workflow steps generated.</p>
+        {% endif %}
+    </div>
+
+    <div class="section">
+        <h3>5. Approval Timeline</h3>
+
+        {% if approval_actions %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Action</th>
+                        <th>By</th>
+                        <th>Step</th>
+                        <th>Comment</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for action in approval_actions %}
+                        <tr>
+                            <td>{{ action.created_at|date:"d M Y, h:i A" }}</td>
+                            <td>{{ action.get_action_type_display }}</td>
+                            <td>
+                                {% if action.action_by %}
+                                    {{ action.action_by.display_name }}
+                                {% else %}
+                                    System
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if action.step %}
+                                    {{ action.step.step_order }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            <td>{{ action.comment|default:"-" }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p>No approval action timeline found.</p>
+        {% endif %}
+    </div>
+
+    <div class="footer">
+        <div>Generated by DocFlow AI</div>
+        <div>{{ document_request.request_number }}</div>
+    </div>
+</div>
+
+</body>
+</html>

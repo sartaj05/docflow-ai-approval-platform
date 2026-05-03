@@ -1,0 +1,738 @@
+{% load static %}
+
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Verify Certificate - {{ certificate_signature.verification_code }}</title>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
+    <link rel="stylesheet" href="{% static 'css/app.css' %}">
+
+    <style>
+        body {
+            background:
+                radial-gradient(circle at top left, rgba(37, 99, 235, 0.12), transparent 30%),
+                radial-gradient(circle at bottom right, rgba(22, 163, 74, 0.10), transparent 28%),
+                #f8fafc;
+        }
+
+        .public-verify-shell {
+            min-height: 100vh;
+            padding: 28px 0;
+        }
+
+        .verify-hero {
+            position: relative;
+            overflow: hidden;
+            border-radius: 28px;
+            border: 1px solid #e5e7eb;
+            background:
+                linear-gradient(135deg, #ffffff 0%, #f8fafc 55%, #eff6ff 100%);
+            box-shadow: 0 24px 70px rgba(15, 23, 42, 0.10);
+            padding: 34px;
+        }
+
+        .verify-hero::after {
+            content: "";
+            position: absolute;
+            width: 260px;
+            height: 260px;
+            border-radius: 999px;
+            background: rgba(37, 99, 235, 0.10);
+            right: -80px;
+            top: -80px;
+        }
+
+        .verify-hero-content {
+            position: relative;
+            z-index: 2;
+        }
+
+        .verify-brand-row {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            flex-wrap: wrap;
+        }
+
+        .verify-logo {
+            width: 78px;
+            height: 78px;
+            border-radius: 24px;
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            display: grid;
+            place-items: center;
+            overflow: hidden;
+            box-shadow: 0 14px 35px rgba(15, 23, 42, 0.08);
+            font-size: 34px;
+            font-weight: 900;
+            color: #2563eb;
+        }
+
+        .verify-logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .verify-code {
+            font-size: 34px;
+            font-weight: 950;
+            letter-spacing: -0.8px;
+            margin-bottom: 4px;
+            color: #0f172a;
+            word-break: break-word;
+        }
+
+        .verify-status-panel {
+            min-width: 230px;
+            border-radius: 22px;
+            padding: 18px;
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 16px 45px rgba(15, 23, 42, 0.08);
+        }
+
+        .verify-valid-banner {
+            background: #dcfce7;
+            border: 1px solid #86efac;
+            color: #166534;
+            border-radius: 20px;
+            padding: 18px 20px;
+            font-weight: 800;
+        }
+
+        .verify-invalid-banner {
+            background: #fee2e2;
+            border: 1px solid #fecaca;
+            color: #991b1b;
+            border-radius: 20px;
+            padding: 18px 20px;
+            font-weight: 800;
+        }
+
+        .verify-warning-banner {
+            background: #fef3c7;
+            border: 1px solid #fde68a;
+            color: #92400e;
+            border-radius: 20px;
+            padding: 18px 20px;
+            font-weight: 800;
+        }
+
+        .seal-preview,
+        .signature-preview {
+            min-height: 185px;
+            display: grid;
+            place-items: center;
+            text-align: center;
+            background: #f8fafc;
+            border: 1px dashed #cbd5e1;
+            border-radius: 22px;
+            padding: 20px;
+        }
+
+        .seal-preview img {
+            max-height: 135px;
+            max-width: 190px;
+            object-fit: contain;
+        }
+
+        .signature-preview img {
+            max-height: 95px;
+            max-width: 240px;
+            object-fit: contain;
+        }
+
+        .qr-preview-box {
+            display: inline-block;
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 22px;
+            padding: 16px;
+            box-shadow: 0 12px 35px rgba(15, 23, 42, 0.08);
+        }
+
+        .qr-preview-box img {
+            width: 180px;
+            height: 180px;
+            object-fit: contain;
+        }
+
+        .hash-box {
+            background: #0f172a;
+            color: #dbeafe;
+            border-radius: 18px;
+            padding: 16px;
+            font-size: 12px;
+            line-height: 1.7;
+            word-break: break-all;
+        }
+
+        .verify-footer {
+            text-align: center;
+            color: #64748b;
+            font-size: 13px;
+            padding: 28px 0 10px;
+        }
+
+        .public-action-bar {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        @media (max-width: 768px) {
+            .verify-hero {
+                padding: 22px;
+                border-radius: 22px;
+            }
+
+            .verify-code {
+                font-size: 25px;
+            }
+
+            .public-action-bar {
+                justify-content: stretch;
+            }
+
+            .public-action-bar .btn {
+                width: 100%;
+            }
+
+            .qr-preview-box img {
+                width: 155px;
+                height: 155px;
+            }
+        }
+
+        @media print {
+            .public-action-bar {
+                display: none;
+            }
+
+            body {
+                background: #ffffff;
+            }
+
+            .public-verify-shell {
+                padding: 0;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="public-verify-shell">
+    <div class="container">
+
+        <div class="public-action-bar mb-3">
+            <button type="button" onclick="window.print()" class="btn btn-outline-dark">
+                Print Verification
+            </button>
+        </div>
+
+        <!-- Hero -->
+        <div class="verify-hero mb-4">
+            <div class="verify-hero-content">
+                <div class="d-flex justify-content-between gap-4 flex-wrap align-items-start">
+                    <div>
+                        <div class="verify-brand-row mb-3">
+                            <div class="verify-logo">
+                                {% if document_request.organization.logo %}
+                                    <img
+                                        src="{{ document_request.organization.logo.url }}"
+                                        alt="{{ document_request.organization.name }}"
+                                    >
+                                {% else %}
+                                    {{ document_request.organization.name|slice:":1"|upper }}
+                                {% endif %}
+                            </div>
+
+                            <div>
+                                <p class="eyebrow mb-1">Certificate Verification</p>
+                                <h1 class="verify-code">
+                                    {{ certificate_signature.verification_code }}
+                                </h1>
+                                <p class="page-subtitle mb-0">
+                                    {{ document_request.organization.certificate_header_text|default:"Official Approval Certificate" }}
+                                </p>
+                            </div>
+                        </div>
+
+                        <p class="mb-0 text-muted">
+                            Verify the authenticity, validity, signing metadata, request details,
+                            approval chain, certificate hash, and QR verification linked with this DocFlow AI certificate.
+                        </p>
+                    </div>
+
+                    <div class="verify-status-panel">
+                        {% if certificate_signature.is_valid and document_request.status == "APPROVED" %}
+                            <span class="status-badge status-approved mb-2">
+                                Valid Certificate
+                            </span>
+                            <h5 class="fw-bold mb-1">Authentic</h5>
+                            <p class="text-muted small mb-0">
+                                Certificate is valid and request is approved.
+                            </p>
+                        {% elif not certificate_signature.is_valid %}
+                            <span class="status-badge status-rejected mb-2">
+                                Invalidated
+                            </span>
+                            <h5 class="fw-bold mb-1">Revoked</h5>
+                            <p class="text-muted small mb-0">
+                                This certificate is no longer valid.
+                            </p>
+                        {% else %}
+                            <span class="status-badge status-review mb-2">
+                                Not Approved
+                            </span>
+                            <h5 class="fw-bold mb-1">Warning</h5>
+                            <p class="text-muted small mb-0">
+                                Linked request is not approved.
+                            </p>
+                        {% endif %}
+
+                        <div class="small text-muted mt-3">
+                            Signed:
+                            <strong>
+                                {{ certificate_signature.signed_at|date:"d M Y, h:i A" }}
+                            </strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Status Banners -->
+        {% if certificate_signature.is_valid and document_request.status == "APPROVED" %}
+            <div class="verify-valid-banner mb-4">
+                ✅ This certificate is valid. The linked request is approved and the certificate metadata is active.
+            </div>
+        {% elif not certificate_signature.is_valid %}
+            <div class="verify-invalid-banner mb-4">
+                ⛔ This certificate has been invalidated.
+                {% if certificate_signature.invalidation_reason %}
+                    <br>
+                    Reason: {{ certificate_signature.invalidation_reason }}
+                {% endif %}
+            </div>
+        {% else %}
+            <div class="verify-warning-banner mb-4">
+                ⚠️ This certificate is linked to a request that is currently not approved.
+            </div>
+        {% endif %}
+
+        <div class="row g-4">
+
+            <!-- Left -->
+            <div class="col-lg-8">
+
+                <!-- Request Info -->
+                <div class="panel-card">
+                    <div class="panel-card-header">
+                        <div>
+                            <h5>Request Information</h5>
+                            <p>Approved request linked with this certificate.</p>
+                        </div>
+
+                        {% if document_request.status == "APPROVED" %}
+                            <span class="status-badge status-approved">Approved</span>
+                        {% elif document_request.status == "REJECTED" %}
+                            <span class="status-badge status-rejected">Rejected</span>
+                        {% elif document_request.status == "IN_REVIEW" %}
+                            <span class="status-badge status-review">In Review</span>
+                        {% elif document_request.status == "SUBMITTED" %}
+                            <span class="status-badge status-submitted">Submitted</span>
+                        {% else %}
+                            <span class="status-badge status-draft">
+                                {{ document_request.get_status_display }}
+                            </span>
+                        {% endif %}
+                    </div>
+
+                    <div class="info-list">
+                        <div>
+                            <span>Request Number</span>
+                            <strong>{{ document_request.request_number }}</strong>
+                        </div>
+
+                        <div>
+                            <span>Title</span>
+                            <strong>{{ document_request.title }}</strong>
+                        </div>
+
+                        <div>
+                            <span>Description</span>
+                            <strong>{{ document_request.description|linebreaksbr|default:"-" }}</strong>
+                        </div>
+
+                        <div>
+                            <span>Organization</span>
+                            <strong>{{ document_request.organization.name|default:"-" }}</strong>
+                        </div>
+
+                        <div>
+                            <span>Department</span>
+                            <strong>
+                                {% if document_request.department %}
+                                    {{ document_request.department.name }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </strong>
+                        </div>
+
+                        <div>
+                            <span>Created By</span>
+                            <strong>
+                                {% if document_request.created_by %}
+                                    {{ document_request.created_by.display_name }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </strong>
+                        </div>
+
+                        <div>
+                            <span>Category</span>
+                            <strong>{{ document_request.get_category_display }}</strong>
+                        </div>
+
+                        <div>
+                            <span>Priority</span>
+                            <strong>{{ document_request.get_priority_display }}</strong>
+                        </div>
+
+                        <div>
+                            <span>Created At</span>
+                            <strong>{{ document_request.created_at|date:"d M Y, h:i A" }}</strong>
+                        </div>
+
+                        <div>
+                            <span>Submitted At</span>
+                            <strong>
+                                {% if document_request.submitted_at %}
+                                    {{ document_request.submitted_at|date:"d M Y, h:i A" }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </strong>
+                        </div>
+
+                        <div>
+                            <span>Approved At</span>
+                            <strong>
+                                {% if document_request.approved_at %}
+                                    {{ document_request.approved_at|date:"d M Y, h:i A" }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </strong>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Approval Steps -->
+                <div class="panel-card mt-4">
+                    <div class="panel-card-header">
+                        <div>
+                            <h5>Approval Chain</h5>
+                            <p>Approval steps used for this request.</p>
+                        </div>
+                    </div>
+
+                    {% if approval_steps %}
+                        <div class="workflow-timeline">
+                            {% for step in approval_steps %}
+                                <div class="workflow-step-item {% if step.is_current %}current{% endif %}">
+                                    <div class="workflow-step-marker">
+                                        {{ step.step_order }}
+                                    </div>
+
+                                    <div class="workflow-step-content">
+                                        <div class="d-flex justify-content-between gap-3 flex-wrap">
+                                            <div>
+                                                <h6 class="mb-1">
+                                                    Step {{ step.step_order }} — {{ step.role_required }}
+                                                </h6>
+
+                                                <p class="text-muted mb-1">
+                                                    Assigned To:
+                                                    {% if step.assigned_to %}
+                                                        <strong>{{ step.assigned_to.display_name }}</strong>
+                                                    {% else %}
+                                                        <strong>-</strong>
+                                                    {% endif %}
+                                                </p>
+
+                                                {% if step.comments %}
+                                                    <p class="mb-0">
+                                                        {{ step.comments|linebreaksbr }}
+                                                    </p>
+                                                {% endif %}
+                                            </div>
+
+                                            <div>
+                                                {% if step.status == "APPROVED" %}
+                                                    <span class="status-badge status-approved">Approved</span>
+                                                {% elif step.status == "REJECTED" %}
+                                                    <span class="status-badge status-rejected">Rejected</span>
+                                                {% elif step.status == "PENDING" %}
+                                                    <span class="status-badge status-review">Pending</span>
+                                                {% elif step.status == "SKIPPED" %}
+                                                    <span class="status-badge status-draft">Skipped</span>
+                                                {% else %}
+                                                    <span class="status-badge status-draft">
+                                                        {{ step.get_status_display }}
+                                                    </span>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+
+                                        <div class="small text-muted mt-2">
+                                            {% if step.approved_at %}
+                                                Approved at {{ step.approved_at|date:"d M Y, h:i A" }}
+                                            {% elif step.rejected_at %}
+                                                Rejected at {{ step.rejected_at|date:"d M Y, h:i A" }}
+                                            {% else %}
+                                                Created at {{ step.created_at|date:"d M Y, h:i A" }}
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="empty-state compact">
+                            <div class="empty-icon">🔁</div>
+                            <h5>No approval steps found</h5>
+                            <p>No approval workflow steps are linked with this request.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Right -->
+            <div class="col-lg-4">
+
+                <!-- QR Verification -->
+                <div class="panel-card">
+                    <div class="panel-card-header">
+                        <div>
+                            <h5>QR Verification</h5>
+                            <p>Scan this QR code to open this public verification page.</p>
+                        </div>
+                    </div>
+
+                    <div class="text-center">
+                        <div class="qr-preview-box">
+                            <img
+                                src="{% url 'reports:certificate_qr_png' certificate_signature.verification_code %}"
+                                alt="Certificate Verification QR Code"
+                            >
+                        </div>
+
+                        <h6 class="fw-bold mt-3 mb-1">
+                            {{ certificate_signature.verification_code }}
+                        </h6>
+
+                        <p class="text-muted small mb-0">
+                            Scan to verify certificate authenticity.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Certificate Metadata -->
+                <div class="panel-card mt-4">
+                    <div class="panel-card-header">
+                        <div>
+                            <h5>Certificate Metadata</h5>
+                            <p>Digital signing and verification details.</p>
+                        </div>
+                    </div>
+
+                    <div class="info-list">
+                        <div>
+                            <span>Verification Code</span>
+                            <strong>{{ certificate_signature.verification_code }}</strong>
+                        </div>
+
+                        <div>
+                            <span>Certificate UUID</span>
+                            <strong class="small text-break">
+                                {{ certificate_signature.certificate_uuid }}
+                            </strong>
+                        </div>
+
+                        <div>
+                            <span>Certificate Hash</span>
+                            <strong class="small text-break">
+                                {{ certificate_signature.certificate_hash }}
+                            </strong>
+                        </div>
+
+                        <div>
+                            <span>Signed At</span>
+                            <strong>{{ certificate_signature.signed_at|date:"d M Y, h:i A" }}</strong>
+                        </div>
+
+                        <div>
+                            <span>Organization Snapshot</span>
+                            <strong>
+                                {{ certificate_signature.organization_name|default:document_request.organization.name }}
+                            </strong>
+                        </div>
+
+                        <div>
+                            <span>Validity</span>
+                            <strong>
+                                {% if certificate_signature.is_valid %}
+                                    <span class="status-badge status-approved">Valid</span>
+                                {% else %}
+                                    <span class="status-badge status-rejected">Invalid</span>
+                                {% endif %}
+                            </strong>
+                        </div>
+
+                        <div>
+                            <span>Verification URL</span>
+                            <strong class="small text-break">
+                                {{ verification_url|default:certificate_signature.verification_url|default:"-" }}
+                            </strong>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Hash Box -->
+                <div class="panel-card mt-4">
+                    <div class="panel-card-header">
+                        <div>
+                            <h5>Certificate Hash</h5>
+                            <p>SHA-256 style certificate metadata fingerprint.</p>
+                        </div>
+                    </div>
+
+                    <div class="hash-box">
+                        {{ certificate_signature.certificate_hash|default:"-" }}
+                    </div>
+                </div>
+
+                <!-- Signer -->
+                <div class="panel-card mt-4">
+                    <div class="panel-card-header">
+                        <div>
+                            <h5>Signer</h5>
+                            <p>Final approver snapshot.</p>
+                        </div>
+                    </div>
+
+                    <div class="signature-preview">
+                        <div>
+                            {% if certificate_signature.signed_by and certificate_signature.signed_by.profile.signature_image %}
+                                <img
+                                    src="{{ certificate_signature.signed_by.profile.signature_image.url }}"
+                                    alt="Signature"
+                                    class="mb-3"
+                                >
+                            {% else %}
+                                <div class="empty-icon mx-auto">✍️</div>
+                            {% endif %}
+
+                            <h5 class="fw-bold mb-1">
+                                {{ certificate_signature.signed_by_name|default:"System" }}
+                            </h5>
+
+                            <p class="text-muted mb-0">
+                                {{ certificate_signature.signed_by_role|default:"Final Approver" }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Organization Seal -->
+                <div class="panel-card mt-4">
+                    <div class="panel-card-header">
+                        <div>
+                            <h5>Organization Seal</h5>
+                            <p>Official seal used for certificate.</p>
+                        </div>
+                    </div>
+
+                    <div class="seal-preview">
+                        <div>
+                            {% if document_request.organization.seal_image %}
+                                <img
+                                    src="{{ document_request.organization.seal_image.url }}"
+                                    alt="Organization Seal"
+                                    class="mb-3"
+                                >
+                            {% else %}
+                                <div class="empty-icon mx-auto">🏢</div>
+                            {% endif %}
+
+                            <h6 class="fw-bold mb-1">
+                                {{ certificate_signature.organization_name|default:document_request.organization.name }}
+                            </h6>
+
+                            <p class="text-muted small mb-0">
+                                Organization Seal
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Invalidation Details -->
+                {% if certificate_signature.invalidated_at %}
+                    <div class="panel-card danger-panel mt-4">
+                        <div class="panel-card-header">
+                            <div>
+                                <h5>Invalidation Details</h5>
+                                <p>Revocation metadata for this certificate.</p>
+                            </div>
+                        </div>
+
+                        <div class="info-list">
+                            <div>
+                                <span>Invalidated At</span>
+                                <strong>{{ certificate_signature.invalidated_at|date:"d M Y, h:i A" }}</strong>
+                            </div>
+
+                            <div>
+                                <span>Invalidated By</span>
+                                <strong>
+                                    {% if certificate_signature.invalidated_by %}
+                                        {{ certificate_signature.invalidated_by.display_name }}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </strong>
+                            </div>
+
+                            <div>
+                                <span>Reason</span>
+                                <strong>{{ certificate_signature.invalidation_reason|default:"-" }}</strong>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="verify-footer">
+            {{ document_request.organization.certificate_footer_text|default:"This certificate is digitally generated by DocFlow AI." }}
+            <br>
+            Verification generated by DocFlow AI.
+        </div>
+
+    </div>
+</div>
+
+</body>
+</html>

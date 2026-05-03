@@ -1,0 +1,49 @@
+<div class="stats-grid request-stats-grid">
+    <div class="metric-card">
+        <div class="metric-icon bg-soft-primary">📄</div>
+        <div>
+            <p>Total</p>
+            <h3>{{ summary.total_requests }}</h3>
+        </div>
+    </div>
+
+    <div class="metric-card">
+        <div class="metric-icon bg-soft-warning">📝</div>
+        <div>
+            <p>Draft</p>
+            <h3>{{ summary.draft_count }}</h3>
+        </div>
+    </div>
+
+    <div class="metric-card">
+        <div class="metric-icon bg-soft-primary">📤</div>
+        <div>
+            <p>Submitted</p>
+            <h3>{{ summary.submitted_count }}</h3>
+        </div>
+    </div>
+
+    <div class="metric-card">
+        <div class="metric-icon bg-soft-warning">🔎</div>
+        <div>
+            <p>In Review</p>
+            <h3>{{ summary.in_review_count }}</h3>
+        </div>
+    </div>
+
+    <div class="metric-card">
+        <div class="metric-icon bg-soft-success">✅</div>
+        <div>
+            <p>Approved</p>
+            <h3>{{ summary.approved_count }}</h3>
+        </div>
+    </div>
+
+    <div class="metric-card">
+        <div class="metric-icon bg-soft-danger">❌</div>
+        <div>
+            <p>Rejected</p>
+            <h3>{{ summary.rejected_count }}</h3>
+        </div>
+    </div>
+</div>
