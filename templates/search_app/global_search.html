@@ -1,0 +1,533 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <p class="eyebrow">Advanced Search</p>
+        <h1>Global Search</h1>
+        <p class="page-subtitle">
+            Search across approval requests, users, departments, uploaded documents, and audit logs.
+        </p>
+    </div>
+
+    <a href="{% url 'dashboard:home' %}" class="btn btn-light">
+        Back to Dashboard
+    </a>
+</div>
+
+<div class="panel-card">
+    <div class="panel-card-header">
+        <div>
+            <h5>Search Filters</h5>
+            <p>Use keyword, module type, status, risk level, and date range to find records quickly.</p>
+        </div>
+    </div>
+
+    <form method="get" class="row g-3 align-items-end">
+        <div class="col-lg-4 col-md-12">
+            <label class="form-label">Search Keyword</label>
+            {{ form.q }}
+        </div>
+
+        <div class="col-lg-2 col-md-6">
+            <label class="form-label">Search Type</label>
+            {{ form.search_type }}
+        </div>
+
+        <div class="col-lg-2 col-md-6">
+            <label class="form-label">Request Status</label>
+            {{ form.status }}
+        </div>
+
+        <div class="col-lg-2 col-md-6">
+            <label class="form-label">Risk Level</label>
+            {{ form.risk_level }}
+        </div>
+
+        <div class="col-lg-2 col-md-6">
+            <button type="submit" class="btn btn-primary w-100">
+                Search
+            </button>
+        </div>
+
+        <div class="col-lg-2 col-md-6">
+            <label class="form-label">From Date</label>
+            {{ form.date_from }}
+        </div>
+
+        <div class="col-lg-2 col-md-6">
+            <label class="form-label">To Date</label>
+            {{ form.date_to }}
+        </div>
+
+        <div class="col-lg-2 col-md-6">
+            <a href="{% url 'search_app:global_search' %}" class="btn btn-outline-secondary w-100">
+                Reset
+            </a>
+        </div>
+    </form>
+</div>
+
+<div class="stats-grid super-grid mt-4">
+    <div class="metric-card">
+        <div class="metric-icon bg-soft-primary">🔎</div>
+        <div>
+            <p>Total Results</p>
+            <h3>{{ results.counts.total }}</h3>
+        </div>
+    </div>
+
+    <div class="metric-card">
+        <div class="metric-icon bg-soft-primary">📄</div>
+        <div>
+            <p>Requests</p>
+            <h3>{{ results.counts.requests }}</h3>
+        </div>
+    </div>
+
+    <div class="metric-card">
+        <div class="metric-icon bg-soft-success">👥</div>
+        <div>
+            <p>Users</p>
+            <h3>{{ results.counts.users }}</h3>
+        </div>
+    </div>
+
+    <div class="metric-card">
+        <div class="metric-icon bg-soft-warning">🏢</div>
+        <div>
+            <p>Departments</p>
+            <h3>{{ results.counts.departments }}</h3>
+        </div>
+    </div>
+
+    <div class="metric-card">
+        <div class="metric-icon bg-soft-primary">📎</div>
+        <div>
+            <p>Documents</p>
+            <h3>{{ results.counts.documents }}</h3>
+        </div>
+    </div>
+
+    <div class="metric-card">
+        <div class="metric-icon bg-soft-danger">🛡️</div>
+        <div>
+            <p>Audit Logs</p>
+            <h3>{{ results.counts.audit_logs }}</h3>
+        </div>
+    </div>
+</div>
+
+{% if results.counts.total == 0 and request.GET %}
+    <div class="panel-card mt-4">
+        <div class="empty-state">
+            <div class="empty-icon">🔍</div>
+            <h5>No matching records found</h5>
+            <p>Try a different keyword, wider date range, or search all modules.</p>
+        </div>
+    </div>
+{% endif %}
+
+{% if results.requests %}
+    <div class="panel-card mt-4">
+        <div class="panel-card-header">
+            <div>
+                <h5>Approval Requests</h5>
+                <p>{{ results.counts.requests }} matching request records</p>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table modern-table align-middle">
+                <thead>
+                    <tr>
+                        <th>Request</th>
+                        <th>Department</th>
+                        <th>Status</th>
+                        <th>Priority</th>
+                        <th>Risk</th>
+                        <th>Created By</th>
+                        <th>Created</th>
+                        <th class="text-end">Open</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for item in results.requests %}
+                        <tr>
+                            <td>
+                                <div class="fw-bold">{{ item.request_number }}</div>
+                                <small class="text-muted">{{ item.title|truncatechars:70 }}</small>
+                            </td>
+
+                            <td>
+                                {% if item.department %}
+                                    {{ item.department.name }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {% if item.status == "DRAFT" %}
+                                    <span class="status-badge status-draft">Draft</span>
+                                {% elif item.status == "SUBMITTED" %}
+                                    <span class="status-badge status-submitted">Submitted</span>
+                                {% elif item.status == "IN_REVIEW" %}
+                                    <span class="status-badge status-review">In Review</span>
+                                {% elif item.status == "APPROVED" %}
+                                    <span class="status-badge status-approved">Approved</span>
+                                {% elif item.status == "REJECTED" %}
+                                    <span class="status-badge status-rejected">Rejected</span>
+                                {% else %}
+                                    <span class="status-badge status-draft">{{ item.get_status_display }}</span>
+                                {% endif %}
+                            </td>
+
+                            <td>{{ item.get_priority_display }}</td>
+
+                            <td>
+                                {% if item.risk_level == "HIGH" %}
+                                    <span class="status-badge status-rejected">High</span>
+                                {% elif item.risk_level == "MEDIUM" %}
+                                    <span class="status-badge status-review">Medium</span>
+                                {% elif item.risk_level == "LOW" %}
+                                    <span class="status-badge status-approved">Low</span>
+                                {% else %}
+                                    <span class="text-muted">Pending</span>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {% if item.created_by %}
+                                    {{ item.created_by.display_name }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+
+                            <td>{{ item.created_at|date:"d M Y" }}</td>
+
+                            <td class="text-end">
+                                <a href="{% url 'approvals:request_detail' item.pk %}" class="btn btn-sm btn-outline-primary">
+                                    View
+                                </a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endif %}
+
+{% if results.users %}
+    <div class="panel-card mt-4">
+        <div class="panel-card-header">
+            <div>
+                <h5>Users</h5>
+                <p>{{ results.counts.users }} matching user records</p>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table modern-table align-middle">
+                <thead>
+                    <tr>
+                        <th>User</th>
+                        <th>Organization</th>
+                        <th>Department</th>
+                        <th>Role</th>
+                        <th>Status</th>
+                        <th>Joined</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for user_obj in results.users %}
+                        <tr>
+                            <td>
+                                <div class="fw-bold">{{ user_obj.display_name }}</div>
+                                <small class="text-muted">{{ user_obj.email }}</small>
+                            </td>
+
+                            <td>
+                                {% if user_obj.profile.organization %}
+                                    {{ user_obj.profile.organization.name }}
+                                {% else %}
+                                    Platform
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {% if user_obj.profile.department %}
+                                    {{ user_obj.profile.department.name }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {% if user_obj.is_superuser %}
+                                    <span class="status-badge status-draft">Super Admin</span>
+                                {% elif user_obj.profile %}
+                                    <span class="status-badge status-submitted">
+                                        {{ user_obj.profile.get_role_display }}
+                                    </span>
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {% if user_obj.is_active %}
+                                    <span class="status-badge status-approved">Active</span>
+                                {% else %}
+                                    <span class="status-badge status-rejected">Inactive</span>
+                                {% endif %}
+                            </td>
+
+                            <td>{{ user_obj.date_joined|date:"d M Y" }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endif %}
+
+{% if results.departments %}
+    <div class="panel-card mt-4">
+        <div class="panel-card-header">
+            <div>
+                <h5>Departments</h5>
+                <p>{{ results.counts.departments }} matching department records</p>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table modern-table align-middle">
+                <thead>
+                    <tr>
+                        <th>Department</th>
+                        <th>Organization</th>
+                        <th>Head</th>
+                        <th>Status</th>
+                        <th>Created</th>
+                        <th class="text-end">Open</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for dept in results.departments %}
+                        <tr>
+                            <td>
+                                <div class="fw-bold">{{ dept.name }}</div>
+                                <small class="text-muted">{{ dept.description|default:"No description"|truncatechars:80 }}</small>
+                            </td>
+
+                            <td>{{ dept.organization.name }}</td>
+
+                            <td>
+                                {% if dept.head %}
+                                    {{ dept.head.display_name }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {% if dept.is_active %}
+                                    <span class="status-badge status-approved">Active</span>
+                                {% else %}
+                                    <span class="status-badge status-rejected">Inactive</span>
+                                {% endif %}
+                            </td>
+
+                            <td>{{ dept.created_at|date:"d M Y" }}</td>
+
+                            <td class="text-end">
+                                <a href="{% url 'departments:detail' dept.pk %}" class="btn btn-sm btn-outline-primary">
+                                    View
+                                </a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endif %}
+
+{% if results.documents %}
+    <div class="panel-card mt-4">
+        <div class="panel-card-header">
+            <div>
+                <h5>Documents</h5>
+                <p>{{ results.counts.documents }} matching document records</p>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table modern-table align-middle">
+                <thead>
+                    <tr>
+                        <th>Document</th>
+                        <th>Request</th>
+                        <th>Type</th>
+                        <th>Uploaded By</th>
+                        <th>AI Status</th>
+                        <th>Uploaded</th>
+                        <th class="text-end">Open</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for doc in results.documents %}
+                        <tr>
+                            <td>
+                                <div class="fw-bold">{{ doc.original_filename|truncatechars:70 }}</div>
+                                {% if doc.extracted_text %}
+                                    <small class="text-success">Text extracted</small>
+                                {% elif doc.processing_error %}
+                                    <small class="text-warning">Extraction issue</small>
+                                {% else %}
+                                    <small class="text-muted">No extracted text</small>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                <div class="fw-bold">{{ doc.request.request_number }}</div>
+                                <small class="text-muted">{{ doc.request.title|truncatechars:50 }}</small>
+                            </td>
+
+                            <td>{{ doc.display_file_type }}</td>
+
+                            <td>
+                                {% if doc.uploaded_by %}
+                                    {{ doc.uploaded_by.display_name }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {% if doc.ai_processed %}
+                                    <span class="status-badge status-approved">Processed</span>
+                                {% else %}
+                                    <span class="status-badge status-draft">Pending</span>
+                                {% endif %}
+                            </td>
+
+                            <td>{{ doc.created_at|date:"d M Y" }}</td>
+
+                            <td class="text-end">
+                                <a href="{% url 'documents:attachment_detail' doc.pk %}" class="btn btn-sm btn-outline-primary">
+                                    View
+                                </a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endif %}
+
+{% if results.audit_logs %}
+    <div class="panel-card mt-4">
+        <div class="panel-card-header">
+            <div>
+                <h5>Audit Logs</h5>
+                <p>{{ results.counts.audit_logs }} matching audit log records</p>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table modern-table align-middle">
+                <thead>
+                    <tr>
+                        <th>Action</th>
+                        <th>Message</th>
+                        <th>Model</th>
+                        <th>User</th>
+                        <th>Organization</th>
+                        <th>IP</th>
+                        <th>Date</th>
+                        <th class="text-end">Open</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for log in results.audit_logs %}
+                        <tr>
+                            <td>
+                                {% if log.action == "APPROVED" %}
+                                    <span class="status-badge status-approved">Approved</span>
+                                {% elif log.action == "REJECTED" %}
+                                    <span class="status-badge status-rejected">Rejected</span>
+                                {% elif log.action == "CREATED" %}
+                                    <span class="status-badge status-submitted">Created</span>
+                                {% elif log.action == "UPDATED" %}
+                                    <span class="status-badge status-review">Updated</span>
+                                {% elif log.action == "DELETED" %}
+                                    <span class="status-badge status-rejected">Deleted</span>
+                                {% elif log.action == "PRINTED" %}
+                                    <span class="status-badge status-draft">Printed</span>
+                                {% else %}
+                                    <span class="status-badge status-draft">{{ log.get_action_display }}</span>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                <div class="fw-bold">{{ log.message|truncatechars:90 }}</div>
+                                <small class="text-muted">Object ID: {{ log.object_id|default:"-" }}</small>
+                            </td>
+
+                            <td>{{ log.model_name }}</td>
+
+                            <td>
+                                {% if log.user %}
+                                    {{ log.user.display_name }}
+                                {% else %}
+                                    System
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {% if log.organization %}
+                                    {{ log.organization.name }}
+                                {% else %}
+                                    Platform
+                                {% endif %}
+                            </td>
+
+                            <td>{{ log.ip_address|default:"-" }}</td>
+
+                            <td>{{ log.created_at|date:"d M Y, h:i A" }}</td>
+
+                            <td class="text-end">
+                                <a href="{% url 'audit:audit_log_detail' log.pk %}" class="btn btn-sm btn-outline-primary">
+                                    View
+                                </a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endif %}
+
+{% if not request.GET %}
+    <div class="panel-card mt-4">
+        <div class="empty-state">
+            <div class="empty-icon">🔎</div>
+            <h5>Start searching</h5>
+            <p>Enter a keyword above to search across your accessible workspace records.</p>
+        </div>
+    </div>
+{% endif %}
+
+{% endblock %}
