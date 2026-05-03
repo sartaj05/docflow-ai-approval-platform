@@ -1,0 +1,113 @@
+cd /d D:\sartaj\docflow_ai
+venv\Scripts\activate
+celery -A config beat -l info
+
+
+
+So you need 2 terminals running:
+
+Terminal 1 — Worker
+celery -A config worker -l info -P solo
+Terminal 2 — Beat
+celery -A config beat -l info
+Test manually from Django shell
+
+cd /d D:\sartaj\docflow_ai
+venv\Scripts\activate
+python manage.py shell
+
+from apps.notifications.tasks import send_daily_notification_digest_task
+
+send_daily_notification_digest_task.delay()
+
+Then check your Celery worker terminal. You should see the task received/executed.
+
+
+
+
+
+python manage.py create_backup --type database
+python manage.py create_backup --type media
+python manage.py create_backup --type full
+python manage.py create_backup --type audit
+python manage.py create_backup --type notifications
+python manage.py create_backup --type requests
+
+
+
+
+
+
+9. Restart Celery
+
+Stop and restart your worker:
+
+celery -A config worker -l info -P solo
+
+Start beat in another terminal:
+
+celery -A config beat -l info
+
+You should see these tasks registered:
+
+apps.dashboard.tasks.scheduled_database_backup_task
+apps.dashboard.tasks.scheduled_media_backup_task
+apps.dashboard.tasks.scheduled_full_backup_task
+apps.dashboard.tasks.scheduled_audit_export_task
+apps.dashboard.tasks.scheduled_notification_export_task
+apps.dashboard.tasks.scheduled_backup_cleanup_task
+
+
+
+
+(venv) D:\sartaj\docflow_ai>celery -A config worker -l info -P solo
+ 
+ -------------- celery@DESKTOP-EBKDHQ9 v5.4.0 (opalescent)
+--- ***** ----- 
+-- ******* ---- Windows-10-10.0.26200-SP0 2026-05-11 17:14:17
+- *** --- * --- 
+- ** ---------- [config]
+- ** ---------- .> app:         docflow_ai:0x27c0addd390
+- ** ---------- .> transport:   redis://localhost:6379/0
+- ** ---------- .> results:     redis://localhost:6379/1
+- *** --- * --- .> concurrency: 8 (solo)
+-- ******* ---- .> task events: OFF (enable -E to monitor tasks in this worker)
+--- ***** ----- 
+ -------------- [queues]
+                .> celery           exchange=celery(direct) key=celery
+                
+
+[tasks]
+  . apps.dashboard.tasks.scheduled_audit_export_task
+  . apps.dashboard.tasks.scheduled_backup_cleanup_task
+  . apps.dashboard.tasks.scheduled_database_backup_task
+  . apps.dashboard.tasks.scheduled_full_backup_task
+  . apps.dashboard.tasks.scheduled_media_backup_task
+  . apps.dashboard.tasks.scheduled_notification_export_task
+  . apps.notifications.tasks.retry_notification_delivery_task
+  . apps.notifications.tasks.run_sla_monitor_task
+  . apps.notifications.tasks.send_approval_assigned_email_task
+  . apps.notifications.tasks.send_daily_notification_digest_task
+  . apps.notifications.tasks.send_daily_pending_approval_summary_task
+  . apps.notifications.tasks.send_request_approved_email_task
+  . apps.notifications.tasks.send_request_rejected_email_task
+  . apps.notifications.tasks.send_weekly_notification_digest_task
+  . config.celery.debug_task
+
+
+
+8. For production, run this too
+python manage.py check --deploy
+
+Also run:
+
+python manage.py collectstatic --noinput
+python manage.py create_backup --type full
+
+Start Celery worker:
+
+celery -A config worker -l info -P solo
+
+Start Celery Beat:
+
+celery -A config beat -l info

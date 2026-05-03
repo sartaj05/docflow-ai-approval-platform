@@ -1,0 +1,165 @@
+DocFlow AI - Prompt Information Reference
+Generated for future reference.
+
+Important note:
+- Steps 5-26 are preserved from the project workflow prompts used in the conversation.
+- Steps 1-4 are reconstructed from the modules already built before Step 5: setup, accounts/organizations, dashboards/superadmin, and departments.
+- You can copy any step prompt and send it again to continue/rebuild that module.
+
+================================================================================
+
+FIRST PROJECT PROMPT
+--------------------------------------------------------------------------------
+AI Office Clerk - Document & Approval Automation SaaS / DocFlow AI - Smart Document Approval & Workflow Automation SaaS. Build a Django template based SaaS project for offices, schools, hospitals, CA firms, agencies, and local businesses to digitize approval workflows, track documents, process documents with AI, generate reports, and reduce manual follow-ups.
+
+================================================================================
+ALL STEP PROMPTS
+================================================================================
+
+Start Step 1
+--------------------------------------------------------------------------------
+Create initial DocFlow AI Django project setup with apps, settings, static/templates structure, PostgreSQL configuration, authentication base, Bootstrap/Tailwind-like premium layout foundation, and landing page.
+
+Start Step 2
+--------------------------------------------------------------------------------
+Create accounts and organization registration module with custom user model, user profile, roles, organization signup, login/logout, role-based redirects, profile page, forms, URLs, views, templates, and admin.
+
+Start Step 3
+--------------------------------------------------------------------------------
+Create dashboard and superadmin module with role-wise dashboard routing, super admin dashboard, organization list/detail, platform users list, activate/deactivate organization and user, templates, URLs, views, and admin integration.
+
+Start Step 4
+--------------------------------------------------------------------------------
+Create departments module with Department model, organization scoped department CRUD, department head assignment, department users list, URLs, views, forms, templates, admin, and dashboard/sidebar links.
+
+Start Step 5
+--------------------------------------------------------------------------------
+Create document attachment module with multiple file upload, file validation, PDF text extraction, attachment list, AI processing placeholder fields, URLs, views, templates, admin, and connect attachments to approval request detail page.
+
+Start Step 6
+--------------------------------------------------------------------------------
+Create approval workflow module with workflow templates, workflow steps, sequential approval step generation on submit, assigned approver logic, URLs, views, forms, templates, admin, and connect workflow selection to approval request create/edit page.
+
+Start Step 7
+--------------------------------------------------------------------------------
+Create approve/reject/comment logic with ApprovalAction model, current step transition, final approval/rejection status update, approval inbox actions, comments, templates, admin, and request timeline.
+
+Start Step 8
+--------------------------------------------------------------------------------
+Create audit logging module with AuditLog model, middleware/helper for IP and user-agent, reusable log function, automatic logs for request create/update/submit/approve/reject/upload/delete, admin, views, URLs, templates, and auditor dashboard integration.
+
+Start Step 9
+--------------------------------------------------------------------------------
+Create notification module with Notification model, in-app notification list/read/unread, notification count badge, approval assignment notification, request approved/rejected notification, admin, URLs, views, templates, and dashboard integration.
+
+Start Step 10
+--------------------------------------------------------------------------------
+Connect Django documents app with FastAPI AI service so uploaded PDF text is sent to AI service, summary/category/risk/extracted fields are saved to DocumentAttachment and DocumentRequest, with retry/error handling and audit logs.
+
+Start Step 11
+--------------------------------------------------------------------------------
+Create reports module with approval request reports, department-wise reports, risk-level reports, export CSV/PDF, and printable approval summary pages.
+
+Start Step 12
+--------------------------------------------------------------------------------
+Create email notification module with SMTP email sending for approval assignment, approval/rejection result, daily pending approval summary, Celery task support, and email templates.
+
+Start Step 13
+--------------------------------------------------------------------------------
+Create user management module for organization admins with create/update/deactivate users, assign departments/roles, reset password flow, filters, and audit logs.
+
+Start Step 14
+--------------------------------------------------------------------------------
+Create organization settings module with organization profile update, logo upload, approval numbering settings, allowed file settings, SMTP override settings, and audit logs.
+
+Start Step 15
+--------------------------------------------------------------------------------
+Create advanced dashboard analytics with charts, monthly approval trends, department performance, risk distribution, recent activity timeline, and role-wise dashboard widgets.
+
+Start Step 16
+--------------------------------------------------------------------------------
+Create approval escalation and SLA module with due dates, overdue detection, escalation emails, reminder notifications, Celery scheduled checks, and SLA dashboard widgets.
+
+Start Step 17
+--------------------------------------------------------------------------------
+Create PDF generation module with approval certificate PDF, request summary PDF, watermark, organization logo/header, QR verification code, and download buttons.
+
+Start Step 18
+--------------------------------------------------------------------------------
+Create advanced search module with global search across requests, users, departments, documents, audit logs, filters, and quick result navigation.
+
+Start Step 19
+--------------------------------------------------------------------------------
+Create approval delegation module with temporary approver delegation, vacation mode, delegation date range, audit logs, and assignment fallback logic.
+
+Start Step 20
+--------------------------------------------------------------------------------
+Create approval reminders and bulk actions module with bulk approve/reject/comment, reminder buttons, reminder history, and inbox productivity tools.
+
+Start Step 21
+--------------------------------------------------------------------------------
+Create approval policy/rules engine with amount-based routing, category-based workflow auto-selection, priority rules, and dynamic approver assignment.
+
+Start Step 22
+--------------------------------------------------------------------------------
+Create document versioning module with file version history, replace attachment, version comparison, audit logs, and rollback support.
+
+Start Step 23
+--------------------------------------------------------------------------------
+Create OCR module for scanned PDFs/images using OCR fallback, extracted text confidence score, manual correction, and audit logs.
+
+Start Step 24
+--------------------------------------------------------------------------------
+Create AI reprocessing module with re-run AI analysis button, corrected text re-analysis, version-aware AI history, and audit logs.
+
+Start Step 25
+--------------------------------------------------------------------------------
+Create Final Approval Archive Package module with downloadable ZIP containing request metadata, AI/OCR summary, approval timeline, uploaded files, document version history, archive download button, and audit logs.
+
+Start Step 26
+--------------------------------------------------------------------------------
+Create secure share link module with expiring public links for approved request summaries and archive downloads.
+
+================================================================================
+PROJECT MODULE SUMMARY
+================================================================================
+Project modules covered till Step 25:
+- Accounts and roles
+- Organizations and superadmin management
+- Departments
+- Approval requests
+- Approval workflows and workflow steps
+- Approval actions: approve, reject, comment
+- Audit logs
+- Document attachments
+- PDF text extraction
+- OCR fallback and manual correction
+- FastAPI AI service integration
+- AI reprocessing history
+- Notifications and email notifications
+- Reports, CSV/PDF, printable summaries
+- Organization settings
+- Dashboard analytics
+- SLA, escalation, reminders
+- PDF certificates with QR/watermark
+- Global search
+- Delegation and vacation mode
+- Bulk inbox actions
+- Policy/rules engine
+- Document versioning and rollback
+- Final archive ZIP
+
+================================================================================
+HOW TO USE THIS FILE
+================================================================================
+How to use this reference:
+1. Start a new chat or continue the same project.
+2. Copy one prompt, for example: Start Step 26 - Create secure share link module...
+3. Ask for required files one by one, for example: models.py, forms.py, views.py, urls.py, admin.py, templates, CSS.
+4. After each step, run:
+   python manage.py makemigrations
+   python manage.py migrate
+   python manage.py check
+   python manage.py runserver
+5. Keep this file as your master roadmap for DocFlow AI.
+
