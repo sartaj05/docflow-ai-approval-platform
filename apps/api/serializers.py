@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
-from apps.approvals.models import DocumentRequest
+from apps.approvals.models import ApprovalWorkflow, ApprovalWorkflowStep, DocumentRequest
+from apps.departments.models import Department
 
 
 class RequestListSerializer(serializers.ModelSerializer):
@@ -53,3 +54,41 @@ class RequestDetailSerializer(RequestListSerializer):
             "created_by_id",
             "updated_at",
         ]
+
+
+class WorkflowStepOptionSerializer(serializers.ModelSerializer):
+    approver_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ApprovalWorkflowStep
+        fields = [
+            "step_order",
+            "role_required",
+            "department_based",
+            "sla_hours",
+            "reminder_before_hours",
+            "is_final_step",
+            "approver_name",
+        ]
+
+    def get_approver_name(self, obj):
+        return obj.approver_user.display_name if obj.approver_user_id else None
+
+
+class WorkflowOptionSerializer(serializers.ModelSerializer):
+    steps = WorkflowStepOptionSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = ApprovalWorkflow
+        fields = ["id", "name", "category", "description", "step_count", "steps"]
+
+
+class DepartmentOptionSerializer(serializers.ModelSerializer):
+    head_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Department
+        fields = ["id", "name", "description", "head_name"]
+
+    def get_head_name(self, obj):
+        return obj.head.display_name if obj.head_id else None
