@@ -25,6 +25,7 @@ urlpatterns = [
     path("search/", include("apps.search_app.urls")),
 
     path("super-admin/", include("apps.superadmin.urls")),
+    path("api/v1/", include("apps.api.urls")),
 ]
 if settings.DEBUG:
     urlpatterns += static(
