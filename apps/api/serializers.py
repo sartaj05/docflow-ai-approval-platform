@@ -40,6 +40,11 @@ class RequestListSerializer(serializers.ModelSerializer):
 
 
 class RequestDetailSerializer(RequestListSerializer):
+    organization_id = serializers.IntegerField(read_only=True)
+    department_id = serializers.IntegerField(read_only=True, allow_null=True)
+    workflow_id = serializers.IntegerField(read_only=True, allow_null=True)
+    created_by_id = serializers.IntegerField(read_only=True, allow_null=True)
+
     class Meta(RequestListSerializer.Meta):
         fields = RequestListSerializer.Meta.fields + [
             "description",
