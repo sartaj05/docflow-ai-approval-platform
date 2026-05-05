@@ -1,4 +1,4 @@
-from django.urls import path
+from django.urls import include, path
 
 from apps.api.request_views import (
     DepartmentListView,
@@ -21,4 +21,5 @@ urlpatterns = [
     path("requests/<int:pk>/submit/", RequestSubmitView.as_view(), name="request-submit"),
     path("workflows/", WorkflowListView.as_view(), name="workflow-list"),
     path("departments/", DepartmentListView.as_view(), name="department-list"),
+    path("", include("apps.api.approval_urls")),
 ]
