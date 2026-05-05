@@ -1,6 +1,8 @@
 import re
 
+from django.db import transaction
 from django.db.models import Q
+from django.utils import timezone
 from django.utils.dateparse import parse_date
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -22,14 +24,20 @@ from apps.api.serializers import (
     WorkflowOptionSerializer,
 )
 from apps.approvals.models import (
+    ApprovalAction,
+    ApprovalActionType,
+    ApprovalStepStatus,
     DocumentRequest,
     RequestCategory,
     RequestPriority,
     RequestStatus,
 )
+from apps.approvals.services.workflow_engine import generate_approval_steps_for_request
+from apps.notifications.services.notification_service import notify_approval_assigned
 from apps.approvals.services.policy_engine import apply_policy_to_request
 from apps.approvals.services.watcher_service import (
     ACTIVITY_APPROVAL,
+    get_or_create_watcher,
     notify_request_watchers,
 )
 from apps.audit.models import AuditAction
@@ -203,6 +211,82 @@ class RequestCancelView(APIView):
             activity_type=ACTIVITY_APPROVAL,
             title=f"{document_request.request_number} cancelled",
             message=f"{request.user.display_name} cancelled {document_request.request_number}.",
+            object_type="DocumentRequest",
+            object_id=document_request.pk,
+        )
+        return Response(RequestDetailSerializer(document_request).data)
+
+
+class RequestSubmitView(APIView):
+    permission_classes = [IsAuthenticated, HasActiveWorkspace]
+
+    @transaction.atomic
+    def post(self, request, pk):
+        document_request = scoped_requests(request.user).filter(pk=pk).first()
+        if not document_request:
+            return Response({"detail": "Not found."}, status=404)
+        if document_request.created_by_id != request.user.id:
+            return Response(
+                {"detail": "Only the request creator can submit it."},
+                status=403,
+            )
+        if not document_request.can_be_submitted:
+            return Response({"detail": "Only draft requests can be submitted."}, status=400)
+
+        policy_result = apply_policy_to_request(document_request)
+        document_request.refresh_from_db()
+        if not document_request.workflow or not document_request.workflow.steps.exists():
+            return Response(
+                {"detail": "Select a workflow that contains at least one approval step."},
+                status=400,
+            )
+
+        document_request.status = RequestStatus.SUBMITTED
+        document_request.submitted_at = timezone.now()
+        document_request.save(update_fields=["status", "submitted_at", "updated_at"])
+        try:
+            generate_approval_steps_for_request(document_request)
+        except ValueError as exc:
+            document_request.status = RequestStatus.DRAFT
+            document_request.submitted_at = None
+            document_request.save(update_fields=["status", "submitted_at", "updated_at"])
+            return Response({"detail": str(exc)}, status=400)
+
+        current_step = document_request.approval_steps.filter(
+            is_current=True,
+            status=ApprovalStepStatus.PENDING,
+        ).first()
+        if current_step:
+            notify_approval_assigned(approval_step=current_step, actor=request.user)
+
+        ApprovalAction.objects.create(
+            request=document_request,
+            action_by=request.user,
+            action_type=ApprovalActionType.SUBMITTED,
+            comment="Request submitted for approval.",
+            old_status=RequestStatus.DRAFT,
+            new_status=RequestStatus.IN_REVIEW,
+        )
+        create_audit_log(
+            request=request,
+            organization=document_request.organization,
+            action=AuditAction.SUBMITTED,
+            model_name="DocumentRequest",
+            object_id=document_request.pk,
+            message=f"Approval request {document_request.request_number} submitted through the API.",
+            extra_data={
+                "workflow": document_request.workflow.name,
+                "current_step": document_request.current_step,
+                "policy_matched": policy_result["matched"],
+            },
+        )
+        get_or_create_watcher(document_request=document_request, user=request.user)
+        notify_request_watchers(
+            document_request=document_request,
+            actor=request.user,
+            activity_type=ACTIVITY_APPROVAL,
+            title=f"{document_request.request_number} submitted",
+            message=f"{request.user.display_name} submitted {document_request.request_number} for approval.",
             object_type="DocumentRequest",
             object_id=document_request.pk,
         )

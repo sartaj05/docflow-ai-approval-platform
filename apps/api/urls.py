@@ -5,6 +5,7 @@ from apps.api.request_views import (
     RequestDetailView,
     RequestCancelView,
     RequestListView,
+    RequestSubmitView,
     WorkflowListView,
 )
 from apps.api.views import APIRootView
@@ -17,6 +18,7 @@ urlpatterns = [
     path("requests/", RequestListView.as_view(), name="request-list"),
     path("requests/<int:pk>/", RequestDetailView.as_view(), name="request-detail"),
     path("requests/<int:pk>/cancel/", RequestCancelView.as_view(), name="request-cancel"),
+    path("requests/<int:pk>/submit/", RequestSubmitView.as_view(), name="request-submit"),
     path("workflows/", WorkflowListView.as_view(), name="workflow-list"),
     path("departments/", DepartmentListView.as_view(), name="department-list"),
 ]
