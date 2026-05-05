@@ -6,7 +6,11 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from apps.api.permissions import can_create_request, get_user_organization
+from apps.api.permissions import (
+    can_create_request,
+    can_manage_request,
+    get_user_organization,
+)
 from apps.api.pagination import DefaultPagePagination
 from apps.api.permissions import HasActiveWorkspace, scoped_requests
 from apps.api.permissions import scoped_departments, scoped_workflows
@@ -24,6 +28,10 @@ from apps.approvals.models import (
     RequestStatus,
 )
 from apps.approvals.services.policy_engine import apply_policy_to_request
+from apps.approvals.services.watcher_service import (
+    ACTIVITY_APPROVAL,
+    notify_request_watchers,
+)
 from apps.audit.models import AuditAction
 from apps.audit.services.audit_logger import create_audit_log
 
@@ -126,6 +134,79 @@ class RequestDetailView(APIView):
             return Response({"detail": "Not found."}, status=404)
         serializer = RequestDetailSerializer(document_request)
         return Response(serializer.data)
+
+    def patch(self, request, pk):
+        document_request = scoped_requests(request.user).filter(pk=pk).first()
+        if not document_request:
+            return Response({"detail": "Not found."}, status=404)
+        if not can_manage_request(request.user, document_request):
+            return Response(
+                {"detail": "Only the creator can edit a draft request."},
+                status=403,
+            )
+
+        serializer = RequestWriteSerializer(
+            document_request,
+            data=request.data,
+            partial=True,
+            context={"request": request},
+        )
+        serializer.is_valid(raise_exception=True)
+        document_request = serializer.save()
+        policy_result = apply_policy_to_request(document_request)
+        document_request.refresh_from_db()
+        create_audit_log(
+            request=request,
+            organization=document_request.organization,
+            action=AuditAction.UPDATED,
+            model_name="DocumentRequest",
+            object_id=document_request.pk,
+            message=f"Approval request {document_request.request_number} updated through the API.",
+            extra_data={"policy_matched": policy_result["matched"]},
+        )
+        return Response(RequestDetailSerializer(document_request).data)
+
+
+class RequestCancelView(APIView):
+    permission_classes = [IsAuthenticated, HasActiveWorkspace]
+
+    def post(self, request, pk):
+        document_request = scoped_requests(request.user).filter(pk=pk).first()
+        if not document_request:
+            return Response({"detail": "Not found."}, status=404)
+        if document_request.created_by_id != request.user.id:
+            return Response(
+                {"detail": "Only the request creator can cancel it."},
+                status=403,
+            )
+        if not document_request.can_be_cancelled:
+            return Response(
+                {"detail": "This request cannot be cancelled."},
+                status=400,
+            )
+
+        old_status = document_request.status
+        document_request.status = RequestStatus.CANCELLED
+        document_request.save(update_fields=["status", "updated_at"])
+        create_audit_log(
+            request=request,
+            organization=document_request.organization,
+            action=AuditAction.CANCELLED,
+            model_name="DocumentRequest",
+            object_id=document_request.pk,
+            message=f"Approval request {document_request.request_number} cancelled through the API.",
+            extra_data={"old_status": old_status},
+        )
+        notify_request_watchers(
+            document_request=document_request,
+            actor=request.user,
+            activity_type=ACTIVITY_APPROVAL,
+            title=f"{document_request.request_number} cancelled",
+            message=f"{request.user.display_name} cancelled {document_request.request_number}.",
+            object_type="DocumentRequest",
+            object_id=document_request.pk,
+        )
+        return Response(RequestDetailSerializer(document_request).data)
 
 
 class WorkflowListView(APIView):
