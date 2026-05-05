@@ -6,6 +6,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from apps.api.permissions import can_create_request, get_user_organization
 from apps.api.pagination import DefaultPagePagination
 from apps.api.permissions import HasActiveWorkspace, scoped_requests
 from apps.api.permissions import scoped_departments, scoped_workflows
@@ -13,9 +14,18 @@ from apps.api.serializers import (
     DepartmentOptionSerializer,
     RequestDetailSerializer,
     RequestListSerializer,
+    RequestWriteSerializer,
     WorkflowOptionSerializer,
 )
-from apps.approvals.models import RequestCategory, RequestPriority, RequestStatus
+from apps.approvals.models import (
+    DocumentRequest,
+    RequestCategory,
+    RequestPriority,
+    RequestStatus,
+)
+from apps.approvals.services.policy_engine import apply_policy_to_request
+from apps.audit.models import AuditAction
+from apps.audit.services.audit_logger import create_audit_log
 
 
 class RequestListView(APIView):
@@ -65,6 +75,46 @@ class RequestListView(APIView):
         page = paginator.paginate_queryset(requests, request, view=self)
         serializer = RequestListSerializer(page, many=True)
         return paginator.get_paginated_response(serializer.data)
+
+    def post(self, request):
+        if not can_create_request(request.user):
+            return Response(
+                {"detail": "You do not have permission to create requests."},
+                status=403,
+            )
+
+        organization = get_user_organization(request.user)
+        serializer = RequestWriteSerializer(
+            data=request.data,
+            context={"request": request},
+        )
+        serializer.is_valid(raise_exception=True)
+        document_request = serializer.save(
+            organization=organization,
+            created_by=request.user,
+            status=RequestStatus.DRAFT,
+        )
+
+        policy_result = apply_policy_to_request(document_request)
+        document_request.refresh_from_db()
+        create_audit_log(
+            request=request,
+            organization=organization,
+            action=AuditAction.CREATED,
+            model_name="DocumentRequest",
+            object_id=document_request.pk,
+            message=f"Approval request {document_request.request_number} created through the API.",
+            extra_data={
+                "title": document_request.title,
+                "category": document_request.category,
+                "priority": document_request.priority,
+                "policy_matched": policy_result["matched"],
+            },
+        )
+        return Response(
+            RequestDetailSerializer(document_request).data,
+            status=201,
+        )
 
 
 class RequestDetailView(APIView):

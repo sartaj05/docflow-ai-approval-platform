@@ -2,6 +2,7 @@ from rest_framework import serializers
 
 from apps.approvals.models import ApprovalWorkflow, ApprovalWorkflowStep, DocumentRequest
 from apps.departments.models import Department
+from apps.api.permissions import get_user_organization
 
 
 class RequestListSerializer(serializers.ModelSerializer):
@@ -97,3 +98,47 @@ class DepartmentOptionSerializer(serializers.ModelSerializer):
 
     def get_head_name(self, obj):
         return obj.head.display_name if obj.head_id else None
+
+
+class RequestWriteSerializer(serializers.ModelSerializer):
+    department = serializers.PrimaryKeyRelatedField(
+        queryset=Department.objects.none(),
+        required=False,
+        allow_null=True,
+    )
+    workflow = serializers.PrimaryKeyRelatedField(
+        queryset=ApprovalWorkflow.objects.none(),
+        required=False,
+        allow_null=True,
+    )
+
+    class Meta:
+        model = DocumentRequest
+        fields = [
+            "title",
+            "category",
+            "priority",
+            "description",
+            "department",
+            "workflow",
+        ]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        request = self.context.get("request")
+        organization = get_user_organization(request.user) if request else None
+        if organization:
+            self.fields["department"].queryset = Department.objects.filter(
+                organization=organization,
+                is_active=True,
+            )
+            self.fields["workflow"].queryset = ApprovalWorkflow.objects.filter(
+                organization=organization,
+                is_active=True,
+            )
+
+    def validate_title(self, value):
+        value = value.strip()
+        if not value:
+            raise serializers.ValidationError("A title is required.")
+        return value
