@@ -9,12 +9,14 @@ from apps.api.request_views import (
     WorkflowListView,
 )
 from apps.api.views import APIRootView
+from apps.api.schema import OpenAPISchemaView
 
 
 app_name = "api"
 
 urlpatterns = [
     path("", APIRootView.as_view(), name="root"),
+    path("schema/", OpenAPISchemaView.as_view(), name="schema"),
     path("requests/", RequestListView.as_view(), name="request-list"),
     path("requests/<int:pk>/", RequestDetailView.as_view(), name="request-detail"),
     path("requests/<int:pk>/cancel/", RequestCancelView.as_view(), name="request-cancel"),
