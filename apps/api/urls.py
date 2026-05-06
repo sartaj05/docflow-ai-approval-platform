@@ -23,4 +23,5 @@ urlpatterns = [
     path("departments/", DepartmentListView.as_view(), name="department-list"),
     path("", include("apps.api.approval_urls")),
     path("", include("apps.api.activity_urls")),
+    path("", include("apps.api.document_urls")),
 ]
