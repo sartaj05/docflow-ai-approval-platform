@@ -22,4 +22,5 @@ urlpatterns = [
     path("workflows/", WorkflowListView.as_view(), name="workflow-list"),
     path("departments/", DepartmentListView.as_view(), name="department-list"),
     path("", include("apps.api.approval_urls")),
+    path("", include("apps.api.activity_urls")),
 ]
