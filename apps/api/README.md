@@ -2,7 +2,7 @@
 
 Base URL: /api/v1/
 
-The API uses Django REST Framework and requires an authenticated user with an active account and organization. Request and attachment visibility follows the user's role and organization. The configured DRF authentication methods are session authentication and HTTP Basic authentication. Use HTTPS for remote access.
+The API uses Django REST Framework and requires an authenticated user with an active account and organization. Request and attachment visibility follows the user's role and organization. Authentication supports sessions, HTTP Basic, and per-user API tokens. Use HTTPS for remote access. Create or rotate a token with POST /api/v1/auth/token/; revoke it with DELETE /api/v1/auth/token/. Send the returned value in the Authorization header as Token followed by the token.
 
 The OpenAPI 3 schema is available at GET /api/v1/schema/. The version root at GET /api/v1/ lists the available resources.
 
@@ -27,6 +27,7 @@ The OpenAPI 3 schema is available at GET /api/v1/schema/. The version root at GE
 | POST | /notifications/{id}/read/ | Mark one notification as read |
 | POST | /notifications/read-all/ | Mark all notifications as read |
 | GET, PATCH | /notifications/preferences/ | Read or update the user's preferences |
+| POST, DELETE | /auth/token/ | Issue, rotate, or revoke the current user's API token |
 
 Request lists accept status, category, priority, q, date_from, and date_to filters. Results are paginated with page and page_size; page_size is capped at 100.
 

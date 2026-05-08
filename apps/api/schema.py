@@ -160,6 +160,17 @@ class OpenAPISchemaView(APIView):
                 "get": operation("Get notification preferences", "Current preferences."),
                 "patch": operation("Update notification preferences", "Saved preferences."),
             },
+            "/auth/token/": {
+                "post": operation(
+                    "Issue or rotate the current user's API token",
+                    "New token secret.",
+                    status="201",
+                ),
+                "delete": operation(
+                    "Revoke the current user's API token",
+                    "Token revocation result.",
+                ),
+            },
         }
         schema = {
             "openapi": "3.0.3",
@@ -175,6 +186,7 @@ class OpenAPISchemaView(APIView):
                 "securitySchemes": {
                     "basicAuth": {"type": "http", "scheme": "basic"},
                     "sessionAuth": {"type": "apiKey", "in": "cookie", "name": "sessionid"},
+                    "tokenAuth": {"type": "apiKey", "in": "header", "name": "Authorization"},
                 },
             },
         }
