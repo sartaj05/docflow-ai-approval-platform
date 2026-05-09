@@ -9,6 +9,7 @@ from apps.api.permissions import HasActiveWorkspace
 
 class APITokenView(APIView):
     permission_classes = [IsAuthenticated, HasActiveWorkspace]
+    throttle_scope = "token-issue"
 
     @transaction.atomic
     def post(self, request):

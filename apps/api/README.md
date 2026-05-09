@@ -6,6 +6,8 @@ The API uses Django REST Framework and requires an authenticated user with an ac
 
 The OpenAPI 3 schema is available at GET /api/v1/schema/. The version root at GET /api/v1/ lists the available resources.
 
+Authenticated API users are limited to 120 requests per minute. Token issue and rotation requests are limited to 5 per hour.
+
 ## Endpoints
 
 | Method | Endpoint | Purpose |
