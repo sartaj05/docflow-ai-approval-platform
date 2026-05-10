@@ -112,6 +112,12 @@ class OpenAPISchemaView(APIView):
             "/inbox/": {
                 "get": operation("List pending steps assigned to the current user", "Approval inbox."),
             },
+            "/inbox/bulk-action/": {
+                "post": operation(
+                    "Bulk approve, reject, or comment on assigned steps",
+                    "Counts and per-step errors.",
+                ),
+            },
             "/approval-steps/{step_pk}/approve/": {
                 "parameters": [path_parameter("step_pk")],
                 "post": operation("Approve an assigned step", "Approval result."),

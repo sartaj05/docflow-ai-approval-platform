@@ -17,6 +17,7 @@ class APIRootView(APIView):
                 "workflows": request.build_absolute_uri("workflows/"),
                 "departments": request.build_absolute_uri("departments/"),
                 "approval_inbox": request.build_absolute_uri("inbox/"),
+                "bulk_approval_action": request.build_absolute_uri("inbox/bulk-action/"),
                 "notifications": request.build_absolute_uri("notifications/"),
                 "schema": request.build_absolute_uri("schema/"),
                 "token": request.build_absolute_uri("auth/token/"),
