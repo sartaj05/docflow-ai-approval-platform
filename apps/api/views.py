@@ -19,6 +19,7 @@ class APIRootView(APIView):
                 "approval_inbox": request.build_absolute_uri("inbox/"),
                 "bulk_approval_action": request.build_absolute_uri("inbox/bulk-action/"),
                 "notifications": request.build_absolute_uri("notifications/"),
+                "reports": request.build_absolute_uri("reports/summary/"),
                 "schema": request.build_absolute_uri("schema/"),
                 "token": request.build_absolute_uri("auth/token/"),
             },

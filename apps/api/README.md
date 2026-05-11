@@ -31,6 +31,8 @@ Authenticated API users are limited to 120 requests per minute. Token issue and 
 | POST | /notifications/read-all/ | Mark all notifications as read |
 | GET, PATCH | /notifications/preferences/ | Read or update the user's preferences |
 | POST, DELETE | /auth/token/ | Issue, rotate, or revoke the current user's API token |
+| GET | /reports/summary/ | Read request, department, and risk summaries |
+| GET | /reports/requests.csv | Export filtered requests to CSV |
 
 Request lists accept status, category, priority, q, date_from, and date_to filters. Results are paginated with page and page_size; page_size is capped at 100.
 

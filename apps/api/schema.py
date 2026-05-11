@@ -166,6 +166,18 @@ class OpenAPISchemaView(APIView):
                 "get": operation("Get notification preferences", "Current preferences."),
                 "patch": operation("Update notification preferences", "Saved preferences."),
             },
+            "/reports/summary/": {
+                "get": operation(
+                    "Get request, department, and risk summaries",
+                    "Aggregated report data for the user's permitted scope.",
+                ),
+            },
+            "/reports/requests.csv": {
+                "get": operation(
+                    "Export filtered requests as CSV",
+                    "CSV file containing requests in the user's permitted scope.",
+                ),
+            },
             "/auth/token/": {
                 "post": operation(
                     "Issue or rotate the current user's API token",
