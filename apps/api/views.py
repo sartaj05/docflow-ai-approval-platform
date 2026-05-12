@@ -20,6 +20,7 @@ class APIRootView(APIView):
                 "bulk_approval_action": request.build_absolute_uri("inbox/bulk-action/"),
                 "notifications": request.build_absolute_uri("notifications/"),
                 "reports": request.build_absolute_uri("reports/summary/"),
+                "request_archive": request.build_absolute_uri("requests/{id}/archive/"),
                 "schema": request.build_absolute_uri("schema/"),
                 "token": request.build_absolute_uri("auth/token/"),
             },

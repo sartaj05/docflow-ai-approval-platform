@@ -30,4 +30,5 @@ urlpatterns = [
     path("", include("apps.api.auth_urls")),
     path("", include("apps.api.bulk_urls")),
     path("", include("apps.api.report_urls")),
+    path("", include("apps.api.archive_urls")),
 ]

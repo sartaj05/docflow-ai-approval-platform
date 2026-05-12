@@ -16,6 +16,7 @@ Authenticated API users are limited to 120 requests per minute. Token issue and 
 | GET, PATCH | /requests/{id}/ | Read a request or edit the creator's draft |
 | POST | /requests/{id}/submit/ | Submit a draft into its approval workflow |
 | POST | /requests/{id}/cancel/ | Cancel an eligible request |
+| GET | /requests/{id}/archive/ | Download the approved request's final ZIP archive |
 | GET | /workflows/, /departments/ | List active organization options |
 | GET | /inbox/ | List pending approval steps assigned to the user |
 | POST | /inbox/bulk-action/ | Approve, reject, or comment on up to 100 assigned steps |

@@ -103,6 +103,13 @@ class OpenAPISchemaView(APIView):
                 "parameters": [path_parameter("id")],
                 "post": operation("Cancel an eligible request", "Cancelled request."),
             },
+            "/requests/{id}/archive/": {
+                "parameters": [path_parameter("id")],
+                "get": operation(
+                    "Download the final archive for an approved request",
+                    "ZIP archive with request history and documents.",
+                ),
+            },
             "/workflows/": {
                 "get": operation("List active organization workflows", "Workflow options."),
             },
