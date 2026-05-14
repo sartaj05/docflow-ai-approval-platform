@@ -12,3 +12,6 @@ urlpatterns.append(path('profile/contact/', CurrentProfileUpdateView.as_view(), 
 
 from apps.api.global_search_view import GlobalSearchAPIView
 urlpatterns.append(path('search/', GlobalSearchAPIView.as_view(), name='global-search'))
+
+from apps.api.search_suggestions_view import RequestSearchSuggestionsView
+urlpatterns.append(path('search/suggestions/', RequestSearchSuggestionsView.as_view(), name='request-search-suggestions'))
