@@ -9,3 +9,6 @@ urlpatterns = [
 
 from apps.api.profile_update_view import CurrentProfileUpdateView
 urlpatterns.append(path('profile/contact/', CurrentProfileUpdateView.as_view(), name='current-profile-update'))
+
+from apps.api.global_search_view import GlobalSearchAPIView
+urlpatterns.append(path('search/', GlobalSearchAPIView.as_view(), name='global-search'))
