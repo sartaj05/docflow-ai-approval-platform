@@ -18,3 +18,6 @@ urlpatterns.append(path('search/suggestions/', RequestSearchSuggestionsView.as_v
 
 from apps.api.audit_feed_view import AuditFeedView
 urlpatterns.append(path('audit-logs/', AuditFeedView.as_view(), name='audit-feed'))
+
+from apps.api.request_audit_view import RequestAuditHistoryView
+urlpatterns.append(path('requests/<int:pk>/audit/', RequestAuditHistoryView.as_view(), name='request-audit-history'))
