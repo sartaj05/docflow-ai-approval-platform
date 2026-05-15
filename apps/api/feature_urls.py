@@ -15,3 +15,6 @@ urlpatterns.append(path('search/', GlobalSearchAPIView.as_view(), name='global-s
 
 from apps.api.search_suggestions_view import RequestSearchSuggestionsView
 urlpatterns.append(path('search/suggestions/', RequestSearchSuggestionsView.as_view(), name='request-search-suggestions'))
+
+from apps.api.audit_feed_view import AuditFeedView
+urlpatterns.append(path('audit-logs/', AuditFeedView.as_view(), name='audit-feed'))
