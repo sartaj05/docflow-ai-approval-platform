@@ -21,3 +21,6 @@ urlpatterns.append(path('audit-logs/', AuditFeedView.as_view(), name='audit-feed
 
 from apps.api.request_audit_view import RequestAuditHistoryView
 urlpatterns.append(path('requests/<int:pk>/audit/', RequestAuditHistoryView.as_view(), name='request-audit-history'))
+
+from apps.api.discussion_list_view import RequestDiscussionListView
+urlpatterns.append(path('requests/<int:pk>/discussion/', RequestDiscussionListView.as_view(), name='request-discussion-list'))
