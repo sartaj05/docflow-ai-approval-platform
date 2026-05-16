@@ -24,3 +24,6 @@ urlpatterns.append(path('requests/<int:pk>/audit/', RequestAuditHistoryView.as_v
 
 from apps.api.discussion_list_view import RequestDiscussionListView
 urlpatterns.append(path('requests/<int:pk>/discussion/', RequestDiscussionListView.as_view(), name='request-discussion-list'))
+
+from apps.api.discussion_create_view import RequestDiscussionCreateView
+urlpatterns.append(path('requests/<int:pk>/discussion/comments/', RequestDiscussionCreateView.as_view(), name='request-discussion-create'))
