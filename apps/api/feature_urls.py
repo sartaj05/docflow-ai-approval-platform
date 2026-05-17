@@ -27,3 +27,6 @@ urlpatterns.append(path('requests/<int:pk>/discussion/', RequestDiscussionListVi
 
 from apps.api.discussion_create_view import RequestDiscussionCreateView
 urlpatterns.append(path('requests/<int:pk>/discussion/comments/', RequestDiscussionCreateView.as_view(), name='request-discussion-create'))
+
+from apps.api.discussion_reply_view import RequestDiscussionReplyView
+urlpatterns.append(path('requests/<int:pk>/discussion/<int:comment_pk>/replies/', RequestDiscussionReplyView.as_view(), name='request-discussion-replies'))
