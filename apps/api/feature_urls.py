@@ -30,3 +30,6 @@ urlpatterns.append(path('requests/<int:pk>/discussion/comments/', RequestDiscuss
 
 from apps.api.discussion_reply_view import RequestDiscussionReplyView
 urlpatterns.append(path('requests/<int:pk>/discussion/<int:comment_pk>/replies/', RequestDiscussionReplyView.as_view(), name='request-discussion-replies'))
+
+from apps.api.discussion_delete_view import RequestDiscussionDeleteView
+urlpatterns.append(path('requests/<int:pk>/discussion/<int:comment_pk>/delete/', RequestDiscussionDeleteView.as_view(), name='request-discussion-delete'))
