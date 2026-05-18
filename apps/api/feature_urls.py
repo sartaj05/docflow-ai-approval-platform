@@ -36,3 +36,6 @@ urlpatterns.append(path('requests/<int:pk>/discussion/<int:comment_pk>/delete/',
 
 from apps.api.delegation_list_view import DelegationListAPIView
 urlpatterns.append(path('delegations/', DelegationListAPIView.as_view(), name='delegation-list-api'))
+
+from apps.api.delegation_create_view import DelegationCreateAPIView
+urlpatterns.append(path('delegations/create/', DelegationCreateAPIView.as_view(), name='delegation-create-api'))
