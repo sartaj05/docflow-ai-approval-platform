@@ -39,3 +39,6 @@ urlpatterns.append(path('delegations/', DelegationListAPIView.as_view(), name='d
 
 from apps.api.delegation_create_view import DelegationCreateAPIView
 urlpatterns.append(path('delegations/create/', DelegationCreateAPIView.as_view(), name='delegation-create-api'))
+
+from apps.api.delegation_deactivate_view import DelegationDeactivateAPIView
+urlpatterns.append(path('delegations/<int:pk>/deactivate/', DelegationDeactivateAPIView.as_view(), name='delegation-deactivate-api'))
