@@ -48,3 +48,6 @@ urlpatterns.append(path('delegation-candidates/', DelegationCandidatesAPIView.as
 
 from apps.api.policy_catalog_view import PolicyCatalogAPIView
 urlpatterns.append(path('policies/', PolicyCatalogAPIView.as_view(), name='policy-catalog-api'))
+
+from apps.api.policy_evaluations_view import PolicyEvaluationHistoryAPIView
+urlpatterns.append(path('policy-evaluations/', PolicyEvaluationHistoryAPIView.as_view(), name='policy-evaluations-api'))
