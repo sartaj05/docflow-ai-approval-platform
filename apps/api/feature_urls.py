@@ -51,3 +51,6 @@ urlpatterns.append(path('policies/', PolicyCatalogAPIView.as_view(), name='polic
 
 from apps.api.policy_evaluations_view import PolicyEvaluationHistoryAPIView
 urlpatterns.append(path('policy-evaluations/', PolicyEvaluationHistoryAPIView.as_view(), name='policy-evaluations-api'))
+
+from apps.api.request_watchers_view import RequestWatchersAPIView
+urlpatterns.append(path('requests/<int:pk>/watchers/', RequestWatchersAPIView.as_view(), name='request-watchers-api'))
