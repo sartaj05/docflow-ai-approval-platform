@@ -57,3 +57,6 @@ urlpatterns.append(path('requests/<int:pk>/watchers/', RequestWatchersAPIView.as
 
 from apps.api.request_watch_preferences_view import RequestWatchPreferencesAPIView
 urlpatterns.append(path('requests/<int:pk>/watch/preferences/', RequestWatchPreferencesAPIView.as_view(), name='request-watch-preferences-api'))
+
+from apps.api.certificate_metadata_view import RequestCertificateMetadataAPIView
+urlpatterns.append(path('requests/<int:pk>/certificate/', RequestCertificateMetadataAPIView.as_view(), name='request-certificate-metadata'))
