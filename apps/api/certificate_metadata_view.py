@@ -4,7 +4,10 @@ from rest_framework.views import APIView
 
 from apps.api.permissions import HasActiveWorkspace, scoped_requests
 from apps.approvals.models import RequestStatus
-from apps.reports.services.signature_service import create_or_get_certificate_signature
+from apps.reports.services.signature_service import (
+    build_verification_url,
+    create_or_get_certificate_signature,
+)
 
 
 class RequestCertificateMetadataAPIView(APIView):
@@ -17,6 +20,9 @@ class RequestCertificateMetadataAPIView(APIView):
         if document_request.status != RequestStatus.APPROVED:
             return Response({"detail": "Certificates are available after approval."}, status=409)
         signature, _ = create_or_get_certificate_signature(document_request, request=request)
+        if not signature.verification_url:
+            signature.verification_url = build_verification_url(request, signature)
+            signature.save(update_fields=["verification_url"])
         return Response({
             "id": signature.pk,
             "request_id": document_request.pk,

@@ -34,6 +34,26 @@ Authenticated API users are limited to 120 requests per minute. Token issue and 
 | POST, DELETE | /auth/token/ | Issue, rotate, or revoke the current user's API token |
 | GET | /reports/summary/ | Read request, department, and risk summaries |
 | GET | /reports/requests.csv | Export filtered requests to CSV |
+| GET | /profile/ | Read the authenticated user's profile |
+| PATCH | /profile/contact/ | Update the user's name, phone, or designation |
+| GET | /search/ | Search authorized requests, users, departments, documents, and audit logs |
+| GET | /search/suggestions/?q=... | Get request title or number suggestions |
+| GET | /audit-logs/ | Browse organization audit events (organization admins and auditors) |
+| GET | /requests/{id}/audit/ | Read audit events for an authorized request |
+| GET | /requests/{id}/discussion/ | List request discussion threads |
+| POST | /requests/{id}/discussion/comments/ | Add a discussion comment; message supports @username mentions |
+| GET, POST | /requests/{id}/discussion/{comment_id}/replies/ | Read or add replies to a comment |
+| POST | /requests/{id}/discussion/{comment_id}/delete/ | Soft-delete your own comment (or an org admin can remove it) |
+| GET | /delegations/ | List organization approval delegations |
+| POST | /delegations/create/ | Create a delegation using eligible organization users and a valid date range |
+| POST | /delegations/{id}/deactivate/ | Deactivate a delegation as its delegator or an org admin |
+| GET | /delegation-candidates/ | List eligible users for approval delegation |
+| GET | /policies/ | Read organization approval policy rules |
+| GET | /policy-evaluations/ | Read paginated policy evaluation history; optional request_id filter |
+| GET | /requests/{id}/watchers/ | List active watchers on an authorized request |
+| GET, PATCH | /requests/{id}/watch/preferences/ | Read or update your watcher notification settings |
+| GET | /requests/{id}/certificate/ | Read the approved request's certificate metadata |
+| GET | /requests/{id}/certificate.pdf/ | Download the approved request's certificate |
 
 Request lists accept status, category, priority, q, date_from, and date_to filters. Results are paginated with page and page_size; page_size is capped at 100.
 

@@ -23,5 +23,11 @@ class APIRootView(APIView):
                 "request_archive": request.build_absolute_uri("requests/{id}/archive/"),
                 "schema": request.build_absolute_uri("schema/"),
                 "token": request.build_absolute_uri("auth/token/"),
+                "profile": request.build_absolute_uri("profile/"),
+                "search": request.build_absolute_uri("search/"),
+                "audit_logs": request.build_absolute_uri("audit-logs/"),
+                "delegations": request.build_absolute_uri("delegations/"),
+                "policies": request.build_absolute_uri("policies/"),
+                "policy_evaluations": request.build_absolute_uri("policy-evaluations/"),
             },
         })
