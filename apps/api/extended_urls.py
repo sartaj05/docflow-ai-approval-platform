@@ -6,3 +6,6 @@ from apps.api.version_list_view import AttachmentVersionListAPIView
 urlpatterns = [
     path("attachments/<int:attachment_pk>/versions/", AttachmentVersionListAPIView.as_view(), name="api-attachment-versions"),
 ]
+
+from apps.api.version_compare_view import AttachmentVersionCompareAPIView
+urlpatterns.append(path('attachments/<int:attachment_pk>/versions/<int:version_pk>/compare/', AttachmentVersionCompareAPIView.as_view(), name='api-attachment-version-compare'))
