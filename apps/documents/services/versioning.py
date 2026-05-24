@@ -60,6 +60,12 @@ def create_attachment_snapshot(
         ai_summary=attachment.ai_summary,
         ai_category=attachment.ai_category,
         ai_extracted_data=attachment.ai_extracted_data or {},
+        ocr_used=attachment.ocr_used,
+        ocr_confidence=attachment.ocr_confidence,
+        ocr_status=attachment.ocr_status,
+        manual_corrected_text=attachment.manual_corrected_text,
+        manual_corrected_by=attachment.manual_corrected_by,
+        manual_corrected_at=attachment.manual_corrected_at,
         risk_level=attachment.risk_level,
         risk_notes=attachment.risk_notes,
         processing_error=attachment.processing_error,
@@ -174,6 +180,12 @@ def rollback_attachment_to_version(
     attachment.ai_summary = version.ai_summary
     attachment.ai_category = version.ai_category
     attachment.ai_extracted_data = version.ai_extracted_data or {}
+    attachment.ocr_used = version.ocr_used
+    attachment.ocr_confidence = version.ocr_confidence
+    attachment.ocr_status = version.ocr_status
+    attachment.manual_corrected_text = version.manual_corrected_text
+    attachment.manual_corrected_by = version.manual_corrected_by
+    attachment.manual_corrected_at = version.manual_corrected_at
     attachment.risk_level = version.risk_level
     attachment.risk_notes = version.risk_notes
     attachment.processing_error = version.processing_error
@@ -189,6 +201,12 @@ def rollback_attachment_to_version(
             "ai_summary",
             "ai_category",
             "ai_extracted_data",
+            "ocr_used",
+            "ocr_confidence",
+            "ocr_status",
+            "manual_corrected_text",
+            "manual_corrected_by",
+            "manual_corrected_at",
             "risk_level",
             "risk_notes",
             "processing_error",
