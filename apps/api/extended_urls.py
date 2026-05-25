@@ -15,3 +15,6 @@ urlpatterns.append(path('attachments/<int:attachment_pk>/versions/<int:version_p
 
 from apps.api.version_restore_view import AttachmentVersionRestoreAPIView
 urlpatterns.append(path('attachments/<int:attachment_pk>/versions/<int:version_pk>/restore/', AttachmentVersionRestoreAPIView.as_view(), name='api-attachment-version-restore'))
+
+from apps.api.manual_correction_view import AttachmentManualCorrectionAPIView
+urlpatterns.append(path('attachments/<int:attachment_pk>/manual-correction/', AttachmentManualCorrectionAPIView.as_view(), name='api-attachment-manual-correction'))
