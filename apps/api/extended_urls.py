@@ -18,3 +18,6 @@ urlpatterns.append(path('attachments/<int:attachment_pk>/versions/<int:version_p
 
 from apps.api.manual_correction_view import AttachmentManualCorrectionAPIView
 urlpatterns.append(path('attachments/<int:attachment_pk>/manual-correction/', AttachmentManualCorrectionAPIView.as_view(), name='api-attachment-manual-correction'))
+
+from apps.api.ai_reprocess_view import AttachmentAIReprocessAPIView
+urlpatterns.append(path('attachments/<int:attachment_pk>/reprocess-ai/', AttachmentAIReprocessAPIView.as_view(), name='api-attachment-ai-reprocess'))
