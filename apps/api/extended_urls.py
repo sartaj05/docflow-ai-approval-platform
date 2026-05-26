@@ -21,3 +21,6 @@ urlpatterns.append(path('attachments/<int:attachment_pk>/manual-correction/', At
 
 from apps.api.ai_reprocess_view import AttachmentAIReprocessAPIView
 urlpatterns.append(path('attachments/<int:attachment_pk>/reprocess-ai/', AttachmentAIReprocessAPIView.as_view(), name='api-attachment-ai-reprocess'))
+
+from apps.api.ai_history_list_view import AttachmentAIHistoryListAPIView
+urlpatterns.append(path('attachments/<int:attachment_pk>/ai-history/', AttachmentAIHistoryListAPIView.as_view(), name='api-attachment-ai-history'))
