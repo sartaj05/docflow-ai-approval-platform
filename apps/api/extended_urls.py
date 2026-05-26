@@ -24,3 +24,6 @@ urlpatterns.append(path('attachments/<int:attachment_pk>/reprocess-ai/', Attachm
 
 from apps.api.ai_history_list_view import AttachmentAIHistoryListAPIView
 urlpatterns.append(path('attachments/<int:attachment_pk>/ai-history/', AttachmentAIHistoryListAPIView.as_view(), name='api-attachment-ai-history'))
+
+from apps.api.ai_history_detail_view import AttachmentAIHistoryDetailAPIView
+urlpatterns.append(path('attachments/<int:attachment_pk>/ai-history/<int:history_pk>/', AttachmentAIHistoryDetailAPIView.as_view(), name='api-attachment-ai-history-detail'))
