@@ -30,3 +30,6 @@ urlpatterns.append(path('attachments/<int:attachment_pk>/ai-history/<int:history
 
 from apps.api.share_link_list_view import RequestShareLinkListAPIView
 urlpatterns.append(path('requests/<int:pk>/share-links/', RequestShareLinkListAPIView.as_view(), name='api-request-share-links'))
+
+from apps.api.share_link_create_view import RequestShareLinkCreateAPIView
+urlpatterns.append(path('requests/<int:pk>/share-links/create/', RequestShareLinkCreateAPIView.as_view(), name='api-request-share-link-create'))
