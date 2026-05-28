@@ -33,3 +33,6 @@ urlpatterns.append(path('requests/<int:pk>/share-links/', RequestShareLinkListAP
 
 from apps.api.share_link_create_view import RequestShareLinkCreateAPIView
 urlpatterns.append(path('requests/<int:pk>/share-links/create/', RequestShareLinkCreateAPIView.as_view(), name='api-request-share-link-create'))
+
+from apps.api.share_link_revoke_view import RequestShareLinkRevokeAPIView
+urlpatterns.append(path('requests/<int:pk>/share-links/<int:link_pk>/revoke/', RequestShareLinkRevokeAPIView.as_view(), name='api-request-share-link-revoke'))
