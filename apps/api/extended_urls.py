@@ -42,3 +42,6 @@ urlpatterns.append(path('share/<str:token>/summary/', PublicShareSummaryAPIView.
 
 from apps.api.public_share_archive_view import PublicShareArchiveAPIView
 urlpatterns.append(path('share/<str:token>/archive/', PublicShareArchiveAPIView.as_view(), name='api-public-share-archive'))
+
+from apps.api.report_department_csv_view import DepartmentReportCSVAPIView
+urlpatterns.append(path('reports/departments.csv', DepartmentReportCSVAPIView.as_view(), name='api-department-report-csv'))
