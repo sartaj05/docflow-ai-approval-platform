@@ -39,3 +39,6 @@ urlpatterns.append(path('requests/<int:pk>/share-links/<int:link_pk>/revoke/', R
 
 from apps.api.public_share_summary_view import PublicShareSummaryAPIView
 urlpatterns.append(path('share/<str:token>/summary/', PublicShareSummaryAPIView.as_view(), name='api-public-share-summary'))
+
+from apps.api.public_share_archive_view import PublicShareArchiveAPIView
+urlpatterns.append(path('share/<str:token>/archive/', PublicShareArchiveAPIView.as_view(), name='api-public-share-archive'))
