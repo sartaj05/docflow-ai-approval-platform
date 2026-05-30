@@ -48,3 +48,6 @@ urlpatterns.append(path('reports/departments.csv', DepartmentReportCSVAPIView.as
 
 from apps.api.report_risk_csv_view import RiskReportCSVAPIView
 urlpatterns.append(path('reports/risks.csv', RiskReportCSVAPIView.as_view(), name='api-risk-report-csv'))
+
+from apps.api.request_approval_actions_view import RequestApprovalActionsAPIView
+urlpatterns.append(path('requests/<int:pk>/approval-actions/', RequestApprovalActionsAPIView.as_view(), name='api-request-approval-actions'))
