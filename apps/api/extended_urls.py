@@ -51,3 +51,6 @@ urlpatterns.append(path('reports/risks.csv', RiskReportCSVAPIView.as_view(), nam
 
 from apps.api.request_approval_actions_view import RequestApprovalActionsAPIView
 urlpatterns.append(path('requests/<int:pk>/approval-actions/', RequestApprovalActionsAPIView.as_view(), name='api-request-approval-actions'))
+
+from apps.api.notification_deliveries_view import NotificationDeliveryHistoryAPIView
+urlpatterns.append(path('notifications/deliveries/', NotificationDeliveryHistoryAPIView.as_view(), name='api-notification-deliveries'))
