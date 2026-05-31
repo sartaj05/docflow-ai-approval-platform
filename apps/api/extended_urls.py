@@ -54,3 +54,6 @@ urlpatterns.append(path('requests/<int:pk>/approval-actions/', RequestApprovalAc
 
 from apps.api.notification_deliveries_view import NotificationDeliveryHistoryAPIView
 urlpatterns.append(path('notifications/deliveries/', NotificationDeliveryHistoryAPIView.as_view(), name='api-notification-deliveries'))
+
+from apps.api.notification_retry_view import NotificationDeliveryRetryAPIView
+urlpatterns.append(path('notifications/deliveries/<int:delivery_pk>/retry/', NotificationDeliveryRetryAPIView.as_view(), name='api-notification-delivery-retry'))
