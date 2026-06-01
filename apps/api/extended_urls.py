@@ -57,3 +57,6 @@ urlpatterns.append(path('notifications/deliveries/', NotificationDeliveryHistory
 
 from apps.api.notification_retry_view import NotificationDeliveryRetryAPIView
 urlpatterns.append(path('notifications/deliveries/<int:delivery_pk>/retry/', NotificationDeliveryRetryAPIView.as_view(), name='api-notification-delivery-retry'))
+
+from apps.api.reminder_history_view import ApprovalReminderHistoryAPIView
+urlpatterns.append(path('reminders/', ApprovalReminderHistoryAPIView.as_view(), name='api-reminder-history'))
