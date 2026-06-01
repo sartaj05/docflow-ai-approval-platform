@@ -54,6 +54,26 @@ Authenticated API users are limited to 120 requests per minute. Token issue and 
 | GET, PATCH | /requests/{id}/watch/preferences/ | Read or update your watcher notification settings |
 | GET | /requests/{id}/certificate/ | Read the approved request's certificate metadata |
 | GET | /requests/{id}/certificate.pdf/ | Download the approved request's certificate |
+| GET | /attachments/{id}/versions/ | List authorized document versions |
+| GET | /attachments/{id}/versions/{version_id}/compare/ | Compare historical extracted text with the current text |
+| GET | /attachments/{id}/versions/{version_id}/download/ | Download an authorized historical file version |
+| POST | /attachments/{id}/versions/{version_id}/restore/ | Restore a version on your own draft request; include a reason |
+| PATCH | /attachments/{id}/manual-correction/ | Save corrected OCR or extracted text |
+| POST | /attachments/{id}/reprocess-ai/ | Re-run AI analysis using the available corrected/extracted text |
+| GET | /attachments/{id}/ai-history/ | List paginated AI processing runs |
+| GET | /attachments/{id}/ai-history/{history_id}/ | Read one AI run's result |
+| GET | /requests/{id}/share-links/ | List share links you are allowed to manage |
+| POST | /requests/{id}/share-links/create/ | Create an expiring share link for an approved request |
+| POST | /requests/{id}/share-links/{link_id}/revoke/ | Revoke a request share link |
+| GET | /share/{token}/summary/ | Public approved-request summary, subject to link permissions |
+| GET | /share/{token}/archive/ | Download the public archive when enabled by the link |
+| GET | /reports/departments.csv | Export a filtered department summary |
+| GET | /reports/risks.csv | Export a filtered risk summary |
+| GET | /requests/{id}/approval-actions/ | Read paginated approval action history |
+| GET | /notifications/deliveries/ | Review your notification delivery status |
+| POST | /notifications/deliveries/{id}/retry/ | Retry one of your eligible failed email deliveries |
+| GET | /reminders/ | Read reminder history visible through your request access |
+| POST | /approval-steps/{id}/reminders/ | Send a reminder for a current pending step you can access |
 
 Request lists accept status, category, priority, q, date_from, and date_to filters. Results are paginated with page and page_size; page_size is capped at 100.
 

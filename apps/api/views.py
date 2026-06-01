@@ -29,5 +29,10 @@ class APIRootView(APIView):
                 "delegations": request.build_absolute_uri("delegations/"),
                 "policies": request.build_absolute_uri("policies/"),
                 "policy_evaluations": request.build_absolute_uri("policy-evaluations/"),
+                "document_versions": request.build_absolute_uri("attachments/{id}/versions/"),
+                "share_links": request.build_absolute_uri("requests/{id}/share-links/"),
+                "public_shares": request.build_absolute_uri("share/{token}/summary/"),
+                "notification_deliveries": request.build_absolute_uri("notifications/deliveries/"),
+                "approval_reminders": request.build_absolute_uri("reminders/"),
             },
         })
